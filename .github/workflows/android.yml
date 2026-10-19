@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,6 +34,18 @@ jobs:
           name: build-log
           path: build.log
           retention-days: 14
+
+      - name: Push build log to ci/logs branch (failure only)
+        if: failure()
+        run: |
+          git config user.email "ci-bot@example.local"
+          git config user.name "ci-bot"
+          git fetch origin main --depth=1
+          git checkout -B ci/logs origin/main
+          cp build.log ./build.log 2>/dev/null || true
+          git add build.log
+          git commit -m "ci: build log for ${GITHUB_SHA}" || true
+          git push origin ci/logs
 
       - name: Upload app-debug.apk
         uses: actions/upload-artifact@v4

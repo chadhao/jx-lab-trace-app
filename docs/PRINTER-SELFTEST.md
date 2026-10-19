@@ -32,14 +32,24 @@
 
 1. 控制面板 → 添加打印机 → 「我所需的打印机未列出」→ **手动设置添加** → 「选择打印机端口」页选 **「使用现有的端口」→ 下拉选 `USB001 (KM-118BT(NEW))`**（就是快麦驱动建的那个口；实测「创建新端口 → Virtual Port Monitor」会报「无法添加指定的端口/参数错误」，不要走那条）→ 下一步 → 厂商选「**Generic**」→ 型号「**Generic / Text Only**」→ 命名如 `KM-RAW`（提示「已安装此驱动/端口被占用」都选「使用当前已安装的驱动/是」继续）。
 2. 共享该打印机（右键 → 打印机属性 → 共享，共享名如 `KMRAW`；若共享页提示需开启「文件和打印机共享」，按提示开启）。
-3. 管理员命令行执行（两条分开打）：
+3. 发送探测文件——**注意 shell**：`copy /b` 和 `%变量%` 是 **cmd** 语法；在 **PowerShell** 里跑必报「找不到接受实际参数」。
 
-```bat
-copy /b "%USERPROFILE%\path\to\probe_tspl.txt"   \\%COMPUTERNAME%\KMRAW
-copy /b "%USERPROFILE%\path\to\probe_escpos.bin" \\%COMPUTERNAME%\KMRAW
+**管理员 PowerShell（推荐，直接粘贴）**——先确认共享名应为 `KMRAW`（为空就是没共享，回第 2 步）：
+
+```powershell
+Get-Printer KM-RAW | Format-List Name,ShareName,PortName
+Copy-Item "C:\Users\haoduan\workspace\jx-lab-trace-app\docs\printer\probe_tspl.txt"   "\\localhost\KMRAW"
+Copy-Item "C:\Users\haoduan\workspace\jx-lab-trace-app\docs\printer\probe_escpos.bin" "\\localhost\KMRAW"
 ```
 
-（`path\to` 换成实际路径；一次发一条，等出纸再发下一条。）
+**或管理员 cmd**：
+
+```bat
+copy /b "C:\Users\haoduan\workspace\jx-lab-trace-app\docs\printer\probe_tspl.txt"   \\localhost\KMRAW
+copy /b "C:\Users\haoduan\workspace\jx-lab-trace-app\docs\printer\probe_escpos.bin" \\localhost\KMRAW
+```
+
+（`Copy-Item` 是字节级复制，`.bin` 不会被转码；一次发一条，等出纸再发下一条。）
 
 | 结果 | 结论 |
 |---|---|

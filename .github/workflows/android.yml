@@ -70,3 +70,6 @@ jobs:
 
       - name: Check design tokens consistency
         run: python3 scripts/check_tokens.py
+
+      - name: Check no hardcoded colors (J4)
+        run: python3 scripts/check_colors.py

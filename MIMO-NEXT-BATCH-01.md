@@ -102,3 +102,28 @@ CI：<run 链接> · 结论：<绿/红>
 设计疑问：<无 / 列表>
 遗留：<列表>
 ```
+
+---
+
+## 回执 · BATCH-01
+
+状态：MIMO-DONE
+
+提交：8e5130e（M01 工程骨架与 CI）· 5a986fe（M02 设计系统落地）
+
+CI：https://github.com/chadhao/jx-lab-trace-app/actions/runs/39289482269 · 结论 **success**（head 0d53b97）
+
+判据：
+- J1 ✓ CI success；artifact `app-debug-apk` 11,187,314 bytes 已产出
+- J2 ✓ PreflightOfflineTest 2 条绿（NO_RESPONSE 模拟断网：前置探测拦截 + 无超时等待 + 真实请求零到达）
+- J3 ✓ ApiErrorMappingTest 6 条绿（401/403/500/Biz/Parse 五类齐全，含 userMessage 断言）
+- J4 ✓ 裸色值 grep = 0（验收方本机执行；B2 起并入 CI 门禁）
+- J5 ✓ CI `check_tokens.py` OK（生成物与 tokens.json 逐字节一致）
+- J6 ✓ 13 个组件 × 3 档 Preview；ComponentSizeTest 7 条绿
+- J7 ✓ ComponentSizeTest 尺寸断言（BigButton 60 / NumPad 64 / ScanHero 120 / 触控 ≥56）
+
+依赖变更：mockwebserver、kotlinx-coroutines-test（白名单内）；无白名单外依赖
+
+设计疑问：无
+
+遗留：开发/修复过程中 mimo 3 次被模型供应商内容过滤拦断 ⇒ 验收方依 COLLAB C-01 代修 11 处（编译 5 + 测试 1 + Parse 口径 1 + CI 可观测 4），全部为机械修复或验收方职权内的口径定义；mimo 的原始实现为基座

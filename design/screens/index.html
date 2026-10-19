@@ -156,6 +156,49 @@
   .qa h3{margin:0 0 12px;font-size:15px}
   .qa ol{margin:0;padding-left:22px;color:var(--t2);font-size:13.5px;line-height:2}
   .qa b{color:var(--t1)}
+
+  /* ---------- S03 扫码 ---------- */
+  .sc{position:absolute;inset:0;background:#0B0F14;display:flex;flex-direction:column}
+  .sc-top{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;flex:none}
+  .sc-top .t{font-size:15px;font-weight:700}
+  .sc-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14)}
+  .finder{width:244px;height:244px;position:relative;margin:56px auto 0}
+  .finder i{position:absolute;width:36px;height:36px;border:4px solid #fff;border-radius:6px}
+  .f1{top:0;left:0;border-right:0;border-bottom:0}.f2{top:0;right:0;border-left:0;border-bottom:0}
+  .f3{bottom:0;left:0;border-right:0;border-top:0}.f4{bottom:0;right:0;border-left:0;border-top:0}
+  .laser{position:absolute;left:10px;right:10px;top:50%;height:3px;background:#38E08B;border-radius:2px;box-shadow:0 0 14px #38E08B}
+  .sc-hint{color:rgba(255,255,255,.85);font-size:14px;text-align:center;margin-top:24px;line-height:1.7}
+  .sc-hint .sub{display:block;color:rgba(255,255,255,.55);font-size:12.5px;margin-top:4px}
+  .sc-manual{margin:16px auto 0;width:210px;height:48px;border:1px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .errband{position:absolute;left:12px;right:12px;bottom:14px;background:#FDECEA;border:2px solid #B42318;border-radius:14px;padding:14px 16px;color:#B42318}
+  .errband .h{font-size:15px;font-weight:800;display:flex;gap:8px;align-items:center}
+  .errband .s{font-size:13px;color:#712B13;margin-top:6px;line-height:1.65}
+  .errband .c{font-family:ui-monospace,monospace;font-size:11.5px;color:#98A2B3;margin-top:8px}
+  .oksheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 18px 18px;box-shadow:0 -8px 30px rgba(0,0,0,.3)}
+  .grab{width:44px;height:5px;border-radius:99px;background:#D0D5DD;margin:2px auto 12px}
+  .okh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .okh .ic{width:34px;height:34px;border-radius:10px;background:#E4F4EC;display:flex;align-items:center;justify-content:center}
+  .okh .h{font-size:13px;color:#667085;font-weight:600}
+  .okh .v{font-size:16px;font-weight:800;margin-top:2px}
+  .codebox{font-family:ui-monospace,monospace;font-size:13.5px;font-weight:700;letter-spacing:.4px;white-space:nowrap;background:#F9FAFB;border:1px dashed #D0D5DD;border-radius:10px;padding:11px;text-align:center;margin-bottom:12px}
+  .kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-bottom:14px}
+  .kv2 div{font-size:12.5px;color:#667085}
+  .kv2 b{display:block;font-size:15px;color:#101828;margin-top:2px}
+  .btnrow{display:flex;gap:10px}
+  .btn2{height:56px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;border:0}
+  .b-sec{flex:0 0 32%;background:#fff;border:1px solid #D0D5DD;color:#475467}
+  .b-pri{flex:1;background:#0B4F9E;color:#fff}
+  .note2{font-size:12px;color:#667085;text-align:center;margin-top:10px}
+  .manualbox{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 18px 18px}
+  .mstep{font-size:12.5px;color:#667085;font-weight:600;margin-bottom:8px}
+  .msel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+  .mopt{height:52px;border-radius:11px;border:1px solid #D0D5DD;font-size:13px;font-weight:600;color:#475467;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .mopt b{font-size:13.5px}
+  .mopt.on{border:2px solid #0B4F9E;background:#E8F0FB;color:#0B4F9E}
+  .minput{display:flex;align-items:center;gap:8px;background:#F9FAFB;border:1px solid #D0D5DD;border-radius:11px;padding:12px 14px;margin-bottom:10px}
+  .minput .lb{font-size:13px;color:#475467;font-weight:600;flex:none}
+  .minput .ph{font-size:19px;color:#98A2B3;font-weight:700;letter-spacing:3px}
+  .mcalc{font-size:12.5px;color:#067647;font-weight:700;text-align:center;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -180,7 +223,7 @@
       <tr class="rowhead"><td colspan="5">通用</td></tr>
       <tr><td>S01</td><td class="nm">登录 · 飞书授权</td><td>—</td><td>全部</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S02</td><td class="nm">现场首页</td><td>—</td><td>3 变体</td><td><span class="st now">已出</span></td></tr>
-      <tr><td>S03</td><td class="nm">扫码</td><td>—（取景/确认卡/手输/异常）</td><td>收货 · 生产</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S03</td><td class="nm">扫码</td><td>—（取景/确认卡/手输/异常）</td><td>收货 · 生产</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">收货（receiver）</td></tr>
       <tr><td>S04</td><td class="nm">到货确认（选预报 · 含退车）</td><td>recv.arrive.confirm · recv.return</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S05</td><td class="nm">过磅</td><td>recv.weigh</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
@@ -559,6 +602,124 @@
       <li><b>底部导航为平级 Tab，无全局扫码键</b>（D25，2026-10-19 修订）：各业务页进入即扫，追溯页首屏放大号扫码入口</li>
     </ol>
   </div>
+
+
+  <!-- ==================== S03 ==================== -->
+  <div class="sec-h" id="s03"><span class="no">S03</span><h2>扫码（业务页内嵌，无全局入口 · D25）</h2></div>
+  <p class="sec-desc">扫码不是一个独立页面，而是<b>所有业务页共用的取景层</b>：从哪个业务进来，顶栏就写谁（如「投料 · 扫袋码」），确认按钮文案也跟着变。失败文案与后端 <code>GET /api/recv/scan</code> 的三类「不存在」一一对应，禁止合并成一句「扫码失败」。</p>
+
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen" style="background:#0B0F14">
+        <div class="sbar" style="background:#0B0F14;color:#C7CDD6"><span>9:41</span><span class="mid" style="background:#000"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="sc">
+          <div class="sc-top">
+            <div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div>
+            <div class="t">投料 · 扫袋码</div>
+            <div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 5 14h6l-1 8 8-12h-6z"/></svg></div>
+          </div>
+          <div class="finder"><i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i><div class="laser"></div></div>
+          <div class="sc-hint">对准袋上二维码，自动识别<span class="sub">识别成功：震动 + 蜂鸣 + 尾 6 位大字回显</span></div>
+          <div class="sc-manual">手输：先选父对象 → 输袋序</div>
+          <div class="note2" style="color:rgba(255,255,255,.45);margin-bottom:14px">扫码枪对准即扫，无需按键</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>① 取景态（归属：投料）</b><br>顶栏写明业务，杜绝「这一扫算谁的」</div>
+    </div>
+
+    <div class="fitem">
+      <div class="phone"><div class="screen" style="background:#0B0F14">
+        <div class="sbar" style="background:#0B0F14;color:#C7CDD6"><span>9:41</span><span class="mid" style="background:#000"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="sc" style="opacity:.55">
+          <div class="sc-top"><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div class="t">投料 · 扫袋码</div><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 5 14h6l-1 8 8-12h-6z"/></svg></div></div>
+          <div class="finder"><i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i></div>
+        </div>
+        <div class="oksheet">
+          <div class="grab"></div>
+          <div class="okh">
+            <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#067647" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></div>
+            <div><div class="h">已识别 · 原料吨袋</div><div class="v">湘F·A1234 第 13 袋</div></div>
+          </div>
+          <div class="codebox">1B 02 1019 0001 000123 00 013 000 7</div>
+          <div class="kv2">
+            <div>物料<b>石油焦（硫&lt;1%）</b></div>
+            <div>毛重<b>1.02 t</b></div>
+            <div>当前批<b>2410-007 · 已投 18/40</b></div>
+            <div>状态<b>可投料</b></div>
+          </div>
+          <div class="btnrow">
+            <button class="btn2 b-sec">重扫</button>
+            <button class="btn2 b-pri">确认投料</button>
+          </div>
+          <div class="note2">确认后记录不可修改；连续扫下一袋时本卡自动关闭</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>② 识别成功 · 确认卡</b><br>只留四个关键字段，主按钮文案随业务变</div>
+    </div>
+
+    <div class="fitem">
+      <div class="phone"><div class="screen" style="background:#0B0F14">
+        <div class="sbar" style="background:#0B0F14;color:#C7CDD6"><span>9:41</span><span class="mid" style="background:#000"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="sc" style="opacity:.55">
+          <div class="sc-top"><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div class="t">投料 · 扫袋码</div><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 5 14h6l-1 8 8-12h-6z"/></svg></div></div>
+          <div class="finder"><i class="f1" style="border-color:#F09595"></i><i class="f2" style="border-color:#F09595"></i><i class="f3" style="border-color:#F09595"></i><i class="f4" style="border-color:#F09595"></i></div>
+          <div class="sc-hint" style="color:#F09595">识别失败 · 见下方原因</div>
+        </div>
+        <div class="errband">
+          <div class="h"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 16.6v.4"/><circle cx="12" cy="12" r="9"/></svg>不能重复投料</div>
+          <div class="s">该袋已于 09:41 投入批 2410-007。如投错了，请用「投料更正」（限本班次内）。</div>
+          <div class="c">HTTP 409 · ALREADY_FED · 1B 02 …013 7</div>
+          <div class="btnrow" style="margin-top:12px">
+            <button class="btn2 b-sec" style="flex:1">返回投料</button>
+            <button class="btn2 b-pri" style="flex:1;background:#B42318">作废此扫码</button>
+          </div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>③ 业务拒绝（HTTP 409）</b><br>三类「不存在」各有专属文案，不许合并</div>
+    </div>
+
+    <div class="fitem">
+      <div class="phone"><div class="screen" style="background:#0B0F14">
+        <div class="sbar" style="background:#0B0F14;color:#C7CDD6"><span>9:41</span><span class="mid" style="background:#000"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="sc" style="opacity:.55">
+          <div class="sc-top"><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div class="t">投料 · 手输</div><div class="sc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 5 14h6l-1 8 8-12h-6z"/></svg></div></div>
+          <div class="finder"><i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i></div>
+        </div>
+        <div class="manualbox">
+          <div class="grab"></div>
+          <div class="mstep">第 1 步 · 选父对象（本批投料的父＝生产批）</div>
+          <div class="msel">
+            <div class="mopt"><b>车次</b><span>A-0001</span></div>
+            <div class="mopt on"><b>生产批</b><span>2410-007</span></div>
+            <div class="mopt"><b>成品批</b><span>D-…002</span></div>
+          </div>
+          <div class="minput"><span class="lb">袋序</span><span class="ph">013</span></div>
+          <div class="mcalc">校验位自动计算：1B 02 1019 0001 000123 00 013 000 <b>7</b> ✓</div>
+          <div class="btnrow">
+            <button class="btn2 b-sec">取消</button>
+            <button class="btn2 b-pri">生成并继续</button>
+          </div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>④ 手输（二维码破损时）</b><br>选父对象 → 输序号，校验位系统算，工人不碰 27 位裸串</div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>项目</th><th>规格</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>入口（D25）</td><td>无全局扫码键；投料/取样/装车页进入即为本取景层；追溯页用 ScanHero（≥120dp）</td><td>顶栏左侧返回，标题＝「业务名 · 对象」</td></tr>
+      <tr><td>识别成功反馈</td><td>40ms 震动 + 双音蜂鸣 + 绿边闪一次 + 尾 6 位 34sp 大字回显 ≥800ms</td><td>声/震/视三通道同时给，车间噪音下不漏</td></tr>
+      <tr><td>确认节奏</td><td>识别 ≠ 提交：底部确认卡二次确认；连续扫模式下确认后自动回取景</td><td>连续模式默认开，可关</td></tr>
+      <tr><td>手输（D07）</td><td>先选父对象（车次/生产批/成品批）→ 输本层序号；校验位系统计算并显示全码</td><td>禁止 27 位裸串输入（spec code_faces.manual_entry）</td></tr>
+      <tr><td>失败分类</td><td>400 码非法→「不是本系统码」；404 →「系统里没有这个码」；409 →按 code 给专属文案与出路；403 →「你的角色无此权限」；已作废→指回追溯</td><td>每类文案不同 + 错误码小字，供排查</td></tr>
+      <tr><td>接口</td><td>GET /api/recv/scan?code=…（解析+状态）；业务动作由各业务页在确认后调用</td><td>扫码层只解析与展示，不做业务写操作</td></tr>
+      <tr><td>手电筒/相机</td><td>右上角手电筒常驻；连续对焦；弱光自动增强</td><td>判据：弱光/污损样本 20 张识别 ≥18（M04）</td></tr>
+      <tr><td>三态</td><td>断网：取景可用、确认时拦（M12）；无权限：业务页入口已隐藏，403 兜底话术</td><td>与 S16 状态族共用组件</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note-inline"><b>S03 与 M04 的接口对齐：</b>解析走 <code>GET /api/recv/scan?code=…</code>，后端把「不存在」分成 400（码非法）/404（对象不存在）/409（业务拒绝）——B2 任务包会要求失败文案映射表逐条对齐这三类，并在单测里各测一条。</div>
 
 </div>
 </body>

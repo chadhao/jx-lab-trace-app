@@ -199,6 +199,41 @@
   .minput .lb{font-size:13px;color:#475467;font-weight:600;flex:none}
   .minput .ph{font-size:19px;color:#98A2B3;font-weight:700;letter-spacing:3px}
   .mcalc{font-size:12.5px;color:#067647;font-weight:700;text-align:center;margin-bottom:12px}
+
+  /* ---------- B3 业务屏 ---------- */
+  .bcard{background:#fff;border:1px solid #EAECF0;border-radius:12px;padding:13px 14px;margin-bottom:10px;display:flex;gap:11px;align-items:center}
+  .bcard .domo{width:42px;height:42px;border-radius:11px;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .bcard .t{font-size:15px;font-weight:700}
+  .bcard .s{font-size:12.5px;color:#667085;margin-top:3px;line-height:1.5}
+  .bcard .go{margin-left:auto;font-size:13px;font-weight:700;color:#0B4F9E;flex:none}
+  .dint{height:64px;border-radius:15px;background:#B42318;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:800;width:100%}
+  .numdisp{display:flex;align-items:baseline;gap:6px;background:#fff;border:2px solid #0B4F9E;border-radius:13px;padding:10px 16px;margin-bottom:10px}
+  .numdisp .n{font-size:34px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .numdisp .u{font-size:14px;color:#475467;font-weight:600}
+  .numdisp .lb{margin-left:auto;font-size:12px;color:#667085}
+  .numpad{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .numpad b{height:52px;border-radius:11px;background:#fff;border:1px solid #D0D5DD;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#101828}
+  .printq{background:#fff;border:1px solid #EAECF0;border-radius:13px;padding:14px 15px;margin-bottom:10px}
+  .printq .qh{display:flex;justify-content:space-between;align-items:baseline}
+  .printq .qn{font-size:15px;font-weight:700}
+  .printq .qc{font-size:12.5px;color:#667085;margin-top:4px;font-family:ui-monospace,monospace;letter-spacing:.5px}
+  .bar3{height:10px;border-radius:99px;background:#EEF0F3;margin-top:10px;overflow:hidden;position:relative}
+  .bar3 i{display:block;height:100%;background:#0B4F9E;border-radius:99px}
+  .seg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+  .seg3 .o{height:46px;border-radius:10px;border:1px solid #D0D5DD;font-size:13px;font-weight:600;color:#475467;display:flex;align-items:center;justify-content:center}
+  .seg3 .o.on{border:2px solid #0B4F9E;background:#E8F0FB;color:#0B4F9E}
+  .pcard{background:#fff;border:1px solid #EAECF0;border-radius:13px;padding:14px 15px;margin-bottom:10px}
+  .pcard .ph{display:flex;justify-content:space-between;align-items:center}
+  .pcard .pt{font-size:15px;font-weight:700}
+  .stat{font-size:11.5px;font-weight:700;border-radius:6px;padding:3px 8px}
+  .stat.on{background:#E4F4EC;color:#067647}
+  .stat.off{background:#F2F4F7;color:#667085}
+  .pcard .pd{font-size:12.5px;color:#475467;margin-top:8px;line-height:1.75}
+  .mehead{background:#0B4F9E;color:#fff;padding:18px 16px 16px;display:flex;align-items:center;gap:12px}
+  .mehead .ava2{width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800}
+  .mehead .n{font-size:17px;font-weight:800}
+  .mehead .r{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:3px}
+  .calloff{background:#FDF0E4;border:1px solid #EAC9A8;border-radius:11px;padding:10px 13px;font-size:12.5px;color:#B54708;line-height:1.6;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -225,11 +260,11 @@
       <tr><td>S02</td><td class="nm">现场首页</td><td>—</td><td>3 变体</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S03</td><td class="nm">扫码</td><td>—（取景/确认卡/手输/异常）</td><td>收货 · 生产</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">收货（receiver）</td></tr>
-      <tr><td>S04</td><td class="nm">到货确认（选预报 · 含退车）</td><td>recv.arrive.confirm · recv.return</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S05</td><td class="nm">过磅</td><td>recv.weigh</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S06</td><td class="nm">建袋打码（含补打）</td><td>recv.bag.gen · label.print · label.reprint</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S04</td><td class="nm">到货确认（选预报 · 含退车）</td><td>recv.arrive.confirm · recv.return</td><td>收货员</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S05</td><td class="nm">过磅</td><td>recv.weigh</td><td>收货员</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S06</td><td class="nm">建袋打码（含补打）</td><td>recv.bag.gen · label.print · label.reprint</td><td>收货员</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">生产（production）</td></tr>
-      <tr><td>S07</td><td class="nm">取样</td><td>sample.take（需 BACKEND-REQ-01 授权）</td><td><b>生产班组</b></td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S07</td><td class="nm">取样</td><td>sample.take（需 BACKEND-REQ-01 授权）</td><td><b>生产班组</b></td><td><span class="st now">已出</span></td></tr>
       <tr><td>S08</td><td class="nm">建批</td><td>prod.batch.create</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S09</td><td class="nm">投料（含更正）</td><td>prod.feed.scan · feed.correct</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S10</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
@@ -239,7 +274,7 @@
       <tr><td>S13</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S14</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st todo">待出图</span></td></tr>
       <tr class="rowhead"><td colspan="5">个人与全局</td></tr>
-      <tr><td>S15</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S15</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S16</td><td class="nm">全局状态族</td><td>—（断网/无预报/无权限/码无效）</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
     </tbody>
   </table>
@@ -720,6 +755,210 @@
   </table>
 
   <div class="note-inline"><b>S03 与 M04 的接口对齐：</b>解析走 <code>GET /api/recv/scan?code=…</code>，后端把「不存在」分成 400（码非法）/404（对象不存在）/409（业务拒绝）——B2 任务包会要求失败文案映射表逐条对齐这三类，并在单测里各测一条。</div>
+
+
+  <!-- ==================== S04 ==================== -->
+  <div class="sec-h" id="s04"><span class="no">S04</span><h2>收货 · 到货确认（选预报 · 含退车 · 无预报拦截）</h2></div>
+  <p class="sec-desc">必填项 <b>0</b>：工人只做「选一条预报 → 确认到货」。预报一律在 PC 端建（D 裁决），APP 遇到没预报的车就拦——拦截页给「最近 3 条同牌预报 + 一键拨号」，不给死胡同。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava">刘</div><div><div class="n">到货确认</div><div class="r">10月20日 · 待确认 2 车</div></div></div></div>
+        <div class="body">
+          <div class="bcard"><div class="domo" style="background:#1D4ED8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></div>
+            <div><div class="t">湘F·A1234 · 第 2 车</div><div class="s">岳阳观盛 · 石油焦（硫&lt;1%）· 40 袋</div></div><div class="go">确认到货 ›</div></div>
+          <div class="bcard"><div class="domo" style="background:#1D4ED8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></div>
+            <div><div class="t">湘E·B6677 · 第 4 车</div><div class="s">岳阳观盛 · 石油焦（硫&lt;1%）· 38 袋</div></div><div class="go">确认到货 ›</div></div>
+          <div class="sech"><span>已完成</span></div>
+          <div class="row"><i class="bar"></i><div><div class="t">湘E·B6677 · 第 3 车</div><div class="s">08:05 · 32 袋 · 已生成车码</div></div><div class="v">已入库</div></div>
+          <div class="calloff" style="margin-top:6px">车到了但列表里没有？<b>下拉刷新</b>仍无 ⇒ 点右下角「无预报登记」走拦截流程</div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>① 选预报 → 确认到货</b><br>必填 0：点选即确认，车码自动生成</div>
+    </div>
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">无预报登记</div></div></div></div>
+        <div class="body">
+          <div class="banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+            该车牌今日无预报，暂不能收货
+          </div>
+          <div class="objcard" style="padding:13px"><span class="tp" style="background:#FDECEA;color:#B42318">湘F·A1234</span><div class="meta" style="margin-top:8px">请先电话联系综合运营部补预报，补录后<b>下拉刷新本页</b>即可继续</div></div>
+          <div class="dint"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 4h4l2 5-3 2a13 13 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>一键拨号 0730-XXXXXXX</div>
+          <div class="sech"><span>该车牌最近 3 条预报</span></div>
+          <div class="row"><i class="bar"></i><div><div class="t">10-18 · 第 1 车</div><div class="s">岳阳观盛 · 40 袋 · 已完成</div></div></div>
+          <div class="row"><i class="bar"></i><div><div class="t">10-16 · 第 2 车</div><div class="s">岳阳观盛 · 38 袋 · 已完成</div></div></div>
+          <div class="row"><i class="bar"></i><div><div class="t">10-15 · 第 1 车</div><div class="s">岳阳观盛 · 40 袋 · 已完成</div></div></div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>② 无预报拦截（S18 族实装）</b><br>原因 + 最近 3 条 + 一键拨号，无死胡同</div>
+    </div>
+  </div>
+
+  <!-- ==================== S05 ==================== -->
+  <div class="sec-h" id="s05"><span class="no">S05</span><h2>收货 · 过磅</h2></div>
+  <p class="sec-desc">必填 <b>0–1</b>：只录一次毛重；皮重默认取该车历史（可改）；净重自动算。全键盘大键位（手套可用）。D22：一期全部手输，不接磅秤。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">过磅 · 湘F·A1234</div><div class="r">预报 40 袋 · 岳阳观盛</div></div></div></div>
+        <div class="body">
+          <div class="fld"><div class="lb"><span>皮重</span><span class="rng">历史 8.62 t · 可改</span></div>
+            <div class="val"><span class="num" style="color:#475467">8.62</span><span class="u">t</span></div></div>
+          <div class="fld active"><div class="lb"><span>毛重</span><span class="req">必填</span></div>
+            <div class="val"><span class="num">32.18</span><span class="u">t</span></div></div>
+          <div class="fld" style="background:#F9FAFB"><div class="lb"><span>净重（自动）</span></div>
+            <div class="val"><span class="num" style="color:#067647">23.56</span><span class="u">t</span></div></div>
+          <div class="numpad">
+            <b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>.</b><b>0</b><b>⌫</b>
+          </div>
+        </div>
+        <div class="footnav"><button class="btn pri">提交过磅</button>
+          <div class="note" style="margin-top:8px">提交后进入「建袋打码」；袋数默认按净重折算，可改</div></div>
+      </div></div>
+      <div class="fcap"><b>过磅录入</b><br>录 1 个数，其余全默认/自动</div>
+    </div>
+  </div>
+
+  <!-- ==================== S06 ==================== -->
+  <div class="sec-h" id="s06"><span class="no">S06</span><h2>收货 · 建袋打码（连打 + 补打）</h2></div>
+  <p class="sec-desc">必填 <b>0–1</b>：袋数默认按过磅净重折算；序号系统连号；「开始打印」后逐张出 100×100 袋码（TSPL 位图），进度实时、可暂停。补打必须填原因。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">建袋打码 · 湘F·A1234</div><div class="r">净重 23.56 t · KM-118BT 已连接</div></div></div></div>
+        <div class="body">
+          <div class="printq">
+            <div class="qh"><div class="qn">正在打印 12 / 40</div><div class="pill ok">进行中</div></div>
+            <div class="qc">1B 02 1020 0001 000124 00 012 000 3</div>
+            <div class="bar3"><i style="width:30%"></i></div>
+            <div class="s" style="font-size:12px;color:#667085;margin-top:8px">每张 ≈1.2s · 预计还需 34s · 已出 12 张无异常</div>
+          </div>
+          <div class="bcard"><div class="domo" style="background:#123A8C"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V4h10v4"/><rect x="4" y="8" width="16" height="8" rx="2"/><path d="M7 16h10v4H7z"/></svg></div>
+            <div><div class="t">袋数 40</div><div class="s">按净重 23.56 t ÷ 0.6 t 折算，可改</div></div><div class="go">修改 ›</div></div>
+          <div class="bcard"><div class="domo" style="background:#067647"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></div>
+            <div><div class="t">40 袋已建</div><div class="s">序号 0001–0040 连号 · 车码已更新</div></div></div>
+          <div class="btnrow">
+            <button class="btn2 b-sec" style="flex:1">暂停</button>
+            <button class="btn2 b-pri" style="flex:1">全部打完再回来</button>
+          </div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>① 连打进行中</b><br>袋数 0 决策：默认折算，可改；进度/异常实时</div>
+    </div>
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">补打标签</div><div class="r">湘F·A1234 · 车码 A-0001</div></div></div></div>
+        <div class="body">
+          <div class="banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+            补打会生成审计记录，必须填原因
+          </div>
+          <div class="fld active"><div class="lb"><span>补打对象</span></div>
+            <div class="val"><span style="font-size:16px;font-weight:700">第 7 袋</span><span class="rng">扫码或输序号定位</span></div></div>
+          <div class="seg3">
+            <div class="o on">标签破损</div><div class="o">打印模糊</div><div class="o">贴错重贴</div>
+          </div>
+          <div class="fld"><div class="lb"><span>原因说明</span><span class="req">必填</span></div>
+            <div class="val"><span style="font-size:14px;color:#98A2B3">撕破重贴，位置不变</span></div></div>
+          <div class="fld"><div class="lb"><span>补打张数</span></div>
+            <div class="val"><span class="num" style="font-size:22px">1</span><span class="u">张</span></div></div>
+        </div>
+        <div class="footnav"><button class="btn pri">确认补打</button></div>
+      </div></div>
+      <div class="fcap"><b>② 补打（须原因）</b><br>原因三选一 + 说明；空原因时提交禁用</div>
+    </div>
+  </div>
+
+  <!-- ==================== S07 ==================== -->
+  <div class="sec-h" id="s07"><span class="no">S07</span><h2>取样（生产班组）</h2></div>
+  <p class="sec-desc">必填 <b>0–1</b>：扫对象码（复用 S03 确认卡，宿主＝取样）后，取样类型与数量都给默认值；取样人取登录账号（D16，后端授权已生效）。**无留样入库**（化验室 PC）。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">取样</div><div class="r">王建国 · 生产班组</div></div></div></div>
+        <div class="body">
+          <div class="objcard" style="padding:13px">
+            <span class="tp" style="background:#FDF0E4;color:#B54708">生产批 · 已确认</span>
+            <h3 style="font-size:17px;margin:8px 0 4px">2410-007 · 1 号磨</h3>
+            <div class="meta">已投 18 / 40 袋 · 出磨 32 min</div>
+          </div>
+          <div class="seg3">
+            <div class="o on">份样</div><div class="o">大样</div><div class="o">保留样</div>
+          </div>
+          <div class="fld active"><div class="lb"><span>取样量</span><span class="rng">默认 500 g</span></div>
+            <div class="val"><span class="num">500</span><span class="u">g</span></div></div>
+          <div class="fld"><div class="lb"><span>份样数</span><span class="rng">按批约定 5</span></div>
+            <div class="val"><span class="num" style="font-size:22px">5</span><span class="u">个</span></div></div>
+          <div class="fld"><div class="lb"><span>样品编号</span></div>
+            <div class="val"><span style="font-size:15px;font-weight:700;font-family:ui-monospace,monospace">1C 02 1020 0001 000007 02 001 00 2</span></div></div>
+          <div class="note-inline" style="margin:0">取样人＝王建国（登录账号，不可改）。取样后<b>样品交化验室</b>：登记柜位与检测在 PC 端；检测结论走 S13 追溯只读。</div>
+        </div>
+        <div class="footnav"><button class="btn pri">确认取样</button></div>
+      </div></div>
+      <div class="fcap"><b>取样表单</b><br>类型/数量全默认，编号系统分配</div>
+    </div>
+  </div>
+
+  <!-- ==================== S15 ==================== -->
+  <div class="sec-h" id="s15"><span class="no">S15</span><h2>我的 · 打印机</h2></div>
+  <p class="sec-desc">个人页承载三件事：身份与权限展示、<b>公用蓝牙标签机</b>的连接与自检（KM-118BT · TSPL 主通道已实测）、帮助（紧急放行指引 + 一键拨号）。退出登录清 Cookie 与本地缓存。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="mehead">
+          <div class="ava2">刘</div>
+          <div><div class="n">刘川</div><div class="r">收货员 · 综合运营部 · 权限 4 项</div></div>
+        </div>
+        <div class="body">
+          <div class="pcard">
+            <div class="ph"><div class="pt">标签打印机</div><span class="stat on">已连接</span></div>
+            <div class="pd">KM-118BT · 蓝牙 · 信号 良好<br>主通道 <b>TSPL</b> · 纸宽 100mm · 203dpi<br>上次自检 10-20 09:20 · 通过</div>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="btn2 b-sec" style="flex:1">自检打印</button>
+              <button class="btn2 b-pri" style="flex:1">管理</button>
+            </div>
+          </div>
+          <div class="pcard"><div class="ph"><div class="pt">紧急放行怎么办</div></div>
+            <div class="pd">APP 不办理紧急放行。请联系主管在 PC 端审批。<br><b style="color:#0B4F9E">一键拨号 0730-XXXXXXX</b></div></div>
+          <div class="pcard"><div class="ph"><div class="pt">今日我的作业</div><span class="go" style="font-size:13px;font-weight:700;color:#0B4F9E">›</span></div>
+            <div class="pd">收货 2 车 · 打码 72 袋 · 过磅 2 次</div></div>
+          <div class="pcard"><div class="ph"><div class="pt">退出登录</div></div>
+            <div class="pd">清本地会话与 Cookie（飞书账号同步）</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>我的 · 打印机</b><br>连接状态/自检/主通道一目了然</div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>页面</th><th>接口（后端已存在）</th><th>自动化要点</th></tr></thead>
+    <tbody>
+      <tr><td>S04 到货确认</td><td>GET /api/recv/notices · POST /api/recv/arrivals · POST /api/recv/trucks/:id/return</td><td>选预报即确认；无预报拦截页（拨号 + 最近 3 条，本地过滤 D23）</td></tr>
+      <tr><td>S05 过磅</td><td>POST /api/recv/trucks/:id/weigh</td><td>皮重默认取该车历史；净重自动；NumPad ≥64dp</td></tr>
+      <tr><td>S06 建袋打码</td><td>POST /api/recv/trucks/:id/bags · POST /api/recv/labels/print · POST /api/recv/labels/reprint（须原因）</td><td>袋数按净重折算；连打进度实时；重试幂等</td></tr>
+      <tr><td>S07 取样</td><td>GET /api/sample/targets · POST /api/sample/take</td><td>取样量默认 500g；sampled_by=登录账号不可改；无留样入库</td></tr>
+      <tr><td>S15 我的·打印机</td><td>本地蓝牙 + PrinterProfile（TSPL 主通道已实测）</td><td>自检打印（100mm 标尺）；断连给「去连接」不给白屏</td></tr>
+    </tbody>
+  </table>
 
 </div>
 </body>

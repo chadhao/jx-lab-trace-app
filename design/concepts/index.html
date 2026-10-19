@@ -84,12 +84,12 @@
   .pill.ok{background:var(--qc-soft);color:var(--qc)}
 
   .blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .blk{border-radius:var(--r-lg);padding:16px;color:#fff;position:relative;min-height:132px;display:flex;flex-direction:column;justify-content:space-between}
+  .blk{border-radius:var(--r-lg);padding:16px;color:#fff;position:relative;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
   .blk .tt{font-size:20px;font-weight:800;letter-spacing:.5px}
   .blk .sb{font-size:13px;opacity:.92;margin-top:4px;line-height:1.45}
   .blk svg{opacity:.95}
   .blk .cnt{position:absolute;right:14px;top:12px;font-size:13px;font-weight:800;background:rgba(255,255,255,.22);border-radius:8px;padding:3px 8px}
-  .b-recv{background:var(--recv)} .b-prod{background:var(--prod)} .b-qc{background:var(--qc)} .b-trace{background:var(--trace)}
+  .b-recv{background:var(--recv)} .b-prod{background:var(--prod)} .b-qc{background:var(--qc)} .b-ship{background:var(--ship)} .b-trace{background:var(--trace)}
 
   .sec{margin:18px 0 8px;font-size:13px;font-weight:700;color:var(--t3);letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
   .row{background:#fff;border:1px solid #EAECF0;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
@@ -126,7 +126,7 @@
   .okhead .ic{width:36px;height:36px;border-radius:11px;background:var(--qc-soft);display:flex;align-items:center;justify-content:center}
   .okhead .h{font-size:14px;color:var(--t3);font-weight:600}
   .okhead .v{font-size:16px;font-weight:800;margin-top:2px}
-  .code{font-family:"Roboto Mono",ui-monospace,monospace;font-size:17px;font-weight:700;letter-spacing:1.6px;background:var(--sunken);border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center;margin-bottom:14px}
+  .code{font-family:"Roboto Mono",ui-monospace,monospace;font-size:16px;font-weight:700;letter-spacing:.8px;white-space:nowrap;background:var(--sunken);border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center;margin-bottom:14px}
   .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:16px}
   .kv div{font-size:13px;color:var(--t3)}
   .kv b{display:block;font-size:16px;color:var(--t1);margin-top:3px}
@@ -186,10 +186,10 @@
 
   /* ---------- C: big buttons ---------- */
   .grid6{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .big{border-radius:18px;padding:18px 16px;color:#fff;min-height:158px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
-  .big .tt{font-size:21px;font-weight:800;letter-spacing:.5px;line-height:1.2}
-  .big .sb{font-size:13px;opacity:.92;margin-top:6px;line-height:1.4}
-  .big .n{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+  .gbtn{border-radius:18px;padding:18px 16px;color:#fff;min-height:158px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+  .gbtn .tt{font-size:21px;font-weight:800;letter-spacing:.5px;line-height:1.2}
+  .gbtn .sb{font-size:13px;opacity:.92;margin-top:6px;line-height:1.4}
+  .gbtn .n{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
 
   /* form */
   .fld{background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -541,24 +541,28 @@
           <div class="top" style="padding-bottom:10px"><div class="who"><div class="ava" style="background:#1D4ED8">刘</div><div><div class="n">刘川 · 收货员</div><div class="r">10月19日 周一 · 待收 3 车</div></div></div></div>
           <div class="body" style="padding:14px 16px 0">
             <div class="grid6">
-              <div class="big b-recv"><span class="n">3</span>
+              <div class="gbtn b-recv"><span class="n">3</span>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
                 <div><div class="tt">收货</div><div class="sb">预报 / 过磅</div></div></div>
-              <div class="big b-recv" style="background:#1E40AF"><span class="n">12</span>
+              <div class="gbtn b-recv" style="background:#1E40AF"><span class="n">12</span>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg>
                 <div><div class="tt">贴码</div><div class="sb">逐袋打码</div></div></div>
-              <div class="big b-prod">
+              <div class="gbtn b-prod">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
                 <div><div class="tt">投料</div><div class="sb">当前批 007</div></div></div>
-              <div class="big b-qc">
+              <div class="gbtn b-qc">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L5.5 17A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-3L14 8.5V3"/><path d="M8 14h8"/></svg>
                 <div><div class="tt">取样</div><div class="sb">待取样 5</div></div></div>
-              <div class="big b-ship">
+              <div class="gbtn b-ship">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16h12l3-4h3v4"/><path d="M3 16V8h12"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></svg>
                 <div><div class="tt">出货</div><div class="sb">出场登记</div></div></div>
-              <div class="big b-trace">
+              <div class="gbtn b-trace">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
                 <div><div class="tt">追溯</div><div class="sb">查谱系</div></div></div>
+            </div>
+            <div class="kpi" style="margin-top:14px;padding:12px 14px">
+              <div><div class="n" style="font-size:15px;font-weight:700">今日进度</div><div class="sub">收货 1 / 4 车 · 贴码 12 / 40 袋</div></div>
+              <div class="sp"></div><div class="pill" style="background:#E8F0FB;color:#0B4F9E">进行中</div>
             </div>
           </div>
           <div class="footnav" style="padding:8px 18px 14px"><div class="c3tab">
@@ -635,13 +639,17 @@
 <script>
   const tabs = [...document.querySelectorAll('.tab')];
   const secs = {A:document.getElementById('cA'),B:document.getElementById('cB'),C:document.getElementById('cC')};
+  function show(k){
+    tabs.forEach(x=>x.setAttribute('aria-selected', x.dataset.c===k ? 'true':'false'));
+    Object.entries(secs).forEach(([key,s])=>s.classList.toggle('active', key===k));
+  }
   tabs.forEach(t=>t.addEventListener('click',()=>{
-    tabs.forEach(x=>x.setAttribute('aria-selected','false'));
-    t.setAttribute('aria-selected','true');
-    Object.values(secs).forEach(s=>s.classList.remove('active'));
-    secs[t.dataset.c].classList.add('active');
+    show(t.dataset.c);
+    history.replaceState(null,'','#'+t.dataset.c);
     window.scrollTo({top:0,behavior:'smooth'});
   }));
+  const h=location.hash.replace('#','').toUpperCase();
+  if(secs[h]) show(h);
 </script>
 </body>
 </html>

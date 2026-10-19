@@ -84,7 +84,7 @@ object CodeParser {
         if (type !in OBJECT_TYPES) return Result.Rejected(Reject.TYPE)
 
         val payload = code.substring(0, PAYLOAD_LENGTH)
-        val check = code[PAYLOAD_LENGTH - 1]
+        val check = code[TOTAL_LENGTH - 1] // 校验位是第 27 位（下标 26），不是 payload 末位
         if (checkChar(payload) != check) return Result.Rejected(Reject.CHECKSUM)
 
         var cursor = 0

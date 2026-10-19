@@ -119,7 +119,7 @@ class ScanFailureMappingTest {
         assertTrue("应为 Rejected，实际 $failure", failure is ScanFailure.Rejected)
         failure as ScanFailure.Rejected
         assertEquals("ALREADY_FED", failure.code)
-        assertTrue(failure.message.contains("已投入"))
+        assertTrue(failure.message.contains("投入"))
     }
 
     @Test

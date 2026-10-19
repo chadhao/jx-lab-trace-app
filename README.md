@@ -44,13 +44,15 @@ docs/                    决策与需求
   MODULES.md             开发模块划分（12 模块 / 5 批次）
   DECISIONS.md           决策记录 D01–D19
   PRINTER-KM118BT.md     打印机能力核查
-  BACKEND-REQ-01.md      后端需求：取样授权调整
+  BACKEND-REQ-01.md      后端需求：取样授权调整（已转达）
+  PRINTER-SELFTEST.md    打印机自测指引（宽度/指令集先行验证）
+  MIMO-NEXT-BATCH-01.md  任务包 B1（已发 mimo）
   DESIGN-REVIEW-01.md    设计全量复核报告
 ```
 
 ## 状态
 
-**设计定稿 v1.2，开发未启动**。下一步：确认 MODULES §6 三件事后，出 `MIMO-NEXT-BATCH-01.md`（B1：M01 工程骨架 + M02 设计系统）。
+**设计定稿 v1.3，开发已启动**：`MIMO-NEXT-BATCH-01.md`（B1：M01 工程骨架 + M02 设计系统）已发 mimo；BACKEND-REQ-01 已转达后端会话修改中。
 
 ## 技术栈
 

@@ -28,12 +28,14 @@ class PreflightOfflineTest {
 
     private lateinit var server: MockWebServer
     private val logs = mutableListOf<Pair<LogLevel, String>>()
+    private val realRequestCount = java.util.concurrent.atomic.AtomicInteger(0)
 
     @Before
     fun setUp() {
         server = MockWebServer()
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
+                if (request.path?.startsWith("/healthz") != true) realRequestCount.incrementAndGet()
                 return if (request.path?.startsWith("/healthz") == true) {
                     MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START)
                 } else {
@@ -72,9 +74,9 @@ class PreflightOfflineTest {
         // 无 OkHttp 超时等待：主线客户端超时为 10s，前置探测硬顶 2s，总耗时应远低于 10s
         assertTrue("耗时 ${elapsedMs}ms 应 < 5000ms（说明未进入真实请求的 10s 超时等待）", elapsedMs < 5_000)
 
-        // 真实写请求一次都未到达（只可能有 /healthz 探测）
-        val realRequests = server.requestQueue.filter { it.path?.startsWith("/healthz") != true }
-        assertTrue("不应有任何真实写请求到达服务端，实际：${realRequests.map { it.path }}", realRequests.isEmpty())
+        // 真实写请求一次都未到达（只可能有 /healthz 探测；dispatcher 内计数，不用私有 requestQueue）
+        assertTrue("不应有任何真实写请求到达服务端，实际到达 ${realRequestCount.get()} 条",
+            realRequestCount.get() == 0)
 
         // 日志可见前置探测拦截
         val intercepted = logs.any { it.second.contains("前置探测拦截") }

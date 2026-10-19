@@ -127,7 +127,7 @@ class BagIdempotencyTest {
         assertTrue("期望 Built，实际=$state", state is BagUiState.Built)
         val bags = (state as BagUiState.Built).bags
         assertEquals(40, bags.size)
-        assertEquals(1..40, bags.map { it.bag_seq }.sorted())
+        assertEquals((1..40).toList(), bags.map { it.bag_seq }.sorted())
         // 无重复序号
         assertEquals(bags.size, bags.map { it.bag_seq }.toSet().size)
     }

@@ -17,7 +17,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -128,23 +127,35 @@ class ReprintAndReturnTest {
     }
 
     @Test
-    fun `M5-4 退车无退货判定 - 409 映射为业务错误`() = runTest {
-        server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
+    fun `M5-4 退车无退货判定 - 409 映射为非成功且有话术`() = runTest {
+        // 独立 server：避免中途替换 dispatcher 的时序问题
+        val s409 = MockWebServer()
+        s409.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse =
                 if (request.path?.startsWith("/healthz") == true) {
-                    return MockResponse().setResponseCode(200).setBody("ok")
+                    MockResponse().setResponseCode(200)
+                } else {
+                    MockResponse().setResponseCode(409)
+                        .setBody("""{"error":"该车尚无退货判定，不能退车"}""")
                 }
-                return MockResponse().setResponseCode(409)
-                    .setBody("""{"error":"该车尚无退货判定，不能退车"}""")
-            }
         }
-        val result = repo().returnTruck(3)
-        // 409 走 Server 分类（网络层 mapResponse 对非 2xx 归 Server）——
-        // 但 409 非 401/403 ⇒ ApiError.Server；断言失败类型非 Success 且有话术
-        assertNotNull(result)
-        assertTrue(result is ApiResult.Failure)
-        val error = (result as ApiResult.Failure).error
-        assertFalse(error.userMessage.isBlank())
-        assertTrue(error is ApiError.Server || error is ApiError.Biz)
+        s409.start()
+        try {
+            val api = ApiClient(
+                baseUrl = s409.url("/").toString(),
+                cookieJar = JxCookieJar(InMemorySidStore()),
+                logger = JxLogger { _, _, _ -> },
+            )
+            val result = RecvRepository(api).returnTruck(3)
+            assertTrue("409 应为 Failure，实际=$result", result is ApiResult.Failure)
+            val error = (result as ApiResult.Failure).error
+            assertFalse("话术不得为空", error.userMessage.isBlank())
+            assertTrue(
+                "409 应映射 Server/Biz，实际=${error::class.simpleName}",
+                error is ApiError.Server || error is ApiError.Biz,
+            )
+        } finally {
+            s409.shutdown()
+        }
     }
 }

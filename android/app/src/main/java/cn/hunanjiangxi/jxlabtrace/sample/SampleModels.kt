@@ -7,6 +7,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 
 // ===== M06 取样（S07 · 生产班组）=====
 // 后端契约（internal/httpapi/sample.go 实读）：
@@ -129,11 +131,44 @@ class SampleRepository(
         }
     }
 
-    /** 取样提交。 */
+    /**
+     * 取样提交。
+     * ★ 后端 2xx 响应含 `"code":"<27位对象码>"` —— 会被 ApiClient envelope 的
+     * 业务码检查误判为 Biz；故此处不经 envelope code 检查，仅按 HTTP 状态判定
+     * （与 ScanService 直 GET 同口径：状态码映射 + 2xx 即成功）。
+     */
     suspend fun take(body: SampleTakeBody): ApiResult<Unit> =
-        api.executeWrite("POST", "/api/sample/take", SampleForm.toJson(body)) {
-            // 响应形状随后端版本变化；提交成功以 2xx envelope 为准
-            Unit
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (!api.currentlyOnline()) {
+                return@withContext ApiResult.Failure(cn.hunanjiangxi.jxlabtrace.net.ApiError.Offline())
+            }
+            if (!api.preflight()) {
+                return@withContext ApiResult.Failure(cn.hunanjiangxi.jxlabtrace.net.ApiError.Offline())
+            }
+            val request = okhttp3.Request.Builder()
+                .url(api.urlOf("/api/sample/take"))
+                .post(
+                    SampleForm.toJson(body)
+                        .toRequestBody("application/json; charset=utf-8".toMediaType()),
+                )
+                .build()
+            try {
+                api.httpClient.newCall(request).execute().use { response ->
+                    when {
+                        response.code == 401 ->
+                            ApiResult.Failure(cn.hunanjiangxi.jxlabtrace.net.ApiError.Unauthorized())
+                        response.code == 403 ->
+                            ApiResult.Failure(cn.hunanjiangxi.jxlabtrace.net.ApiError.Forbidden())
+                        !response.isSuccessful ->
+                            ApiResult.Failure(
+                                cn.hunanjiangxi.jxlabtrace.net.ApiError.Server(response.code),
+                            )
+                        else -> ApiResult.Success(Unit)
+                    }
+                }
+            } catch (e: java.io.IOException) {
+                ApiResult.Failure(cn.hunanjiangxi.jxlabtrace.net.ApiError.Offline())
+            }
         }
 
     private fun JsonObject.str(key: String): String =

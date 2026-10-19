@@ -11,9 +11,12 @@ import cn.hunanjiangxi.jxlabtrace.recv.BagPrintViewModel
 import cn.hunanjiangxi.jxlabtrace.recv.BagUiState
 import cn.hunanjiangxi.jxlabtrace.recv.RecvBag
 import cn.hunanjiangxi.jxlabtrace.recv.RecvRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -56,7 +59,7 @@ class BagIdempotencyTest {
                 val path = request.path.orEmpty()
                 return when {
                     path.startsWith("/healthz") ->
-                        MockResponse().setResponseCode(200).setBody("ok")
+                        MockResponse().setResponseCode(200)
                     request.method == "POST" && path.endsWith("/bags") -> {
                         bagsPostCount++
                         // 第一次建袋：模拟中途失败（第 13 袋 500）
@@ -107,7 +110,7 @@ class BagIdempotencyTest {
     }
 
     @Test
-    fun `ViewModel建袋重试 - 幂等恢复且不重复POST建袋`() = runTest {
+    fun `ViewModel建袋重试 - 幂等恢复且不重复POST建袋`() = runBlocking {
         val repository = repo()
         val session = SessionCoordinator { true }
         val vm = BagPrintViewModel(
@@ -115,11 +118,12 @@ class BagIdempotencyTest {
             session = session,
             truckId = 3,
             printOne = { ApiResult.Success(Unit) },
+            scope = kotlinx.coroutines.CoroutineScope(Dispatchers.Unconfined),
         )
         vm.load(defaultNet = 23.56)
-        advanceUntilIdle()
-        // load 后已有 40 袋 ⇒ 直接 Built（不触发 POST /bags）
-        val state = vm.state.value
+        val state = withTimeout(10_000) {
+            vm.state.first { it is BagUiState.Built || it is BagUiState.Error }
+        }
         assertTrue("期望 Built，实际=$state", state is BagUiState.Built)
         val bags = (state as BagUiState.Built).bags
         assertEquals(40, bags.size)

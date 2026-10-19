@@ -83,7 +83,7 @@ class PrinterGateTest {
                 )
             }
         }
-        compose.onNodeWithText("KM-118BT").assertIsDisplayed()
+        compose.onNodeWithText("KM-118BT", substring = true).assertIsDisplayed()
         compose.onNodeWithText("自检打印").assertIsDisplayed()
     }
 

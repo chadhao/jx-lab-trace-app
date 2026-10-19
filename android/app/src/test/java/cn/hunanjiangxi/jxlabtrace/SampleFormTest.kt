@@ -36,7 +36,7 @@ class SampleFormTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 if (request.path?.startsWith("/healthz") == true) {
-                    return MockResponse().setResponseCode(200).setBody("ok")
+                    return MockResponse().setResponseCode(200)
                 }
                 if (request.method == "POST" && request.path?.contains("/sample/take") == true) {
                     takeBody = request.body.readUtf8()
@@ -109,7 +109,7 @@ class SampleFormTest {
         )
         assertTrue(SampleForm.isValid(body))
         val result = SampleRepository(api).take(body)
-        assertTrue(result is ApiResult.Success)
+        assertTrue("take 应成功，实际=$result", result is ApiResult.Success)
 
         val sent = requireNotNull(takeBody)
         assertTrue("含 target_type", sent.contains("\"target_type\""))

@@ -39,12 +39,14 @@ class ReprintAndReturnTest {
                 if (request.method == "POST") recorded.add(request)
                 return when {
                     request.path?.startsWith("/healthz") == true ->
-                        MockResponse().setResponseCode(200).setBody("ok")
+                        MockResponse().setResponseCode(200)
                     request.path?.contains("/labels/reprint") == true ->
                         MockResponse().setResponseCode(200)
+                            .setHeader("Content-Type", "application/json")
                             .setBody("""{"count":1,"labels":[],"page_url":"/p"}""")
                     request.path?.contains("/return") == true ->
                         MockResponse().setResponseCode(200)
+                            .setHeader("Content-Type", "application/json")
                             .setBody("""{"returned":true,"row":{"id":3,"status":"已退货"}}""")
                     else ->
                         MockResponse().setResponseCode(404).setBody("""{"error":"no"}""")
@@ -92,7 +94,7 @@ class ReprintAndReturnTest {
             codes = listOf("1BCG0001000226102003007007"),
             reason = ReprintForm.reasonText("标签破损", "撕破重贴，位置不变"),
         )
-        assertTrue(result is ApiResult.Success)
+        assertTrue("reprint 应成功，实际=$result", result is ApiResult.Success)
         val request = recorded.last()
         assertEquals("POST", request.method)
         assertTrue(request.path!!.contains("/labels/reprint"))
@@ -116,7 +118,7 @@ class ReprintAndReturnTest {
     @Test
     fun `M5-4 POST return 单测`() = runTest {
         val result = repo().returnTruck(3, reason = "质检判定退货")
-        assertTrue(result is ApiResult.Success)
+        assertTrue("return 应成功，实际=$result", result is ApiResult.Success)
         val request = recorded.last()
         assertEquals("POST", request.method)
         assertTrue(request.path!!.contains("/trucks/3/return"))

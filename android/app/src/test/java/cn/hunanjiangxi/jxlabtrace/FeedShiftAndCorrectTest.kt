@@ -170,13 +170,16 @@ class FeedShiftAndCorrectTest {
 
     @Test
     fun `M7-3 ServerClock解析Date头`() {
-        val millis = ServerClock.parseHttpDate("Mon, 20 Oct 2026 02:00:00 GMT")
+        // 用 RFC_1123 自洽生成（星期与日期一致；手写 "Mon" 配 2026-10-20（实际是周二）
+        // 会被 java.time 按不一致 DOW 拒绝——真实 Go Date 头永远自洽）
+        val zdt = java.time.ZonedDateTime.of(2026, 10, 20, 2, 0, 0, 0, ZoneId.of("GMT"))
+        val header = zdt.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+        val millis = ServerClock.parseHttpDate(header)
         assertNotNull(millis)
-        assertEquals(
-            java.time.ZonedDateTime.of(2026, 10, 20, 2, 0, 0, 0, ZoneId.of("GMT"))
-                .toInstant().toEpochMilli(),
-            millis,
-        )
+        assertEquals(zdt.toInstant().toEpochMilli(), millis)
+        // Go 风格 GMT 尾缀
+        val goStyle = "Tue, 20 Oct 2026 02:00:00 GMT"
+        assertEquals(zdt.toInstant().toEpochMilli(), ServerClock.parseHttpDate(goStyle))
         assertEquals(null, ServerClock.parseHttpDate(null))
         assertEquals(null, ServerClock.parseHttpDate("not a date"))
     }

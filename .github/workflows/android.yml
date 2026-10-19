@@ -20,7 +20,17 @@ jobs:
 
       - name: Build debug APK + unit tests
         working-directory: android
-        run: ./gradlew assembleDebug testDebugUnitTest
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug testDebugUnitTest 2>&1 | tee ../build.log
+
+      - name: Upload build log (always, for acceptance)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 14
 
       - name: Upload app-debug.apk
         uses: actions/upload-artifact@v4

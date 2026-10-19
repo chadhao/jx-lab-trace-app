@@ -7,7 +7,6 @@ import cn.hunanjiangxi.jxlabtrace.net.ErrorMessages
 import cn.hunanjiangxi.jxlabtrace.net.InMemorySidStore
 import cn.hunanjiangxi.jxlabtrace.net.JxCookieJar
 import cn.hunanjiangxi.jxlabtrace.net.JxLogger
-import cn.hunanjiangxi.jxlabtrace.net.LogLevel
 import cn.hunanjiangxi.jxlabtrace.net.SessionCoordinator
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher

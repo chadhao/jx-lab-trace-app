@@ -170,7 +170,8 @@
     <div class="meta">
       <span class="tag">基线 390×844dp</span>
       <span class="tag">主色 #0B4F9E</span>
-      <span class="tag">本期 S01–S18 共 18 屏</span>
+      <span class="tag">本期 S01–S17 共 17 屏</span>
+      <span class="tag">APP 20 项 / PC 31 项权限点</span>
       <span class="tag">标签机 快麦 KM-118BT · 203dpi · 100mm=800dots</span>
     </div>
   </div>
@@ -179,8 +180,8 @@
     <thead><tr><th>编号</th><th>页面</th><th>对应权限点</th><th>谁用</th><th>状态</th></tr></thead>
     <tbody>
       <tr class="rowhead"><td colspan="5">通用</td></tr>
-      <tr><td>S01</td><td class="nm">登录 · 飞书授权</td><td>—</td><td>全部</td><td><span class="st now">本轮已出</span></td></tr>
-      <tr><td>S02</td><td class="nm">现场首页</td><td>—</td><td>全部（4 变体）</td><td><span class="st now">本轮已出</span></td></tr>
+      <tr><td>S01</td><td class="nm">登录 · 飞书授权</td><td>—</td><td>全部</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S02</td><td class="nm">现场首页</td><td>—</td><td>全部（4 变体）</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S03</td><td class="nm">扫码</td><td>—（取景/确认卡/手输/异常）</td><td>现场三岗</td><td><span class="st todo">待出图</span></td></tr>
       <tr class="rowhead"><td colspan="5">收货（receiver）</td></tr>
       <tr><td>S04</td><td class="nm">到货确认（选预报 · 含退车）</td><td>recv.arrive.confirm · recv.return</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
@@ -194,19 +195,18 @@
       <tr><td>S10</td><td class="nm">投料（含更正）</td><td>prod.feed.scan · feed.correct</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S11</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S12</td><td class="nm">成品袋打码</td><td>prod.fg.gen</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr class="rowhead"><td colspan="5">检测 · 出货 · 追溯 · 报表</td></tr>
-      <tr><td>S13</td><td class="nm">录值（含拍照上传）</td><td>insp.task.view · result.entry · file.upload</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S14</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S15</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S16</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">出货 · 追溯 · 报表（检测线已移出，全部在实验室电脑）</td></tr>
+      <tr><td>S13</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S14</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S15</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st todo">待出图</span></td></tr>
       <tr class="rowhead"><td colspan="5">个人与全局</td></tr>
-      <tr><td>S17</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S18</td><td class="nm">全局状态族</td><td>—（断网/无预报/无权限/码无效）</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S16</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S17</td><td class="nm">全局状态族</td><td>—（断网/无预报/无权限/码无效）</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
     </tbody>
   </table>
 
   <div class="note-inline" style="margin-top:18px">
-    <b>功能边界已定稿（见 docs/SCOPE-APP.md）：</b>后端 51 个权限点中，APP 只做 23 个现场动作，28 个留 PC —— 含全部门主数据、车次预报、检测结论与各类签署（含紧急放行）、出货撤销、留样销毁、返工、报告与导出、系统管理。<b>APP 里不出现这些动作的入口，灰色按钮也不出现。</b><br>
+    <b>功能边界已定稿 v1.1（见 docs/SCOPE-APP.md）：</b>后端 51 个权限点中，APP 只做 20 个现场动作，31 个留 PC —— 含全部门主数据、车次预报、<b>整条检测线（实验室电脑录值/上传/出结论）</b>、出货撤销、留样销毁、返工、报告与导出、系统管理。<b>APP 里不出现这些动作的入口，灰色按钮也不出现。</b><br>
     由此产生三类必须设计好的拦截界面：<b>无预报</b>、<b>无车辆档案</b>、<b>无权限</b> —— 统一规则是「原因 + 谁负责 + 怎么联系（一键拨号 / 去 PC）」。
   </div>
 
@@ -237,8 +237,7 @@
           <tr><td>S10 投料</td><td><b>0</b></td><td>扫码即投，重量取袋记录</td></tr>
           <tr><td>S11 作业段</td><td><b>0</b></td><td>开始/结束两点，时长自动算</td></tr>
           <tr><td>S12 成品打码</td><td><b>0–1</b></td><td>扫成品码自动建袋，袋数自动累计</td></tr>
-          <tr><td>S13 录值</td><td><b>N</b></td><td>检测值必须人录；仪器可导出时降为 0</td></tr>
-          <tr><td>S14 装车出场</td><td><b>0</b></td><td>逐袋扫码即归集，出货单号自动</td></tr>
+          <tr><td>S13 装车出场</td><td><b>0</b></td><td>逐袋扫码即归集，出货单号自动</td></tr>
         </tbody>
       </table>
     </div>
@@ -380,7 +379,7 @@
     <div class="card"><h3>角色自适应</h3><ul>
       <li><b>receiver：</b>收货 / 投料 / 取样 / 追溯（如本页）</li>
       <li><b>production：</b>投料 / 作业段 / 成品入账 / 追溯</li>
-      <li><b>qc：</b>取样 / 录值 / 出报告 / 追溯</li>
+      <li><b>qc：</b>取样 / 留样借还 / 追溯 / 我的取样记录（录值已在实验室电脑完成，不进 APP）</li>
       <li><b>management / sales：</b>四块换成 收货总量 / 在制批次 / 待出报告 / 追溯，全部只读</li>
     </ul></div>
   </div>

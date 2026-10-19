@@ -2,15 +2,15 @@
 
 ## 当前阶段
 
-**方案比选（v0.1）** —— 三套导航 / 首页骨架已出原型，等待定档。
+**逐屏设计（v1.2）** —— 边界定稿：APP 18 项权限点 / 16 屏 / 3 角色；S01、S02 已出并经确认，S03 起待出。
 
 | 文件 | 内容 | 状态 |
 |---|---|---|
-| [`concepts/index.html`](concepts/index.html) | 方案 A/B/C 原型比选（9 屏） | 待选 |
+| [`concepts/index.html`](concepts/index.html) | 方案 A/B/C 原型比选（9 屏） | **已定档方案 A**（历史稿，内容含已被 v1.1/v1.2 移除的检测线，仅供回溯） |
 | [`tokens.json`](tokens.json) | 设计令牌（颜色/字号/间距/组件尺寸） | 草案 |
-| `design-system.md` | 完整设计规范（组件、状态、无障碍对照） | 定档后写 |
-| `screens/` | 逐屏规格（组件/状态/字段/API 映射） | 定档后写 |
-| `labels/` | 100×100mm 标签版式 | 待做 |
+| [`screens/index.html`](screens/index.html) | 逐屏规格与清单（S01–S16） | S01/S02 已出 |
+| `design-system.md` | 完整设计规范（组件、状态、无障碍对照） | 随 M02 写 |
+| `labels/` | 100×100mm 标签版式与字段来源表 | 随 M09 写 |
 | `assets/` | 图标与图形资产 | 待做 |
 
 ## 四条不可协商的设计原则

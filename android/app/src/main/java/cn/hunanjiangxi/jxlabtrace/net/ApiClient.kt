@@ -138,6 +138,11 @@ class ApiClient(
                     logger.log(LogLevel.E, TAG, "2xx 响应非合法 JSON → Parse：${e.javaClass.simpleName}")
                     return ApiResult.Failure(ApiError.Parse(e))
                 }
+                if (element !is JsonObject) {
+                    // envelope 必须是 JSON 对象；非对象（含被宽容解析的垃圾串）一律 Parse
+                    logger.log(LogLevel.E, TAG, "2xx 响应非 JSON 对象 envelope → Parse")
+                    return ApiResult.Failure(ApiError.Parse(IllegalStateException("envelope 不是 JSON 对象")))
+                }
                 bizCodeOf(element)?.let { (code, message) ->
                     logger.log(LogLevel.W, TAG, "业务错误码 $code → Biz")
                     return ApiResult.Failure(ApiError.Biz(code, message))

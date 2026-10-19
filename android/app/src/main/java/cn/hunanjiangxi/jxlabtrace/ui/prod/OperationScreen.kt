@@ -100,9 +100,10 @@ fun OperationScreen(
                         )
                     }
 
-                    if (message != null) {
+                    val errorMsg = message
+                    if (errorMsg != null) {
                         Text(
-                            text = message,
+                            text = errorMsg,
                             color = Tokens.Color.Status.danger,
                             style = MaterialTheme.typography.bodyMedium,
                         )

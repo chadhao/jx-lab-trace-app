@@ -99,9 +99,10 @@ fun FgPrintScreen(
                 } else {
                     BigButton(text = "修改袋数", onClick = { editingCount = true }, style = BigButtonStyle.Quiet)
                 }
-                if (message != null) {
+                val errorMsg = message
+                if (errorMsg != null) {
                     Text(
-                        text = message,
+                        text = errorMsg,
                         color = Tokens.Color.Status.danger,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -130,9 +131,10 @@ fun FgPrintScreen(
                     value = "${s.lot.qty_bag} 袋",
                     hint = "打完自动入账并挂谱系",
                 )
-                if (message != null) {
+                val errorMsg = message
+                if (errorMsg != null) {
                     Text(
-                        text = message,
+                        text = errorMsg,
                         color = Tokens.Color.Status.danger,
                         style = MaterialTheme.typography.bodyMedium,
                     )

@@ -87,7 +87,7 @@ object CodeParser {
         val check = code[TOTAL_LENGTH - 1] // 校验位是第 27 位（下标 26），不是 payload 末位
         if (checkChar(payload) != check) return Result.Rejected(Reject.CHECKSUM)
 
-        var cursor = 0
+        var cursor = 2 // V、T 已单独解析，段切分从 BT 起
         fun take(width: Int): String = code.substring(cursor, cursor + width).also { cursor += width }
 
         val parsed = ParsedCode(

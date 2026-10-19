@@ -34,7 +34,7 @@ class WeighAndSppTest {
     }
 
     @Test
-    fun `袋数默认折算 - ceil(net/0_6)`() {
+    fun `袋数默认折算 - ceil每袋0_6吨`() {
         assertEquals(40, WeighLogic.defaultBagCount(23.56)) // 39.27 → 40
         assertEquals(51, WeighLogic.defaultBagCount(30.5)) // 50.83 → 51
         assertEquals(1, WeighLogic.defaultBagCount(0.1))

@@ -61,7 +61,7 @@
   .sbar .mid{width:88px;height:18px;border-radius:0 0 12px 12px;background:#101828;margin-top:-12px}
   .sbar.dark .mid{background:#000}
 
-  /* ============ P01 登录 ============ */
+  /* ============ S01 登录 ============ */
   .lg{flex:1;background:var(--brand);position:relative;display:flex;flex-direction:column;padding:0 28px 34px;color:#fff;overflow:hidden}
   .lg svg.wm{position:absolute;inset:0;width:100%;height:100%;opacity:.06}
   .lg-top{flex:0 0 auto;padding-top:54px;position:relative;z-index:1}
@@ -96,7 +96,7 @@
   .dots i{width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.4)}
   .dots i.on{background:#fff}
 
-  /* ============ P02 首页 ============ */
+  /* ============ S02 首页 ============ */
   .top{background:#fff;padding:8px 18px 12px;display:flex;align-items:center;justify-content:space-between;flex:none;border-bottom:1px solid #EEF0F3}
   .who{display:flex;align-items:center;gap:10px}
   .ava{width:44px;height:44px;border-radius:13px;background:var(--recv);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
@@ -108,12 +108,12 @@
   .netbar{flex:none;background:var(--danger);color:#fff;font-size:13px;font-weight:600;padding:9px 16px;display:flex;align-items:center;gap:8px}
   .netbar .rt2{margin-left:auto;font-size:12.5px;border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:3px 9px}
 
-  .now{background:var(--brand-soft);border:1px solid #CBDBF3;border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
-  .now .bar{width:4px;height:36px;border-radius:4px;background:var(--brand)}
-  .now .m{flex:1;min-width:0}
-  .now .t{font-size:14px;font-weight:700}
-  .now .s{font-size:12.5px;color:var(--t2);margin-top:3px}
-  .now .go{background:var(--brand);color:#fff;border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:700;white-space:nowrap}
+  .nowbar{background:var(--brand-soft);border:1px solid #CBDBF3;border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .nowbar .bar{width:4px;height:36px;border-radius:4px;background:var(--brand)}
+  .nowbar .m{flex:1;min-width:0}
+  .nowbar .t{font-size:14px;font-weight:700}
+  .nowbar .s{font-size:12.5px;color:var(--t2);margin-top:3px}
+  .nowbar .go{background:var(--brand);color:#fff;border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:700;white-space:nowrap}
 
   .kpi{background:#fff;border:1px solid #EAECF0;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:12px;margin-bottom:13px}
   .kpi .big{font-size:28px;font-weight:800;line-height:1}
@@ -165,44 +165,50 @@
 
   <div class="phead">
     <h1>江熙追溯 · 逐屏设计（方案 A 落地）</h1>
-    <p>方案 A 已定档。以下按「一屏一确认」推进：本轮出 <b>P01 登录</b> 与 <b>P02 现场首页</b> 的完整设计（含全部状态），确认后继续 P03 扫码。<br>
+    <p>方案 A 已定档。以下按「一屏一确认」推进：本轮出 <b>S01 登录</b> 与 <b>S02 现场首页</b> 的完整设计（含全部状态），确认后继续 S03 扫码。<br>
     所有尺寸按 390×844dp 基线；触控 ≥56dp；正文 ≥15sp；状态一律「颜色 + 文字」双编码。</p>
     <div class="meta">
       <span class="tag">基线 390×844dp</span>
       <span class="tag">主色 #0B4F9E</span>
-      <span class="tag">本期 P01–P18 共 18 屏</span>
+      <span class="tag">本期 S01–S18 共 18 屏</span>
       <span class="tag">标签机 快麦 KM-118BT · 203dpi · 100mm=800dots</span>
     </div>
   </div>
 
   <table class="inv">
-    <thead><tr><th>编号</th><th>页面</th><th>职责</th><th>谁用</th><th>状态</th></tr></thead>
+    <thead><tr><th>编号</th><th>页面</th><th>对应权限点</th><th>谁用</th><th>状态</th></tr></thead>
     <tbody>
       <tr class="rowhead"><td colspan="5">通用</td></tr>
-      <tr><td>P01</td><td class="nm">登录 · 飞书授权</td><td>WebView 完成 OAuth，抓会话；失败可辨因重试</td><td>全部</td><td><span class="st now">本轮出图</span></td></tr>
-      <tr><td>P02</td><td class="nm">现场首页</td><td>今天要干什么 + 待办数 + 进行中任务，角色自适应</td><td>全部</td><td><span class="st now">本轮出图</span></td></tr>
-      <tr><td>P03</td><td class="nm">扫码</td><td>全屏取景 + 识别确认卡；扫码枪/手输三通道</td><td>收货 生产 质检</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P04</td><td class="nm">手输码</td><td>先选父对象 → 输本层序号，带校验位即时纠错</td><td>收货 生产 质检</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S01</td><td class="nm">登录 · 飞书授权</td><td>—</td><td>全部</td><td><span class="st now">本轮已出</span></td></tr>
+      <tr><td>S02</td><td class="nm">现场首页</td><td>—</td><td>全部（4 变体）</td><td><span class="st now">本轮已出</span></td></tr>
+      <tr><td>S03</td><td class="nm">扫码</td><td>—（取景/确认卡/手输/异常）</td><td>现场三岗</td><td><span class="st todo">待出图</span></td></tr>
       <tr class="rowhead"><td colspan="5">收货（receiver）</td></tr>
-      <tr><td>P05</td><td class="nm">车次预报</td><td>选客户/物料/车号，建车次；支持预填来料批次</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P06</td><td class="nm">建袋与贴码</td><td>按车批量建袋、连续打印袋码、已打/未打一目了然</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P07</td><td class="nm">过磅录入</td><td>毛重/皮重/净重，单袋或整车，数字键盘大键位</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P08</td><td class="nm">出场登记</td><td>成品出场逐袋扫码归集到出货单</td><td>收货员 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S04</td><td class="nm">到货确认（选预报 · 含退车）</td><td>recv.arrive.confirm · recv.return</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S05</td><td class="nm">过磅</td><td>recv.weigh</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S06</td><td class="nm">建袋打码（含补打）</td><td>recv.bag.gen · label.print · label.reprint</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">取样（qc）</td></tr>
+      <tr><td>S07</td><td class="nm">取样与留样入库</td><td>sample.take · retain.in</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S08</td><td class="nm">留样借还</td><td>sample.retain.lend</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
       <tr class="rowhead"><td colspan="5">生产（production）</td></tr>
-      <tr><td>P09</td><td class="nm">建批</td><td>开生产批：选物料、设备、班组，生成批号</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P10</td><td class="nm">投料</td><td>扫袋码 → 确认卡 → 提交；显示已投/应投进度</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P11</td><td class="nm">作业段</td><td>工序开始/结束打点，记录设备与时长</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P12</td><td class="nm">成品袋入账</td><td>按成品批批量建袋、逐袋打码、标记入库</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr class="rowhead"><td colspan="5">质检（qc）</td></tr>
-      <tr><td>P13</td><td class="nm">取样</td><td>扫对象码 → 取样量/留样位置/编号，一键留样</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P14</td><td class="nm">检验值录入</td><td>参数表逐项录值，标准值常驻，即时判合格</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P15</td><td class="nm">结论与报告</td><td>出结论、生成报告、分享给客户/管理层</td><td>质检员 管理</td><td><span class="st todo">待出图</span></td></tr>
-      <tr class="rowhead"><td colspan="5">追溯与个人</td></tr>
-      <tr><td>P16</td><td class="nm">追溯搜索 + 谱系</td><td>扫码/搜车号批号，一屏看完上游与检测结论</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P17</td><td class="nm">我的 · 打印机</td><td>身份与权限、蓝牙标签机连接、自检打印、退出</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>P18</td><td class="nm">全局状态族</td><td>断网、提交失败、无权限、空态、服务不可用</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S09</td><td class="nm">建批</td><td>prod.batch.create</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S10</td><td class="nm">投料（含更正）</td><td>prod.feed.scan · feed.correct</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S11</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S12</td><td class="nm">成品袋打码</td><td>prod.fg.gen</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">检测 · 出货 · 追溯 · 报表</td></tr>
+      <tr><td>S13</td><td class="nm">录值（含拍照上传）</td><td>insp.task.view · result.entry · file.upload</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S14</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S15</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S16</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">个人与全局</td></tr>
+      <tr><td>S17</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S18</td><td class="nm">全局状态族</td><td>—（断网/无预报/无权限/码无效）</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
     </tbody>
   </table>
+
+  <div class="note-inline" style="margin-top:18px">
+    <b>功能边界已定稿（见 docs/SCOPE-APP.md）：</b>后端 51 个权限点中，APP 只做 23 个现场动作，28 个留 PC —— 含全部门主数据、车次预报、检测结论与各类签署（含紧急放行）、出货撤销、留样销毁、返工、报告与导出、系统管理。<b>APP 里不出现这些动作的入口，灰色按钮也不出现。</b><br>
+    由此产生三类必须设计好的拦截界面：<b>无预报</b>、<b>无车辆档案</b>、<b>无权限</b> —— 统一规则是「原因 + 谁负责 + 怎么联系（一键拨号 / 去 PC）」。
+  </div>
 
   <!-- ==================== 自动化优先 ==================== -->
   <div class="sec-h"><span class="no">规则</span><h2>自动化优先：每页必填项 ≤ 1</h2></div>
@@ -220,26 +226,26 @@
     </ul></div>
     <div class="card"><h3>逐页人工输入预算（后续设计必须守住的线）</h3>
       <table class="spec" style="margin:0">
-        <thead><tr><th style="width:96px">页面</th><th>必须人输</th><th>自动化来源</th></tr></thead>
+        <thead><tr><th style="width:104px">页面</th><th>必须人输</th><th>自动化来源</th></tr></thead>
         <tbody>
-          <tr><td>P05 车次预报</td><td><b>0–1</b></td><td>车牌选历史车、物料取客户历史、日期取当天</td></tr>
-          <tr><td>P06 建袋贴码</td><td><b>0</b></td><td>车号已定，袋数按过磅结果或预报值，序号连号自动</td></tr>
-          <tr><td>P07 过磅</td><td><b>0–1</b></td><td>接秤则直读；否则录一次毛重，皮重取历史</td></tr>
-          <tr><td>P08 出场登记</td><td><b>0</b></td><td>逐袋扫码即归集，出货单号自动</td></tr>
-          <tr><td>P09 建批</td><td><b>0</b></td><td>沿用上一批配方/设备，批号自动</td></tr>
-          <tr><td>P10 投料</td><td><b>0</b></td><td>扫码即投，重量取袋记录</td></tr>
-          <tr><td>P11 作业段</td><td><b>0</b></td><td>开始/结束两点，时长自动算</td></tr>
-          <tr><td>P12 成品入账</td><td><b>0–1</b></td><td>扫成品码自动建袋，袋数自动累计</td></tr>
-          <tr><td>P13 取样</td><td><b>0–1</b></td><td>取样量默认 500g、留样位置默认本柜</td></tr>
-          <tr><td>P14 录值</td><td><b>N</b></td><td>检测值本身必须人录；仪器可导出时降为 0</td></tr>
-          <tr><td>P15 结论</td><td><b>0</b></td><td>按标准值自动判定，异常才人工改</td></tr>
+          <tr><td>S04 到货确认</td><td><b>0</b></td><td>选预报即可；无预报则拦截并给出拨号</td></tr>
+          <tr><td>S05 过磅</td><td><b>0–1</b></td><td>接秤直读；否则录一次毛重，皮重取历史</td></tr>
+          <tr><td>S06 建袋打码</td><td><b>0–1</b></td><td>袋数按预报或过磅结果，序号连号自动</td></tr>
+          <tr><td>S07 取样</td><td><b>0–1</b></td><td>取样量默认 500g、留样位置默认本柜</td></tr>
+          <tr><td>S08 留样借还</td><td><b>0</b></td><td>扫码即借/还</td></tr>
+          <tr><td>S09 建批</td><td><b>0</b></td><td>沿用上一批配方/设备，批号自动</td></tr>
+          <tr><td>S10 投料</td><td><b>0</b></td><td>扫码即投，重量取袋记录</td></tr>
+          <tr><td>S11 作业段</td><td><b>0</b></td><td>开始/结束两点，时长自动算</td></tr>
+          <tr><td>S12 成品打码</td><td><b>0–1</b></td><td>扫成品码自动建袋，袋数自动累计</td></tr>
+          <tr><td>S13 录值</td><td><b>N</b></td><td>检测值必须人录；仪器可导出时降为 0</td></tr>
+          <tr><td>S14 装车出场</td><td><b>0</b></td><td>逐袋扫码即归集，出货单号自动</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ==================== P01 ==================== -->
-  <div class="sec-h" id="p01"><span class="no">P01</span><h2>登录 · 飞书授权</h2></div>
+  <!-- ==================== S01 ==================== -->
+  <div class="sec-h" id="s01"><span class="no">S01</span><h2>登录 · 飞书授权</h2></div>
   <p class="sec-desc">工人只有一次机会对登录页建立信任：<b>一眼知道这是公司的系统、点一个按钮就能进</b>。因此这一屏不放表单、不放账号密码、不放选择角色的下拉框——所有身份信息由飞书账号决定。</p>
 
   <div class="grid2">
@@ -360,8 +366,8 @@
     </tbody>
   </table>
 
-  <!-- ==================== P02 ==================== -->
-  <div class="sec-h" id="p02"><span class="no">P02</span><h2>现场首页（收货员为例）</h2></div>
+  <!-- ==================== S02 ==================== -->
+  <div class="sec-h" id="s02"><span class="no">S02</span><h2>现场首页（收货员为例）</h2></div>
   <p class="sec-desc">首页要同时回答三个问题，按重要性从上到下排：<b>① 有没有做了一半的活（进行中）；② 今天剩多少（待办数）；③ 去哪做（四个入口）</b>。只有「进行中」为空时才让位给「今日待收总数」。</p>
 
   <div class="grid2">
@@ -392,7 +398,7 @@
           </div>
         </div>
         <div class="body">
-          <div class="now">
+          <div class="nowbar">
             <i class="bar"></i>
             <div class="m"><div class="t">正在收货 · 湘F·A1234</div><div class="s">12 / 40 袋已贴码 · 09:12 开始</div></div>
             <div class="go">继续</div>
@@ -443,7 +449,7 @@
           <span class="rt2">重试</span>
         </div>
         <div class="body">
-          <div class="now" style="background:#F2F4F7;border-color:#E4E7EC">
+          <div class="nowbar" style="background:#F2F4F7;border-color:#E4E7EC">
             <i class="bar" style="background:#98A2B3"></i>
             <div class="m"><div class="t" style="color:#475467">正在收货 · 湘F·A1234</div><div class="s">12 / 40 袋已贴码 · 数据已提交至 12 袋</div></div>
             <div class="go" style="background:#98A2B3">继续</div>
@@ -551,7 +557,7 @@
   </table>
 
   <div class="note-inline">
-    <b>P02 的一处接口现实：</b>后端没有「我的待办」聚合端点，首页需要客户端并行拉 3–4 个列表接口再算数。我在规格里按「任一失败只降级对应区块」处理，避免一个接口抖动就整页白屏。若你希望首页更快、更稳，可以考虑向 ② 后端提一个聚合端点——但按 D02 这不属于本期，我会写进后端需求清单备选。
+    <b>S02 的一处接口现实：</b>后端没有「我的待办」聚合端点，首页需要客户端并行拉 3–4 个列表接口再算数。我在规格里按「任一失败只降级对应区块」处理，避免一个接口抖动就整页白屏。若你希望首页更快、更稳，可以考虑向 ② 后端提一个聚合端点——但按 D02 这不属于本期，我会写进后端需求清单备选。
   </div>
 
   <div class="qa">

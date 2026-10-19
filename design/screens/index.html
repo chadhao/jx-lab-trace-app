@@ -265,10 +265,10 @@
       <tr><td>S06</td><td class="nm">建袋打码（含补打）</td><td>recv.bag.gen · label.print · label.reprint</td><td>收货员</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">生产（production）</td></tr>
       <tr><td>S07</td><td class="nm">取样</td><td>sample.take（需 BACKEND-REQ-01 授权）</td><td><b>生产班组</b></td><td><span class="st now">已出</span></td></tr>
-      <tr><td>S08</td><td class="nm">建批</td><td>prod.batch.create</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S09</td><td class="nm">投料（含更正）</td><td>prod.feed.scan · feed.correct</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S10</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S11</td><td class="nm">成品袋打码</td><td>prod.fg.gen</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S08</td><td class="nm">建批</td><td>prod.batch.create</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S09</td><td class="nm">投料（含更正）</td><td>prod.feed.scan · feed.correct</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S10</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S11</td><td class="nm">成品袋打码</td><td>prod.fg.gen</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">出货 · 追溯 · 报表（检测与留样均在化验室 PC，不进 APP）</td></tr>
       <tr><td>S12</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st todo">待出图</span></td></tr>
       <tr><td>S13</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
@@ -957,6 +957,138 @@
       <tr><td>S06 建袋打码</td><td>POST /api/recv/trucks/:id/bags · POST /api/recv/labels/print · POST /api/recv/labels/reprint（须原因）</td><td>袋数按净重折算；连打进度实时；重试幂等</td></tr>
       <tr><td>S07 取样</td><td>GET /api/sample/targets · POST /api/sample/take</td><td>取样量默认 500g；sampled_by=登录账号不可改；无留样入库</td></tr>
       <tr><td>S15 我的·打印机</td><td>本地蓝牙 + PrinterProfile（TSPL 主通道已实测）</td><td>自检打印（100mm 标尺）；断连给「去连接」不给白屏</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- ==================== S08 ==================== -->
+  <div class="sec-h" id="s08"><span class="no">S08</span><h2>生产 · 建批</h2></div>
+  <p class="sec-desc">必填 <b>0</b>：默认沿用上一批的物料配方与设备；批号由后端生成、只显示不可改。改默认值＝显式点开修改（防止手滑换料）。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#B54708">王</div><div><div class="n">建生产批</div><div class="r">上一批 2410-007 · 已结批</div></div></div></div>
+        <div class="body">
+          <div class="fld"><div class="lb"><span>物料配方（沿用上批）</span><span class="go" style="font-size:12.5px;font-weight:700;color:#0B4F9E">修改 ›</span></div>
+            <div class="val"><span style="font-size:15px;font-weight:700">石油焦（硫&lt;1%）</span></div></div>
+          <div class="fld"><div class="lb"><span>设备（沿用上批）</span><span class="go" style="font-size:12.5px;font-weight:700;color:#0B4F9E">修改 ›</span></div>
+            <div class="val"><span style="font-size:15px;font-weight:700">1 号磨</span></div></div>
+          <div class="fld"><div class="lb"><span>班组（登录人所属）</span></div>
+            <div class="val"><span style="font-size:15px;font-weight:700">甲班</span></div></div>
+          <div class="fld" style="background:#F9FAFB"><div class="lb"><span>批号（系统生成）</span></div>
+            <div class="val"><span class="num" style="font-size:20px;color:#0B4F9E">2410-008</span></div></div>
+          <div class="note-inline" style="margin:0">提交后批号与配方立即生效；投料前可作废重建</div>
+        </div>
+        <div class="footnav"><button class="btn pri">确认建批</button></div>
+      </div></div>
+      <div class="fcap"><b>建批</b><br>三个默认值 + 一个只读批号，零输入</div>
+    </div>
+  </div>
+
+  <!-- ==================== S09 ==================== -->
+  <div class="sec-h" id="s09"><span class="no">S09</span><h2>生产 · 投料（含班次内更正）</h2></div>
+  <p class="sec-desc">进入本页＝连续扫码模式（D25）：扫一袋确认一袋，进度条实时。更正入口只对<b>本班次内</b>的记录开放，超时置灰并给 PC 指引（时间判定用服务端时间，防手机改时间）。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#B54708">王</div><div><div class="n">投料 · 2410-008</div><div class="r">1 号磨 · 甲班</div></div></div></div>
+        <div class="body">
+          <div class="kpi"><div><div class="big">19<span style="font-size:15px;color:#667085">/40</span></div><div class="sub">已投袋数（实时）</div></div>
+            <div class="sp"></div><div class="pill ok">进行中</div></div>
+          <div class="bar3"><i style="width:47%"></i></div>
+          <div class="sech"><span>最近投料</span><span style="color:#B54708;font-weight:700">更正 ›</span></div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 19 袋 · 1.02 t</div><div class="s">10:22 · 1B 02 1020 …019 8</div></div><div class="v">更正</div></div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 18 袋 · 1.01 t</div><div class="s">10:19</div></div><div class="v">更正</div></div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 17 袋 · 1.02 t</div><div class="s">10:16 · 已过本班次？否</div></div><div class="v">更正</div></div>
+          <div class="note-inline" style="margin:0">更正须填原因并留版本链；<b>跨班次转 PC 端</b>。误扫的袋在确认卡上「作废此扫码」即可，不入库。</div>
+        </div>
+        <div class="footnav"><button class="btn pri" style="background:#B54708">扫下一袋</button></div>
+      </div></div>
+      <div class="fcap"><b>投料主页</b><br>进度实时；每条记录带班次内更正入口</div>
+    </div>
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">投料更正 · 第 19 袋</div><div class="r">须填原因 · 留版本链</div></div></div></div>
+        <div class="body">
+          <div class="objcard" style="padding:13px"><span class="tp" style="background:#FDF0E4;color:#B54708">原记录</span>
+            <div class="meta" style="margin-top:8px">1B 02 1020 0001 000124 00 019 000 8<br>毛重 1.02 t · 10:22:41 · 版本 v1</div></div>
+          <div class="fld active"><div class="lb"><span>更正为</span><span class="req">必填</span></div>
+            <div class="val"><span class="num">1.20</span><span class="u">t</span></div></div>
+          <div class="seg3">
+            <div class="o on">磅读错</div><div class="o">扫错袋</div><div class="o">其它</div>
+          </div>
+          <div class="fld"><div class="lb"><span>原因说明</span><span class="req">必填</span></div>
+            <div class="val"><span style="font-size:14px;color:#98A2B3">磅显示看错一位</span></div></div>
+        </div>
+        <div class="footnav"><button class="btn pri" style="background:#B54708">提交更正（v2）</button>
+          <div class="note" style="margin-top:8px">原记录作废保留可查，新记录为 v2</div></div>
+      </div></div>
+      <div class="fcap"><b>更正页</b><br>原值可见 + 新值 + 原因；版本链自动</div>
+    </div>
+  </div>
+
+  <!-- ==================== S10 ==================== -->
+  <div class="sec-h" id="s10"><span class="no">S10</span><h2>生产 · 作业段</h2></div>
+  <p class="sec-desc">必填 <b>0</b>：开始/结束两个大按钮，时长自动算；设备与班组取当前批默认。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#B54708">王</div><div><div class="n">作业段 · 2410-008</div><div class="r">1 号磨 · 甲班</div></div></div></div>
+        <div class="body">
+          <div class="pcard" style="text-align:center;padding:24px 15px">
+            <div style="font-size:13px;color:#667085;font-weight:600">当前段</div>
+            <div style="font-size:34px;font-weight:800;margin-top:6px">01:42:18</div>
+            <div style="font-size:13px;color:#667085;margin-top:6px">09:40 开机 · 研磨中</div>
+            <div class="btnrow" style="margin-top:16px">
+              <button class="btn2" style="flex:1;background:#B42318;color:#fff">结束本段</button>
+            </div>
+          </div>
+          <div class="sech"><span>今日已记段</span></div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">段 1 · 研磨</div><div class="s">07:30 – 08:10 · 40 min · 产量 6.2 t</div></div><div class="v">已记</div></div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">段 2 · 研磨</div><div class="s">08:15 – 09:35 · 80 min</div></div><div class="v">已记</div></div>
+          <div class="note-inline" style="margin:0">段与段之间自动衔接；产量可空（选填）</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>作业段</b><br>两点打点，时长自动；无任何输入</div>
+    </div>
+  </div>
+
+  <!-- ==================== S11 ==================== -->
+  <div class="sec-h" id="s11"><span class="no">S11</span><h2>生产 · 成品袋打码</h2></div>
+  <p class="sec-desc">必填 <b>0–1</b>：成品批自动生成；袋数默认按投料净重折算；连打复用 S06 打印队列（同一 PrinterProfile）。打完即入账，谱系自动挂到生产批。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#B54708">王</div><div><div class="n">成品袋打码 · 2410-008</div><div class="r">产出折算 39 袋</div></div></div></div>
+        <div class="body">
+          <div class="fld"><div class="lb"><span>成品批号（系统生成）</span></div>
+            <div class="val"><span class="num" style="font-size:20px;color:#0B4F9E">D-2410-003</span></div></div>
+          <div class="fld active"><div class="lb"><span>成品袋数</span><span class="rng">折算 39 · 可改</span></div>
+            <div class="val"><span class="num">39</span><span class="u">袋</span></div></div>
+          <div class="printq" style="margin-top:10px">
+            <div class="qh"><div class="qn">连打就绪</div><span class="stat on">KM-118BT 已连接</span></div>
+            <div class="qc">首张 1E 02 1020 0003 000045 00 001 012 4</div>
+          </div>
+          <div class="note-inline" style="margin:0">打完自动入账并挂谱系（生产批 → 成品批 → 袋）；袋码格式与原料袋区分（类型位 1E）</div>
+        </div>
+        <div class="footnav"><button class="btn pri">建批并开始连打</button></div>
+      </div></div>
+      <div class="fcap"><b>成品袋打码</b><br>袋数 1 个输入，其余自动；谱系自动挂接</div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>页面</th><th>接口（后端已存在）</th><th>自动化要点</th></tr></thead>
+    <tbody>
+      <tr><td>S08 建批</td><td>GET /api/prod/batches（上批默认）· POST /api/prod/batches</td><td>配方/设备/班组三默认；批号只读；必填 0</td></tr>
+      <tr><td>S09 投料</td><td>POST /api/prod/batches/:id/feeds · PATCH /api/prod/feeds/:id（更正）</td><td>进入即连续扫；更正限本班次（服务端时间判定）；重试幂等</td></tr>
+      <tr><td>S10 作业段</td><td>POST /api/prod/batches/:id/operations</td><td>开始/结束两点；时长前端只展示，以服务端时间为准</td></tr>
+      <tr><td>S11 成品打码</td><td>POST /api/prod/batches/:id/fg-lots · POST /api/prod/fg-lots/:id/bags · POST /api/prod/fg-lots/:id/print</td><td>袋数默认折算；连打复用 M09 队列；谱系自动挂接</td></tr>
     </tbody>
   </table>
 

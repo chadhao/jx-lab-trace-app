@@ -110,7 +110,7 @@ private class BarcodeAnalyzer(
         val input = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         scanner.process(input)
             .addOnSuccessListener { barcodes ->
-                barcodes.firstOrNull()?.rawValue()?.let(onRaw)
+                barcodes.firstOrNull()?.rawValue?.let { onRaw(it) }
             }
             .addOnCompleteListener { imageProxy.close() }
     }
@@ -143,11 +143,11 @@ class DeviceScanFeedback(private val context: Context) : ScanFeedback {
     private fun beep() {
         runCatching {
             val tone = ToneGenerator(AudioManager.STREAM_SYSTEM, 60)
-            tone.startTone(ToneGenerator.TONE_PROP_BEEP, 60L)
+            tone.startTone(ToneGenerator.TONE_PROP_BEEP, 60)
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                tone.startTone(ToneGenerator.TONE_PROP_BEEP_2, 60L)
+                tone.startTone(ToneGenerator.TONE_PROP_BEEP, 60)
                 runCatching { tone.release() }
-            }, 120L)
+            }, 120)
         }
     }
 }

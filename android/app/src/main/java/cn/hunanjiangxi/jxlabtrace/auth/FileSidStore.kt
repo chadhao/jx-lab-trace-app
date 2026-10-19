@@ -35,12 +35,14 @@ class FileSidStore(
         }.getOrNull()
     }
 
-    override fun write(value: String?) = synchronized(lock) {
-        if (value.isNullOrBlank()) {
-            file.delete()
-        } else {
-            file.parentFile?.mkdirs()
-            file.writeBytes(cipher.encrypt(value.toByteArray(Charsets.UTF_8)))
+    override fun write(value: String?) {
+        synchronized(lock) {
+            if (value.isNullOrBlank()) {
+                file.delete()
+            } else {
+                file.parentFile?.mkdirs()
+                file.writeBytes(cipher.encrypt(value.toByteArray(Charsets.UTF_8)))
+            }
         }
     }
 

@@ -179,7 +179,11 @@ class LoginWebViewActivity : ComponentActivity() {
                     if (result.error is cn.hunanjiangxi.jxlabtrace.net.ApiError.Unauthorized) {
                         // 陈旧 sid：清本地与 WebView Cookie，避免「旧凭据 → 401 → 死循环」
                         app.sidStore.write(null)
-                        runCatching { CookieManager.getInstance().removeCookie(baseHost) }
+                        runCatching {
+                            // CookieManager 无单 Cookie 删除 API，用过期指令清 jx_sid
+                            CookieManager.getInstance().setCookie(baseHost, "$SID_COOKIE=; Max-Age=0")
+                            CookieManager.getInstance().flush()
+                        }
                         applyOutcome(loginOutcomeOf(LoginSignal.AuthorizationRejected))
                     } else {
                         applyOutcome(loginOutcomeOf(LoginSignal.MeError(result.error)))

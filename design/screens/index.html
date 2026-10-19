@@ -270,9 +270,9 @@
       <tr><td>S10</td><td class="nm">作业段</td><td>prod.op.log</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S11</td><td class="nm">成品袋打码</td><td>prod.fg.gen</td><td>生产班组</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">出货 · 追溯 · 报表（检测与留样均在化验室 PC，不进 APP）</td></tr>
-      <tr><td>S12</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S13</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
-      <tr><td>S14</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>S12</td><td class="nm">装车归集与出场</td><td>ship.load.scan · out.register</td><td>收货员 · 销售</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S13</td><td class="nm">追溯（正/反向 · 批次档案）</td><td>trace.forward · backward · batch.view</td><td>全部</td><td><span class="st now">已出</span></td></tr>
+      <tr><td>S14</td><td class="nm">报表（只读）</td><td>rpt.view</td><td>管理层 · 销售</td><td><span class="st now">已出</span></td></tr>
       <tr class="rowhead"><td colspan="5">个人与全局</td></tr>
       <tr><td>S15</td><td class="nm">我的 · 打印机</td><td>—</td><td>全部</td><td><span class="st now">已出</span></td></tr>
       <tr><td>S16</td><td class="nm">全局状态族</td><td>—（断网/无预报/无权限/码无效）</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
@@ -1091,6 +1091,113 @@
       <tr><td>S11 成品打码</td><td>POST /api/prod/batches/:id/fg-lots · POST /api/prod/fg-lots/:id/bags · POST /api/prod/fg-lots/:id/print</td><td>袋数默认折算；连打复用 M09 队列；谱系自动挂接</td></tr>
     </tbody>
   </table>
+
+
+  <!-- ==================== S12 ==================== -->
+  <div class="sec-h" id="s12"><span class="no">S12</span><h2>出货 · 装车归集与出场</h2></div>
+  <p class="sec-desc">必填 <b>0</b>：建出货单后逐袋扫码归集，重复袋即时拦截；汇总（袋数/净重）实时累加；出场一键登记。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#0E7490">刘</div><div><div class="n">装车 · SH-1020-01</div><div class="r">客户 岳阳观盛 · 车湘F·A1234</div></div></div></div>
+        <div class="body">
+          <div class="kpi"><div><div class="big">23<span style="font-size:15px;color:#667085">/40</span></div><div class="sub">已扫袋数 · 净重 23.1 t</div></div>
+            <div class="sp"></div><div class="pill ok">归集中</div></div>
+          <div class="banner" style="background:#E4F4EC;color:#067647;border:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg>
+            第 23 袋已归集 · SH-1020-01
+          </div>
+          <div class="row"><i class="bar" style="background:#0E7490"></i><div><div class="t">1E 02 1020 0003 …004 7</div><div class="s">1.01 t · D-2410-003</div></div><div class="v">✓</div></div>
+          <div class="row"><i class="bar" style="background:#0E7490"></i><div><div class="t">1E 02 1020 0003 …003 6</div><div class="s">1.02 t</div></div><div class="v">✓</div></div>
+          <div class="note-inline" style="margin:0">重复扫同一袋 ⇒ 「已在本次出货单中」，不重复计数（M10-1）</div>
+        </div>
+        <div class="footnav"><button class="btn pri" style="background:#0E7490">完成装车 · 出场登记</button></div>
+      </div></div>
+      <div class="fcap"><b>① 装车归集</b><br>逐袋扫，汇总实时；重复袋拦截</div>
+    </div>
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#0E7490">刘</div><div><div class="n">出场登记 · SH-1020-01</div><div class="r">40 袋 · 39.8 t · 岳阳观盛</div></div></div></div>
+        <div class="body">
+          <div class="objcard" style="padding:13px">
+            <span class="tp" style="background:#E2F1F5;color:#0E7490">出货单就绪</span>
+            <div class="meta" style="margin-top:8px">40 袋全部归集 · 净重 39.8 t<br>客户 岳阳观盛 · 车 湘F·A1234</div>
+          </div>
+          <div class="fld"><div class="lb"><span>出场时间（自动）</span></div>
+            <div class="val"><span style="font-size:15px;font-weight:700">10-20 14:20</span></div></div>
+          <div class="note-inline" style="margin:0">出场即出库；事后撤销须走 PC 端审批（ship.void，APP 无入口）</div>
+        </div>
+        <div class="footnav"><button class="btn pri" style="background:#0E7490">确认出场</button></div>
+      </div></div>
+      <div class="fcap"><b>② 出场登记</b><br>一键；撤销不在此处</div>
+    </div>
+  </div>
+
+  <!-- ==================== S13 ==================== -->
+  <div class="sec-h" id="s13"><span class="no">S13</span><h2>追溯（正/反向 · 批次档案）</h2></div>
+  <p class="sec-desc">ScanHero 大扫码入口 + 搜索框双入口；单屏纵向时间线：车 → 批 → 样 → 结论，全部只读。检测结论与报告在 PC 生成，此处只展示。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#6D28D9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg></div><div><div class="n">追溯</div><div class="r">扫袋码 / 车号 / 批号</div></div></div></div>
+        <div class="body">
+          <div class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg><span class="ph">扫码，或输入车号 / 批号</span></div>
+          <div class="objcard">
+            <span class="tp" style="background:#EFE9FD;color:#6D28D9">成品吨袋 · 已出库</span>
+            <h3 style="font-size:16px">1E 02 1020 0003 000045 00 003 012 7</h3>
+            <div class="meta">1.01 t · 发往 岳阳观盛 · 10-20</div>
+          </div>
+          <div class="tl">
+            <div class="node"><i class="pt"></i><div class="t">原料车次 A-0001</div><div class="s">湘F·A1234 · 40 袋 · 10-18</div></div>
+            <div class="node"><i class="pt p"></i><div class="t">生产批 2410-007</div><div class="s">1 号磨 · 投 40 袋</div></div>
+            <div class="node"><i class="pt q"></i><div class="t">中间样 S-0031 <span class="tag">合格</span></div><div class="s">硫 0.62 · 灰分 0.31（PC 出结论）</div></div>
+            <div class="node"><i class="pt p"></i><div class="t">成品批 D-2410-003</div><div class="s">产出 40 袋 · 10-20</div></div>
+            <div class="node"><i class="pt q"></i><div class="t">成品样 S-0044 <span class="tag">合格</span></div><div class="s">硫 0.58 · 水分 0.42</div></div>
+          </div>
+          <div class="note2">任一节点可点开；全程只读，无写入口</div>
+        </div>
+        <div class="tabbar">
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>谱系详情（管理层/销售同款）</b><br>含 PC 端出的检测结论，只读</div>
+    </div>
+  </div>
+
+  <!-- ==================== S14 ==================== -->
+  <div class="sec-h" id="s14"><span class="no">S14</span><h2>报表（管理层 · 只读）</h2></div>
+  <p class="sec-desc">管理层与销售的首页变体：只读卡片，无导出（导出在 PC）。数据走 <code>GET /api/rpt/:name</code>。</p>
+  <div class="frames">
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top"><div class="who"><div class="ava" style="background:#0B4F9E">齐</div><div><div class="n">经营看板</div><div class="r">10月20日 · 只读</div></div></div></div>
+        <div class="body">
+          <div class="kpi"><div><div class="big">4</div><div class="sub">今日收货车次</div></div><div class="sp"></div>
+            <div style="text-align:right"><div class="big" style="font-size:20px">86.4<span style="font-size:13px">t</span></div><div class="sub">净重合计</div></div></div>
+          <div class="kpi"><div><div class="big">3</div><div class="sub">在制批次</div></div><div class="sp"></div>
+            <div style="text-align:right"><div class="big" style="font-size:20px">118</div><div class="sub">今日打码袋数</div></div></div>
+          <div class="kpi"><div><div class="big">2</div><div class="sub">今日出货单</div></div><div class="sp"></div>
+            <div style="text-align:right"><div class="big" style="font-size:20px">39.8<span style="font-size:13px">t</span></div><div class="sub">出场净重</div></div></div>
+          <div class="sech"><span>近 7 日收货趋势</span></div>
+          <div class="row"><i class="bar"></i><div><div class="t">10-14 ~ 10-20</div><div class="s">18 车 · 402 t · 样品合格率 97%</div></div></div>
+          <div class="note-inline" style="margin:0">导出与明细在 PC 端；本页只读刷新即最新</div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M10 5v14"/></svg>报表</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>经营看板（管理层 4 Tab）</b><br>只读 + 无导出；数字即点即刷</div>
+    </div>
+  </div>
 
 </div>
 </body>

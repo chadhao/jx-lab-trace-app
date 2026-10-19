@@ -29,6 +29,7 @@ import cn.hunanjiangxi.jxlabtrace.print.PrinterGateCard
 import cn.hunanjiangxi.jxlabtrace.print.PrinterProfile
 import cn.hunanjiangxi.jxlabtrace.print.PrinterStatusModel
 import cn.hunanjiangxi.jxlabtrace.print.PrinterUiState
+import cn.hunanjiangxi.jxlabtrace.print.sendSelfTest
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButton
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButtonStyle
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme

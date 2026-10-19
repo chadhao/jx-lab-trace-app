@@ -1,5 +1,9 @@
 package cn.hunanjiangxi.jxlabtrace.print
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 /**
  * 打印机连接状态机（M09 · 纯逻辑，可 JVM 单测）。
  * 扫描/配对/记忆/断连提示「去连接」——UI 按 [PrinterUiState] 渲染，不直接碰蓝牙 API。
@@ -51,5 +55,27 @@ class InMemoryPrinterMemory : PrinterMemory {
     }
     override fun clear() {
         address = null
+    }
+}
+
+/** S15 打印机页状态（断连 ⇒ 打印入口「去连接」· M9-3）。 */
+class PrinterStatusModel {
+    private val _state = MutableStateFlow<PrinterUiState>(PrinterUiState.Disconnected)
+    val state: StateFlow<PrinterUiState> = _state.asStateFlow()
+
+    fun onConnected(deviceName: String) {
+        _state.value = printerUiStateOf(connected = true, deviceName = deviceName)
+    }
+
+    fun onDisconnected() {
+        _state.value = printerUiStateOf(connected = false)
+    }
+
+    fun onConnecting() {
+        _state.value = printerUiStateOf(connected = false, connecting = true)
+    }
+
+    fun onError(reason: String) {
+        _state.value = printerUiStateOf(connected = false, lastError = reason)
     }
 }

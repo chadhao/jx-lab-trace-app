@@ -1,12 +1,9 @@
 package cn.hunanjiangxi.jxlabtrace.recv
 
-import cn.hunanjiangxi.jxlabtrace.net.ApiError
 import cn.hunanjiangxi.jxlabtrace.net.ApiResult
 import cn.hunanjiangxi.jxlabtrace.net.ErrorMessages
 import cn.hunanjiangxi.jxlabtrace.net.SessionCoordinator
 import cn.hunanjiangxi.jxlabtrace.print.LabelRenderer
-import cn.hunanjiangxi.jxlabtrace.print.PrinterUiState
-import cn.hunanjiangxi.jxlabtrace.print.printerUiStateOf
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -391,28 +388,4 @@ class BagPrintViewModel(
         dateText = truck.arrive_date,
         seqText = bag.bag_seq.toString().padStart(3, '0'),
     )
-}
-
-// ===== S15 打印机状态（M9-3）=====
-
-/** S15 打印机页状态（断连 ⇒ 打印入口「去连接」）。 */
-class PrinterStatusModel {
-    private val _state = MutableStateFlow<PrinterUiState>(PrinterUiState.Disconnected)
-    val state: StateFlow<PrinterUiState> = _state.asStateFlow()
-
-    fun onConnected(deviceName: String) {
-        _state.value = printerUiStateOf(connected = true, deviceName = deviceName)
-    }
-
-    fun onDisconnected() {
-        _state.value = printerUiStateOf(connected = false)
-    }
-
-    fun onConnecting() {
-        _state.value = printerUiStateOf(connected = false, connecting = true)
-    }
-
-    fun onError(reason: String) {
-        _state.value = printerUiStateOf(connected = false, lastError = reason)
-    }
 }

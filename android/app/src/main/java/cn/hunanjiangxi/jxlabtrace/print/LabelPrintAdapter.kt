@@ -2,12 +2,12 @@ package cn.hunanjiangxi.jxlabtrace.print
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.pdf.PdfDocument
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.print.PageRange
 import android.print.PrintDocumentAdapter
 import android.print.PrintDocumentInfo
-import android.print.pdf.PdfDocument
 import java.io.FileOutputStream
 
 /**

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>江熙追溯 · 逐屏设计（方案 A）</title>
+<style>
+  :root{
+    --brand:#0B4F9E; --brand-deep:#083B76; --brand-soft:#E8F0FB;
+    --recv:#1D4ED8; --recv-soft:#E7EDFC;
+    --prod:#B54708; --prod-soft:#FDF0E4;
+    --qc:#067647; --qc-soft:#E4F4EC;
+    --ship:#0E7490; --ship-soft:#E2F1F5;
+    --trace:#6D28D9; --trace-soft:#EFE9FD;
+    --danger:#B42318; --danger-soft:#FDECEA;
+    --t1:#101828; --t2:#475467; --t3:#667085;
+    --canvas:#F2F4F7; --card:#fff; --line:#D0D5DD; --sunken:#F9FAFB;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{margin:0;background:#E9ECF1;color:var(--t1);font-family:system-ui,-apple-system,"Noto Sans SC","Source Han Sans SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1360px;margin:0 auto;padding:32px 24px 80px}
+  .phead h1{margin:0 0 8px;font-size:26px}
+  .phead p{margin:0;color:var(--t2);font-size:14px;line-height:1.75;max-width:900px}
+  .phead .meta{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .tag{background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12.5px;color:var(--t2)}
+
+  table.inv{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px;margin-top:18px}
+  table.inv th{background:var(--sunken);text-align:left;padding:11px 14px;font-size:12.5px;color:var(--t3);font-weight:600;border-bottom:1px solid #EAECF0;white-space:nowrap}
+  table.inv td{padding:11px 14px;border-bottom:1px solid #F2F4F7;color:var(--t2);vertical-align:top;line-height:1.6}
+  table.inv td:first-child{font-family:ui-monospace,monospace;color:var(--t3);white-space:nowrap}
+  table.inv td.nm{color:var(--t1);font-weight:600;white-space:nowrap}
+  .st{display:inline-block;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .st.now{background:#FDF0E4;color:#B54708}
+  .st.todo{background:#F2F4F7;color:#475467}
+  .rowhead td{background:#FCFCFD;font-weight:700;color:var(--t1);font-family:inherit!important}
+
+  .sec-h{display:flex;align-items:baseline;gap:12px;margin:44px 0 6px}
+  .sec-h h2{margin:0;font-size:22px}
+  .sec-h .no{font-family:ui-monospace,monospace;font-size:13px;color:#fff;background:var(--brand);border-radius:7px;padding:4px 9px;font-weight:700}
+  .sec-desc{margin:0 0 18px;color:var(--t2);font-size:14px;line-height:1.75;max-width:960px}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+  .card h3{margin:0 0 10px;font-size:15px}
+  .card ul{margin:0;padding-left:20px;color:var(--t2);font-size:13.5px;line-height:1.9}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+
+  table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px;margin-bottom:22px}
+  table.spec th{background:var(--sunken);text-align:left;padding:10px 13px;color:var(--t3);font-size:12px;font-weight:600;border-bottom:1px solid #EAECF0;white-space:nowrap}
+  table.spec td{padding:10px 13px;border-bottom:1px solid #F2F4F7;color:var(--t2);line-height:1.65;vertical-align:top}
+  table.spec td:first-child{color:var(--t1);font-weight:600;width:132px;white-space:nowrap}
+
+  .frames{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;align-items:flex-start;margin:8px 0 24px}
+  .fitem{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .phone{width:390px;height:844px;background:#fff;border:11px solid #101828;border-radius:46px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 22px 48px rgba(16,24,40,.22)}
+  .screen{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;background:var(--canvas)}
+  .fcap{font-size:13px;color:var(--t2);text-align:center;max-width:390px;line-height:1.65}
+  .fcap b{color:var(--t1);font-size:14px}
+
+  .sbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11.5px;color:var(--t2);flex:none}
+  .sbar.dark{color:#C7CDD6}
+  .sbar .mid{width:88px;height:18px;border-radius:0 0 12px 12px;background:#101828;margin-top:-12px}
+  .sbar.dark .mid{background:#000}
+
+  /* ============ P01 登录 ============ */
+  .lg{flex:1;background:var(--brand);position:relative;display:flex;flex-direction:column;padding:0 28px 34px;color:#fff;overflow:hidden}
+  .lg svg.wm{position:absolute;inset:0;width:100%;height:100%;opacity:.06}
+  .lg-top{flex:0 0 auto;padding-top:54px;position:relative;z-index:1}
+  .logo{width:88px;height:88px;border-radius:24px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+  .lg h1{font-size:34px;font-weight:800;letter-spacing:2px;margin:22px 0 8px}
+  .lg .sub{font-size:14px;color:rgba(255,255,255,.74);letter-spacing:.6px}
+  .lg .mid{flex:1}
+  .lg .say{font-size:14px;line-height:1.75;color:rgba(255,255,255,.85);margin-bottom:18px}
+  .btn-w{height:60px;border-radius:14px;background:#fff;color:var(--brand);display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;border:0;width:100%}
+  .btn-w:active{background:#F2F6FC}
+  .lg .tiny{font-size:12.5px;color:rgba(255,255,255,.62);text-align:center;margin-top:12px;line-height:1.6}
+  .lg-foot{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;font-size:11.5px;color:rgba(255,255,255,.55)}
+  .dotok{width:7px;height:7px;border-radius:99px;background:#38E08B;display:inline-block}
+
+  .spinner{width:44px;height:44px;border-radius:99px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;position:relative;z-index:1;text-align:center}
+  .ghost{height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.45);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;background:transparent;width:100%}
+
+  .errsheet{position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);background:#fff;border-radius:18px;padding:26px 22px 20px;color:var(--t1);box-shadow:0 24px 60px rgba(0,0,0,.35);z-index:2}
+  .erric{width:56px;height:56px;border-radius:99px;background:var(--danger-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .errsheet h2{margin:0 0 6px;font-size:20px;text-align:center}
+  .errsheet .why{font-size:14px;color:var(--t2);text-align:center;line-height:1.7;margin-bottom:6px}
+  .errsheet .code{font-family:ui-monospace,monospace;font-size:12px;color:var(--t3);text-align:center;margin-bottom:18px}
+  .link{text-align:center;font-size:14px;color:var(--brand);font-weight:600;margin-top:14px}
+
+  .succ{flex:1;background:var(--brand);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff;position:relative}
+  .okring{width:96px;height:96px;border-radius:99px;background:rgba(56,224,139,.16);border:2px solid #38E08B;display:flex;align-items:center;justify-content:center}
+  .succ h2{margin:0;font-size:24px;font-weight:800}
+  .succ p{margin:0;font-size:14px;color:rgba(255,255,255,.76)}
+  .dots{display:flex;gap:6px;margin-top:26px}
+  .dots i{width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.4)}
+  .dots i.on{background:#fff}
+
+  /* ============ P02 首页 ============ */
+  .top{background:#fff;padding:8px 18px 12px;display:flex;align-items:center;justify-content:space-between;flex:none;border-bottom:1px solid #EEF0F3}
+  .who{display:flex;align-items:center;gap:10px}
+  .ava{width:44px;height:44px;border-radius:13px;background:var(--recv);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+  .who .n{font-size:17px;font-weight:700;line-height:1.15}
+  .who .r{font-size:12.5px;color:var(--t3);margin-top:3px}
+  .icob{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;background:#fff}
+
+  .body{flex:1;overflow:hidden;padding:14px 16px 0}
+  .netbar{flex:none;background:var(--danger);color:#fff;font-size:13px;font-weight:600;padding:9px 16px;display:flex;align-items:center;gap:8px}
+  .netbar .rt2{margin-left:auto;font-size:12.5px;border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:3px 9px}
+
+  .now{background:var(--brand-soft);border:1px solid #CBDBF3;border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .now .bar{width:4px;height:36px;border-radius:4px;background:var(--brand)}
+  .now .m{flex:1;min-width:0}
+  .now .t{font-size:14px;font-weight:700}
+  .now .s{font-size:12.5px;color:var(--t2);margin-top:3px}
+  .now .go{background:var(--brand);color:#fff;border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:700;white-space:nowrap}
+
+  .kpi{background:#fff;border:1px solid #EAECF0;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .kpi .big{font-size:28px;font-weight:800;line-height:1}
+  .kpi .sub{font-size:12.5px;color:var(--t2);margin-top:5px}
+  .kpi .sp{flex:1}
+  .pill{font-size:12px;font-weight:700;border-radius:99px;padding:5px 10px;background:var(--qc-soft);color:var(--qc)}
+  .pill.mut{background:#F2F4F7;color:var(--t2)}
+
+  .blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .blk{border-radius:15px;padding:15px 14px;color:#fff;position:relative;min-height:146px;display:flex;flex-direction:column;justify-content:space-between}
+  .blk .tt{font-size:20px;font-weight:800;letter-spacing:.5px}
+  .blk .sb{font-size:12.5px;opacity:.93;margin-top:4px;line-height:1.45}
+  .blk .cnt{position:absolute;right:13px;top:11px;font-size:13px;font-weight:800;background:rgba(255,255,255,.24);border-radius:8px;padding:3px 8px}
+  .blk.off{filter:grayscale(.35);opacity:.55}
+  .b-recv{background:var(--recv)} .b-prod{background:var(--prod)} .b-qc{background:var(--qc)} .b-trace{background:var(--trace)}
+
+  .sech{margin:16px 0 8px;font-size:12.5px;font-weight:700;color:var(--t3);letter-spacing:.5px;display:flex;justify-content:space-between}
+  .row{background:#fff;border:1px solid #EAECF0;border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:11px;margin-bottom:8px}
+  .row .bar{width:4px;height:32px;border-radius:4px;background:var(--recv)}
+  .row .t{font-size:14px;font-weight:600}
+  .row .s{font-size:12px;color:var(--t3);margin-top:3px}
+  .row .v{margin-left:auto;font-size:12.5px;color:var(--t2);font-weight:600}
+
+  .tabbar{flex:none;background:#fff;border-top:1px solid #E6E8EC;height:74px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:start;padding-top:8px}
+  .tb{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--t3);font-weight:600}
+  .tb.on{color:var(--brand)}
+  .fab{width:58px;height:58px;border-radius:19px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:-26px;box-shadow:0 8px 20px rgba(11,79,158,.38)}
+  .tb.mid span{margin-top:-2px}
+
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 36px;text-align:center;gap:14px}
+  .empty h3{margin:0;font-size:19px}
+  .empty p{margin:0;font-size:13.5px;color:var(--t3);line-height:1.7}
+  .qlinks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;width:100%;margin-top:10px}
+  .qlink{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 6px;font-size:12.5px;font-weight:700;color:var(--t2);display:flex;flex-direction:column;align-items:center;gap:7px}
+
+  .skl{background:#E4E7EC;border-radius:9px;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+  .note-inline{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:22px}
+  .note-inline b{color:var(--t1)}
+  .qa{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:10px}
+  .qa h3{margin:0 0 12px;font-size:15px}
+  .qa ol{margin:0;padding-left:22px;color:var(--t2);font-size:13.5px;line-height:2}
+  .qa b{color:var(--t1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="phead">
+    <h1>江熙追溯 · 逐屏设计（方案 A 落地）</h1>
+    <p>方案 A 已定档。以下按「一屏一确认」推进：本轮出 <b>P01 登录</b> 与 <b>P02 现场首页</b> 的完整设计（含全部状态），确认后继续 P03 扫码。<br>
+    所有尺寸按 390×844dp 基线；触控 ≥56dp；正文 ≥15sp；状态一律「颜色 + 文字」双编码。</p>
+    <div class="meta">
+      <span class="tag">基线 390×844dp</span>
+      <span class="tag">主色 #0B4F9E</span>
+      <span class="tag">本期 P01–P18 共 18 屏</span>
+      <span class="tag">标签机 快麦 KM-118BT · 203dpi · 100mm=800dots</span>
+    </div>
+  </div>
+
+  <table class="inv">
+    <thead><tr><th>编号</th><th>页面</th><th>职责</th><th>谁用</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr class="rowhead"><td colspan="5">通用</td></tr>
+      <tr><td>P01</td><td class="nm">登录 · 飞书授权</td><td>WebView 完成 OAuth，抓会话；失败可辨因重试</td><td>全部</td><td><span class="st now">本轮出图</span></td></tr>
+      <tr><td>P02</td><td class="nm">现场首页</td><td>今天要干什么 + 待办数 + 进行中任务，角色自适应</td><td>全部</td><td><span class="st now">本轮出图</span></td></tr>
+      <tr><td>P03</td><td class="nm">扫码</td><td>全屏取景 + 识别确认卡；扫码枪/手输三通道</td><td>收货 生产 质检</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P04</td><td class="nm">手输码</td><td>先选父对象 → 输本层序号，带校验位即时纠错</td><td>收货 生产 质检</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">收货（receiver）</td></tr>
+      <tr><td>P05</td><td class="nm">车次预报</td><td>选客户/物料/车号，建车次；支持预填来料批次</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P06</td><td class="nm">建袋与贴码</td><td>按车批量建袋、连续打印袋码、已打/未打一目了然</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P07</td><td class="nm">过磅录入</td><td>毛重/皮重/净重，单袋或整车，数字键盘大键位</td><td>收货员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P08</td><td class="nm">出场登记</td><td>成品出场逐袋扫码归集到出货单</td><td>收货员 销售</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">生产（production）</td></tr>
+      <tr><td>P09</td><td class="nm">建批</td><td>开生产批：选物料、设备、班组，生成批号</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P10</td><td class="nm">投料</td><td>扫袋码 → 确认卡 → 提交；显示已投/应投进度</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P11</td><td class="nm">作业段</td><td>工序开始/结束打点，记录设备与时长</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P12</td><td class="nm">成品袋入账</td><td>按成品批批量建袋、逐袋打码、标记入库</td><td>生产班组</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">质检（qc）</td></tr>
+      <tr><td>P13</td><td class="nm">取样</td><td>扫对象码 → 取样量/留样位置/编号，一键留样</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P14</td><td class="nm">检验值录入</td><td>参数表逐项录值，标准值常驻，即时判合格</td><td>质检员</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P15</td><td class="nm">结论与报告</td><td>出结论、生成报告、分享给客户/管理层</td><td>质检员 管理</td><td><span class="st todo">待出图</span></td></tr>
+      <tr class="rowhead"><td colspan="5">追溯与个人</td></tr>
+      <tr><td>P16</td><td class="nm">追溯搜索 + 谱系</td><td>扫码/搜车号批号，一屏看完上游与检测结论</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P17</td><td class="nm">我的 · 打印机</td><td>身份与权限、蓝牙标签机连接、自检打印、退出</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+      <tr><td>P18</td><td class="nm">全局状态族</td><td>断网、提交失败、无权限、空态、服务不可用</td><td>全部</td><td><span class="st todo">待出图</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== 自动化优先 ==================== -->
+  <div class="sec-h"><span class="no">规则</span><h2>自动化优先：每页必填项 ≤ 1</h2></div>
+  <p class="sec-desc">这是本 App 的设计总纲，优先于「美观」与「信息丰富」。判断一个页面合格与否，只问一句：<b>工人在这页上必须亲手输入几个字段？</b>0 个最好，1 个可以接受，2 个以上必须回去改流程。</p>
+
+  <div class="grid2">
+    <div class="card"><h3>七条落地规则</h3><ul>
+      <li><b>① 扫一次，能带的全带出。</b>码里已有对象类型、日期、物料、车序、袋序/批序，解析后直接填好，不再让工人选下拉。</li>
+      <li><b>② 上一步就是下一步的默认值。</b>本袋重量继承袋记录、设备继承本批、班组继承登录人所属班组——默认值要可见、可改，但不必手输。</li>
+      <li><b>③ 序号自动分配。</b>袋序、批序、成品批序、样品编号由系统取下一个可用值，界面只显示、不提供编辑。要改＝作废重来，避免人为跳号造成谱系空洞。</li>
+      <li><b>④ 判定自动做。</b>录值即与标准值比对，结论默认「合格」并高亮，异常时才点「不合格」——把常见路径做成零动作。</li>
+      <li><b>⑤ 能接设备就不手输。</b>磅秤/天平若能以蓝牙或 HID 键盘方式输出，优先直读；不能接时用大数字键盘，且同一袋重量只需录一次。</li>
+      <li><b>⑥ 一次点击做完一件事。</b>提交按钮只有一处，不做「保存草稿 + 提交」双按钮；草稿＝系统自动留的，不是人点的。</li>
+      <li><b>⑦ 每页只回答一个问题。</b>一个页面塞两个任务，就要工人做两次判断——拆开比堆着快。</li>
+    </ul></div>
+    <div class="card"><h3>逐页人工输入预算（后续设计必须守住的线）</h3>
+      <table class="spec" style="margin:0">
+        <thead><tr><th style="width:96px">页面</th><th>必须人输</th><th>自动化来源</th></tr></thead>
+        <tbody>
+          <tr><td>P05 车次预报</td><td><b>0–1</b></td><td>车牌选历史车、物料取客户历史、日期取当天</td></tr>
+          <tr><td>P06 建袋贴码</td><td><b>0</b></td><td>车号已定，袋数按过磅结果或预报值，序号连号自动</td></tr>
+          <tr><td>P07 过磅</td><td><b>0–1</b></td><td>接秤则直读；否则录一次毛重，皮重取历史</td></tr>
+          <tr><td>P08 出场登记</td><td><b>0</b></td><td>逐袋扫码即归集，出货单号自动</td></tr>
+          <tr><td>P09 建批</td><td><b>0</b></td><td>沿用上一批配方/设备，批号自动</td></tr>
+          <tr><td>P10 投料</td><td><b>0</b></td><td>扫码即投，重量取袋记录</td></tr>
+          <tr><td>P11 作业段</td><td><b>0</b></td><td>开始/结束两点，时长自动算</td></tr>
+          <tr><td>P12 成品入账</td><td><b>0–1</b></td><td>扫成品码自动建袋，袋数自动累计</td></tr>
+          <tr><td>P13 取样</td><td><b>0–1</b></td><td>取样量默认 500g、留样位置默认本柜</td></tr>
+          <tr><td>P14 录值</td><td><b>N</b></td><td>检测值本身必须人录；仪器可导出时降为 0</td></tr>
+          <tr><td>P15 结论</td><td><b>0</b></td><td>按标准值自动判定，异常才人工改</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== P01 ==================== -->
+  <div class="sec-h" id="p01"><span class="no">P01</span><h2>登录 · 飞书授权</h2></div>
+  <p class="sec-desc">工人只有一次机会对登录页建立信任：<b>一眼知道这是公司的系统、点一个按钮就能进</b>。因此这一屏不放表单、不放账号密码、不放选择角色的下拉框——所有身份信息由飞书账号决定。</p>
+
+  <div class="grid2">
+    <div class="card"><h3>设计要点</h3><ul>
+      <li><b>一个主按钮。</b>全屏只有一个可点的实心按钮，其余都是文字说明——避免误触，也避免工人犹豫。</li>
+      <li><b>失败必须可辨因。</b>不写「登录失败，请重试」这种废话；直接说清是网络、授权被拒、还是账号没分角色，三种给三种出路。</li>
+      <li><b>不显示账号密码任何痕迹。</b>WebView 授权页由飞书渲染，APP 只负责打开与回收 Cookie。</li>
+      <li><b>底部露出服务端状态。</b>车间现场排查「是不是没网/没连上服务器」时，工人自己就能看。</li>
+    </ul></div>
+    <div class="card"><h3>实现约束</h3><ul>
+      <li>WebView 打开 <code>/api/auth/feishu/start</code>，授权完成回落到站内页后，读取 <code>CookieManager</code> 的 <code>jx_sid</code> 注入 OkHttp 的 CookieJar。</li>
+      <li>会话 12h 滑动续期；过期时<b>不跳回登录页</b>，而是弹「会话已过期，请重新验证」并在原位重新授权，避免现场作业中断。</li>
+      <li>登录成功后调 <code>GET /api/me</code> 取姓名、角色、权限点，缓存在本地用于首页渲染。</li>
+    </ul></div>
+  </div>
+
+  <div class="frames">
+    <!-- 1 初始 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar dark"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="lg">
+          <svg class="wm" viewBox="0 0 390 844" preserveAspectRatio="none" fill="none" stroke="#fff" stroke-width="1">
+            <circle cx="330" cy="120" r="150"/><circle cx="330" cy="120" r="220"/>
+            <path d="M-20 700 L410 420"/><path d="M-20 760 L410 480"/>
+          </svg>
+          <div class="lg-top">
+            <div class="logo">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect x="6" y="6" width="16" height="16" rx="4" fill="#0B4F9E"/>
+                <rect x="26" y="6" width="16" height="16" rx="4" stroke="#0B4F9E" stroke-width="3"/>
+                <rect x="6" y="26" width="16" height="16" rx="4" stroke="#0B4F9E" stroke-width="3"/>
+                <path d="M27 35.5h6M33 29.5v12M38 32.5h4" stroke="#0B4F9E" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h1>江熙追溯</h1>
+            <div class="sub">JX LAB TRACE · 实验检测数据追踪</div>
+          </div>
+          <div class="mid"></div>
+          <div class="say">用企业飞书账号登录。<br>登录账号即操作人，权限由后台角色决定。</div>
+          <button class="btn-w">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B4F9E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+            使用飞书账号登录
+          </button>
+          <div class="tiny">首次登录需在飞书内确认授权</div>
+          <div class="lg-foot"><i class="dotok"></i>服务正常 · v0.1.0 · 内网 10.0.0.12</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>① 初始</b><br>全屏只有一个实心按钮</div>
+    </div>
+
+    <!-- 2 授权中 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar dark"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="lg">
+          <div class="center">
+            <div class="spinner"></div>
+            <div style="font-size:18px;font-weight:700">正在打开飞书授权…</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.7;max-width:260px">若 5 秒内没有自动跳转，点下面手动打开</div>
+            <div style="width:100%;padding:0 6px;margin-top:8px"><button class="ghost">手动打开授权页</button></div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:4px">取消登录</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>② 授权中</b><br>超时给手动兜底，不做无限转圈</div>
+    </div>
+
+    <!-- 3 失败 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar dark"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="lg" style="padding-bottom:0">
+          <div class="errsheet">
+            <div class="erric">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 16.6v.4"/><circle cx="12" cy="12" r="9"/></svg>
+            </div>
+            <h2>登录未完成</h2>
+            <div class="why">网络不可达，请确认已连车间 WiFi 或开启 4G</div>
+            <div class="code">错误码 AUTH_NETWORK · 09:41:07</div>
+            <button class="btn-w" style="background:#0B4F9E;color:#fff">重试</button>
+            <div class="link">查看排查指引</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>③ 失败（网络类）</b><br>说清原因 + 错误码，别让工人猜</div>
+    </div>
+
+    <!-- 4 成功 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar dark"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="succ">
+          <div class="okring">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#38E08B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5L19.5 7"/></svg>
+          </div>
+          <h2>欢迎，刘川</h2>
+          <p>收货员 · 综合运营部</p>
+          <div class="dots"><i class="on"></i><i></i><i></i></div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>④ 成功过渡</b><br>1.2 秒后自动进首页，不做「点击继续」</div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>项目</th><th>规格</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>版式</td><td>上 40% 品牌区 / 中 弹性留白 / 下 操作区</td><td>竖屏 390×844dp，安全区外不再放内容</td></tr>
+      <tr><td>背景</td><td>#0B4F9E 纯色 + 6% 白色几何线稿</td><td>不用渐变，避免廉价感与低端机色带</td></tr>
+      <tr><td>标志</td><td>88×88dp 白底圆角 24dp，内嵌品牌几何标</td><td>「袋 / 码 / 检」三元素抽象：实心方块（码）、空格（袋）、右下三笔（检）</td></tr>
+      <tr><td>字号</td><td>主标题 34/800 · 副标 14/400 · 说明 14/400 · 按钮 17/700</td><td>副标字距 +0.6，全大写英文小字提升品牌感</td></tr>
+      <tr><td>主按钮</td><td>白底蓝字 · 高 60dp · 圆角 14dp · 通栏（左右 28dp）</td><td>点按态 #F2F6FC，禁用态 60% 不透明</td></tr>
+      <tr><td>状态机</td><td>初始 → 授权中 → (成功) → 首页<br>初始 → 授权中 → (失败) → 失败卡 → 重试</td><td>失败原因分三类：网络 / 授权被拒 / 账号未分配角色</td></tr>
+      <tr><td>账号未分配角色</td><td>失败卡文案改为「您的账号尚未分配角色，请联系综合运营部开通」+ 不出「重试」而出「我知道了」</td><td>这是业务问题不是技术问题，重试无意义</td></tr>
+      <tr><td>接口</td><td>GET /api/auth/feishu/start · GET /api/me · POST /api/auth/logout</td><td>全部为现有接口，零后端改动</td></tr>
+      <tr><td>安全</td><td>Cookie 存 EncryptedSharedPreferences；退出登录清 Cookie 与本地缓存</td><td>一人一机，但仍按凭据对待</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== P02 ==================== -->
+  <div class="sec-h" id="p02"><span class="no">P02</span><h2>现场首页（收货员为例）</h2></div>
+  <p class="sec-desc">首页要同时回答三个问题，按重要性从上到下排：<b>① 有没有做了一半的活（进行中）；② 今天剩多少（待办数）；③ 去哪做（四个入口）</b>。只有「进行中」为空时才让位给「今日待收总数」。</p>
+
+  <div class="grid2">
+    <div class="card"><h3>四条硬规则</h3><ul>
+      <li><b>进行中永远置顶。</b>做了一半的作业比新作业优先——现场最常见的事故是「贴到第 12 袋被打断，回来忘了从哪继续」。</li>
+      <li><b>色块只放一个数字。</b>角标＝待办数；不放百分比、不放两个指标，避免工人站着一秒内读不出来。</li>
+      <li><b>色块不因断网变灰。</b>扫码取景不耗流量，断网时仍可扫；灰掉会让工人以为坏了。</li>
+      <li><b>底部扫码键常驻。</b>任何页面伸手就能扫，不需要先回首页。</li>
+    </ul></div>
+    <div class="card"><h3>角色自适应</h3><ul>
+      <li><b>receiver：</b>收货 / 投料 / 取样 / 追溯（如本页）</li>
+      <li><b>production：</b>投料 / 作业段 / 成品入账 / 追溯</li>
+      <li><b>qc：</b>取样 / 录值 / 出报告 / 追溯</li>
+      <li><b>management / sales：</b>四块换成 收货总量 / 在制批次 / 待出报告 / 追溯，全部只读</li>
+    </ul></div>
+  </div>
+
+  <div class="frames">
+    <!-- 1 正常 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top">
+          <div class="who"><div class="ava">刘</div><div><div class="n">刘川</div><div class="r">收货员 · 综合运营部</div></div></div>
+          <div style="display:flex;gap:8px">
+            <div class="icob"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.9" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+            <div class="icob"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.4 2.4a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 10a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1L9.5 21h5l.4-2.4a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6c.06-.33.1-.66.1-1Z"/></svg></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="now">
+            <i class="bar"></i>
+            <div class="m"><div class="t">正在收货 · 湘F·A1234</div><div class="s">12 / 40 袋已贴码 · 09:12 开始</div></div>
+            <div class="go">继续</div>
+          </div>
+          <div class="kpi">
+            <div><div class="big">3</div><div class="sub">车待收货</div></div>
+            <div class="sp"></div>
+            <div style="text-align:right"><div class="pill">今日 1 / 4 车</div><div class="sub" style="margin-top:6px;color:#667085">10月19日 周一</div></div>
+          </div>
+          <div class="blocks">
+            <div class="blk b-recv"><span class="cnt">3</span>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+              <div><div class="tt">收货</div><div class="sb">预报 · 过磅 · 打码</div></div></div>
+            <div class="blk b-prod"><span class="cnt">1</span>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+              <div><div class="tt">投料</div><div class="sb">当前批 2410-007</div></div></div>
+            <div class="blk b-qc"><span class="cnt">5</span>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L5.5 17A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-3L14 8.5V3"/><path d="M8 14h8"/></svg>
+              <div><div class="tt">取样</div><div class="sb">待取样 5 个</div></div></div>
+            <div class="blk b-trace">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+              <div><div class="tt">追溯</div><div class="sb">扫码查谱系</div></div></div>
+          </div>
+          <div class="sech"><span>最近作业</span><span style="color:#0B4F9E">全部</span></div>
+          <div class="row"><i class="bar"></i><div><div class="t">湘E·B6677 · 已完成</div><div class="s">08:05 · 32 袋 · 岳阳观盛</div></div><div class="v">合格</div></div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb mid"><div class="fab"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>① 正常态</b><br>进行中 → 待办总数 → 四个入口</div>
+    </div>
+
+    <!-- 2 断网 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span style="color:#B42318;font-weight:700">无网络</span></div>
+        <div class="top">
+          <div class="who"><div class="ava">刘</div><div><div class="n">刘川</div><div class="r">收货员 · 综合运营部</div></div></div>
+          <div style="display:flex;gap:8px"><div class="icob"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.9" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div></div>
+        </div>
+        <div class="netbar">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M5 12.5a10 10 0 0 1 4-2.4M12 5a13 13 0 0 1 7 3"/><circle cx="12" cy="18" r="1"/></svg>
+          网络中断 · 作业提交已暂停
+          <span class="rt2">重试</span>
+        </div>
+        <div class="body">
+          <div class="now" style="background:#F2F4F7;border-color:#E4E7EC">
+            <i class="bar" style="background:#98A2B3"></i>
+            <div class="m"><div class="t" style="color:#475467">正在收货 · 湘F·A1234</div><div class="s">12 / 40 袋已贴码 · 数据已提交至 12 袋</div></div>
+            <div class="go" style="background:#98A2B3">继续</div>
+          </div>
+          <div class="kpi">
+            <div><div class="big" style="color:#98A2B3">–</div><div class="sub">待办数量暂不可用</div></div>
+            <div class="sp"></div>
+            <div style="text-align:right"><div class="pill mut">离线</div><div class="sub" style="margin-top:6px;color:#667085">10月19日 周一</div></div>
+          </div>
+          <div class="blocks">
+            <div class="blk b-recv off">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+              <div><div class="tt">收货</div><div class="sb">可扫码，提交需联网</div></div></div>
+            <div class="blk b-prod off">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+              <div><div class="tt">投料</div><div class="sb">需联网</div></div></div>
+            <div class="blk b-qc off">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L5.5 17A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-3L14 8.5V3"/><path d="M8 14h8"/></svg>
+              <div><div class="tt">取样</div><div class="sb">需联网</div></div></div>
+            <div class="blk b-trace off">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+              <div><div class="tt">追溯</div><div class="sb">需联网</div></div></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb mid"><div class="fab"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>② 断网态</b><br>红条常驻；数量变「–」；入口不灰死只降饱和</div>
+    </div>
+
+    <!-- 3 空态 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top">
+          <div class="who"><div class="ava">刘</div><div><div class="n">刘川</div><div class="r">收货员 · 综合运营部</div></div></div>
+          <div style="display:flex;gap:8px"><div class="icob"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.9" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div></div>
+        </div>
+        <div class="empty">
+          <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+          <h3>今天没有待办作业</h3>
+          <p>没有待收车次，也没有待处理取样。<br>随时可以直接扫码查一袋。</p>
+          <div class="qlinks">
+            <div class="qlink"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建车次</div>
+            <div class="qlink"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>扫一扫</div>
+            <div class="qlink"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#067647" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg>看今日记录</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb mid"><div class="fab"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>③ 空态</b><br>不空白嘲讽，给三个可用动作</div>
+    </div>
+
+    <!-- 4 骨架 -->
+    <div class="fitem">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="mid"></span><span>4G ▮▮▮ 86%</span></div>
+        <div class="top">
+          <div class="who"><div class="skl" style="width:44px;height:44px;border-radius:13px"></div><div><div class="skl" style="width:76px;height:16px;margin-bottom:7px"></div><div class="skl" style="width:112px;height:12px"></div></div></div>
+        </div>
+        <div class="body">
+          <div class="skl" style="height:62px;border-radius:13px;margin-bottom:14px"></div>
+          <div class="skl" style="height:66px;border-radius:12px;margin-bottom:13px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="skl" style="height:146px;border-radius:15px"></div>
+            <div class="skl" style="height:146px;border-radius:15px"></div>
+            <div class="skl" style="height:146px;border-radius:15px"></div>
+            <div class="skl" style="height:146px;border-radius:15px"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tb on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+          <div class="tb mid"><div class="fab"><svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+          <div class="tb"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+        </div>
+      </div></div>
+      <div class="fcap"><b>④ 首次加载</b><br>骨架屏，不用转圈遮罩</div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>项目</th><th>规格</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>栅格</td><td>左右边距 16dp；区块间距 12–14dp</td><td>390dp 屏宽下，两列色块各 173dp</td></tr>
+      <tr><td>身份条</td><td>高 72dp；头像 44dp 圆角 13；姓名 17/700；角色 12.5/400</td><td>右侧最多 2 个 44dp 图标（消息、设置）</td></tr>
+      <tr><td>进行中条</td><td>高 76dp；浅蓝底 #E8F0FB；左 4dp 竖条；右侧「继续」按钮 40dp 高</td><td>无进行中作业时整块消失，不占位</td></tr>
+      <tr><td>待办汇总</td><td>白卡 · 数字 28/800 · 右侧胶囊状态</td><td>断网时数字替换为「–」并附「暂不可用」</td></tr>
+      <tr><td>入口色块</td><td>两列 · 高 146dp · 圆角 15dp · 图标 32dp · 标题 20/800 · 副标 12.5/400</td><td>角标仅在待办 &gt; 0 时出现；＞9 显示 9+</td></tr>
+      <tr><td>色块顺序</td><td>按角色主任务排序，固定不变</td><td>receiver：收货 左上；production：投料 左上；qc：取样 左上</td></tr>
+      <tr><td>底部导航</td><td>4 项 · 高 74dp · 中央扫码 62dp 圆角 21dp 上浮 23dp</td><td>扫码是唯一上浮元素，制造视觉层级</td></tr>
+      <tr><td>断网表现</td><td>顶部红条 36dp「网络中断 · 作业提交已暂停」+ 右侧「重试」｜色块降饱和 35% 但可点</td><td>进页面后提交前再拦一次，两处一致</td></tr>
+      <tr><td>刷新</td><td>下拉刷新；回到前台自动刷新；提交成功后局部刷新受影响区块</td><td>不做全局转圈，避免打断</td></tr>
+      <tr><td>接口</td><td>GET /api/me · GET /api/trucks?status=… · GET /api/samples?pending=1 · GET /api/batches?status=active</td><td>并行 4 个请求；任一失败只降级对应区块，不整页报错</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note-inline">
+    <b>P02 的一处接口现实：</b>后端没有「我的待办」聚合端点，首页需要客户端并行拉 3–4 个列表接口再算数。我在规格里按「任一失败只降级对应区块」处理，避免一个接口抖动就整页白屏。若你希望首页更快、更稳，可以考虑向 ② 后端提一个聚合端点——但按 D02 这不属于本期，我会写进后端需求清单备选。
+  </div>
+
+  <div class="qa">
+    <h3>本轮请你确认 4 件事</h3>
+    <ol>
+      <li><b>登录页只有一个按钮</b>（不放「账号密码登录」「游客进入」）——确认？</li>
+      <li><b>断网时首页仍允许进入扫码取景、只在提交时拦截</b>（而不是一进来就全灰）——这条与 D08「断线就报错」的边界由我这样切分，确认？</li>
+      <li><b>色块数量固定为 4 个</b>（不做 6 宫格、不做列表混排）——确认？</li>
+      <li><b>底部导航 4 项 + 中央上浮扫码键</b>——确认？（若你更想要「扫码」作为普通 Tab，视觉会更平，但扫码入口的辨识度会下降）</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

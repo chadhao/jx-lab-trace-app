@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>江熙追溯 · 界面方案比选 A/B/C</title>
+<style>
+  :root{
+    --brand:#0B4F9E; --brand-press:#083B76; --brand-soft:#E8F0FB;
+    --recv:#1D4ED8; --recv-soft:#E7EDFC;
+    --prod:#B54708; --prod-soft:#FDF0E4;
+    --qc:#067647; --qc-soft:#E4F4EC;
+    --ship:#0E7490; --ship-soft:#E2F1F5;
+    --trace:#6D28D9; --trace-soft:#EFE9FD;
+    --danger:#B42318; --danger-soft:#FDECEA;
+    --t1:#101828; --t2:#475467; --t3:#667085;
+    --canvas:#F2F4F7; --card:#fff; --line:#D0D5DD; --sunken:#F9FAFB;
+    --r-sm:8px; --r-md:12px; --r-lg:16px;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{
+    margin:0;background:#E9ECF1;color:var(--t1);
+    font-family:system-ui,-apple-system,"Noto Sans SC","Source Han Sans SC","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:1360px;margin:0 auto;padding:32px 24px 72px}
+
+  /* ---------- page header ---------- */
+  .phead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:18px}
+  .phead h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+  .phead p{margin:0;color:var(--t2);font-size:14px;line-height:1.7;max-width:760px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .lg{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 12px 6px 8px;font-size:13px;color:var(--t2)}
+  .dot{width:12px;height:12px;border-radius:4px;display:inline-block}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px;margin:22px 0 20px;width:max-content;max-width:100%;flex-wrap:wrap}
+  .tab{border:0;background:transparent;border-radius:10px;padding:11px 20px;font-size:15px;font-weight:600;color:var(--t2);cursor:pointer;font-family:inherit}
+  .tab[aria-selected="true"]{background:var(--brand);color:#fff}
+
+  /* ---------- concept meta ---------- */
+  .cmeta{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:26px}
+  .cmeta h2{margin:0 0 4px;font-size:20px}
+  .cmeta .tagline{color:var(--t2);font-size:14px;line-height:1.7;margin:0 0 14px}
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .cbox{background:var(--sunken);border:1px solid #EAECF0;border-radius:10px;padding:12px 14px}
+  .cbox h4{margin:0 0 8px;font-size:13px;color:var(--t3);font-weight:600;letter-spacing:.4px}
+  .cbox ul{margin:0;padding-left:18px;color:var(--t2);font-size:13.5px;line-height:1.85}
+  .verdict{display:inline-flex;align-items:center;gap:8px;background:var(--brand-soft);color:var(--brand);border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;margin-top:14px}
+  .verdict.warn{background:var(--prod-soft);color:var(--prod)}
+  .verdict.mute{background:#F2F4F7;color:var(--t2)}
+
+  /* ---------- phone ---------- */
+  .frames{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+  .fitem{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .phone{
+    width:390px;height:844px;background:#fff;border:11px solid #101828;border-radius:46px;
+    overflow:hidden;position:relative;display:flex;flex-direction:column;
+    box-shadow:0 22px 48px rgba(16,24,40,.22);
+  }
+  .screen{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--canvas)}
+  .fcap{font-size:13px;color:var(--t2);text-align:center;max-width:390px;line-height:1.6}
+  .fcap b{color:var(--t1);font-size:14px}
+
+  .sbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11.5px;color:var(--t2);background:var(--card);flex:none}
+  .sbar .mid{width:88px;height:18px;border-radius:0 0 12px 12px;background:#101828;margin-top:-12px}
+  .sbar .rt{display:flex;gap:6px;align-items:center}
+
+  /* top bar */
+  .top{background:var(--card);padding:8px 20px 14px;display:flex;align-items:center;justify-content:space-between;flex:none;border-bottom:1px solid #EEF0F3}
+  .who{display:flex;align-items:center;gap:10px}
+  .ava{width:40px;height:40px;border-radius:12px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+  .who .n{font-size:15px;font-weight:700;line-height:1.2}
+  .who .r{font-size:12.5px;color:var(--t3);margin-top:3px}
+  .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;background:#fff}
+
+  .body{flex:1;overflow:hidden;padding:16px 18px 0}
+
+  /* ---------- A: blocks ---------- */
+  .kpi{background:#fff;border:1px solid #EAECF0;border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .kpi .big{font-size:26px;font-weight:800;line-height:1}
+  .kpi .sub{font-size:13px;color:var(--t2);margin-top:5px}
+  .kpi .sp{flex:1}
+  .pill{font-size:12px;font-weight:700;border-radius:99px;padding:5px 10px}
+  .pill.ok{background:var(--qc-soft);color:var(--qc)}
+
+  .blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .blk{border-radius:var(--r-lg);padding:16px;color:#fff;position:relative;min-height:132px;display:flex;flex-direction:column;justify-content:space-between}
+  .blk .tt{font-size:20px;font-weight:800;letter-spacing:.5px}
+  .blk .sb{font-size:13px;opacity:.92;margin-top:4px;line-height:1.45}
+  .blk svg{opacity:.95}
+  .blk .cnt{position:absolute;right:14px;top:12px;font-size:13px;font-weight:800;background:rgba(255,255,255,.22);border-radius:8px;padding:3px 8px}
+  .b-recv{background:var(--recv)} .b-prod{background:var(--prod)} .b-qc{background:var(--qc)} .b-trace{background:var(--trace)}
+
+  .sec{margin:18px 0 8px;font-size:13px;font-weight:700;color:var(--t3);letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+  .row{background:#fff;border:1px solid #EAECF0;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .row .bar{width:4px;height:34px;border-radius:4px;background:var(--recv)}
+  .row .m{flex:1;min-width:0}
+  .row .t{font-size:14.5px;font-weight:600}
+  .row .s{font-size:12.5px;color:var(--t3);margin-top:3px}
+  .row .v{font-size:13px;color:var(--t2);font-weight:600}
+
+  /* ---------- tabbar ---------- */
+  .tabbar{flex:none;background:#fff;border-top:1px solid #E6E8EC;height:76px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:start;padding-top:8px}
+  .tb{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--t3);font-weight:600}
+  .tb.on{color:var(--brand)}
+  .tb.mid{position:relative}
+  .tb.mid .fab{width:64px;height:64px;border-radius:22px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(11,79,158,.38)}
+  .tb.mid span{margin-top:2px}
+
+  /* ---------- scan overlay ---------- */
+  .scanbg{position:absolute;inset:0;background:#0B0F14;display:flex;flex-direction:column;align-items:center;padding-top:72px}
+  .scantop{position:absolute;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#fff}
+  .scantop .ttl{font-size:15px;font-weight:600}
+  .finder{width:240px;height:240px;position:relative;margin-top:52px}
+  .finder .c{position:absolute;width:34px;height:34px;border:4px solid #fff;border-radius:4px}
+  .finder .c1{top:0;left:0;border-right:0;border-bottom:0}
+  .finder .c2{top:0;right:0;border-left:0;border-bottom:0}
+  .finder .c3{bottom:0;left:0;border-right:0;border-top:0}
+  .finder .c4{bottom:0;right:0;border-left:0;border-top:0}
+  .finder .laser{position:absolute;left:8px;right:8px;height:3px;background:#38E08B;box-shadow:0 0 16px #38E08B;top:46%;border-radius:2px}
+  .hint{color:#fff;opacity:.85;font-size:14px;margin-top:26px;text-align:center;line-height:1.6}
+  .manual{margin-top:18px;color:#9FE3C0;font-size:14px;font-weight:600;border-bottom:1px solid #9FE3C0;padding-bottom:2px}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 18px 22px;box-shadow:0 -10px 36px rgba(0,0,0,.28)}
+  .grab{width:44px;height:5px;border-radius:99px;background:#D0D5DD;margin:2px auto 14px}
+  .okhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .okhead .ic{width:36px;height:36px;border-radius:11px;background:var(--qc-soft);display:flex;align-items:center;justify-content:center}
+  .okhead .h{font-size:14px;color:var(--t3);font-weight:600}
+  .okhead .v{font-size:16px;font-weight:800;margin-top:2px}
+  .code{font-family:"Roboto Mono",ui-monospace,monospace;font-size:17px;font-weight:700;letter-spacing:1.6px;background:var(--sunken);border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center;margin-bottom:14px}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:16px}
+  .kv div{font-size:13px;color:var(--t3)}
+  .kv b{display:block;font-size:16px;color:var(--t1);margin-top:3px}
+  .btn{height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;border:0}
+  .btn.pri{background:var(--brand);color:#fff;width:100%}
+  .btn.sec{background:#fff;color:var(--t2);border:1px solid var(--line);width:100%}
+  .btnrow{display:flex;gap:12px}
+  .note{font-size:12.5px;color:var(--t3);text-align:center;margin-top:10px}
+
+  /* ---------- trace ---------- */
+  .search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 14px;height:52px;margin-bottom:14px}
+  .search .ph{font-size:14.5px;color:var(--t3)}
+  .objcard{background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:16px;margin-bottom:14px}
+  .objcard .tp{display:inline-flex;align-items:center;gap:6px;background:var(--recv-soft);color:var(--recv);font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+  .objcard h3{margin:10px 0 4px;font-size:19px}
+  .objcard .meta{font-size:13px;color:var(--t3);line-height:1.6}
+  .tl{position:relative;padding-left:26px}
+  .tl:before{content:"";position:absolute;left:7px;top:6px;bottom:14px;width:2px;background:#E4E7EC}
+  .node{position:relative;margin-bottom:16px}
+  .node .pt{position:absolute;left:-26px;top:4px;width:16px;height:16px;border-radius:6px;background:#fff;border:3px solid var(--recv)}
+  .node .pt.p{left:-26px;border-color:var(--prod)}
+  .node .pt.q{border-color:var(--qc)}
+  .node .t{font-size:14.5px;font-weight:700}
+  .node .s{font-size:12.5px;color:var(--t3);margin-top:3px;line-height:1.55}
+  .node .tag{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;margin-left:6px;background:var(--qc-soft);color:var(--qc)}
+
+  /* ---------- B: task flow ---------- */
+  .prog{background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:16px;margin-bottom:16px}
+  .prog .top2{display:flex;justify-content:space-between;align-items:baseline}
+  .prog .n{font-size:15px;font-weight:700}
+  .prog .p{font-size:13px;color:var(--t2);font-weight:600}
+  .bar2{height:10px;border-radius:99px;background:#EEF0F3;margin-top:12px;overflow:hidden}
+  .bar2 i{display:block;height:100%;width:50%;background:var(--qc);border-radius:99px}
+  .task{background:#fff;border:1px solid #EAECF0;border-radius:14px;margin-bottom:10px;display:flex;overflow:hidden}
+  .task .rail{width:6px;background:var(--recv);flex:none}
+  .task .in{flex:1;padding:13px 14px}
+  .task .h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .task .h .tt{font-size:15px;font-weight:700}
+  .task .h .tm{font-size:12.5px;color:var(--t3);font-variant-numeric:tabular-nums}
+  .task .s{font-size:13px;color:var(--t2);margin-top:5px;line-height:1.55}
+  .task .f{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .state{font-size:12px;font-weight:700;border-radius:6px;padding:3px 8px}
+  .st-done{background:var(--qc-soft);color:var(--qc)}
+  .st-doing{background:var(--prod-soft);color:var(--prod)}
+  .st-todo{background:#F2F4F7;color:var(--t2)}
+  .task.done{opacity:.72}
+  .task.done .rail{background:var(--qc)}
+  .task.prog2 .rail{background:var(--prod)}
+  .task.todo .rail{background:#C4C9D2}
+  .go{margin-left:auto;font-size:13.5px;font-weight:700;color:var(--brand);display:flex;align-items:center;gap:4px}
+
+  .stepper{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+  .step{flex:1;height:6px;border-radius:99px;background:#E4E7EC}
+  .step.on{background:var(--brand)}
+  .steptx{font-size:12.5px;color:var(--t3);margin-bottom:12px}
+  .steptx b{color:var(--brand)}
+
+  /* ---------- C: big buttons ---------- */
+  .grid6{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .big{border-radius:18px;padding:18px 16px;color:#fff;min-height:158px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+  .big .tt{font-size:21px;font-weight:800;letter-spacing:.5px;line-height:1.2}
+  .big .sb{font-size:13px;opacity:.92;margin-top:6px;line-height:1.4}
+  .big .n{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+
+  /* form */
+  .fld{background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .fld .lb{font-size:13px;color:var(--t3);font-weight:600;display:flex;align-items:center;justify-content:space-between}
+  .fld .lb .req{color:var(--danger);font-weight:700}
+  .fld .val{display:flex;align-items:baseline;gap:8px;margin-top:8px}
+  .fld .val .num{font-size:30px;font-weight:800;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+  .fld .val .u{font-size:14px;color:var(--t2);font-weight:600}
+  .fld .val .rng{margin-left:auto;font-size:12.5px;color:var(--t3)}
+  .fld.active{border:2px solid var(--brand);padding:13px 15px;background:#fff}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
+  .seg .o{height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:700;border:2px solid var(--line);color:var(--t2);background:#fff}
+  .seg .o.pass{border-color:var(--qc);background:var(--qc-soft);color:var(--qc)}
+  .seg .o.fail{border-color:#E4E7EC;color:var(--t3)}
+
+  .banner{display:flex;align-items:center;gap:10px;background:var(--danger-soft);color:var(--danger);border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-bottom:12px}
+
+  .footnav{flex:none;background:#fff;border-top:1px solid #E6E8EC;padding:10px 18px 16px}
+  .c3tab{display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;font-size:12px;color:var(--t3);font-weight:600;gap:6px}
+  .c3tab div{padding-top:6px}
+  .c3tab .on{color:var(--brand)}
+
+  .divider{height:1px;background:#EEF0F3;margin:14px 0}
+  .muted{color:var(--t3);font-size:12.5px;line-height:1.6}
+  .concept{display:none}
+  .concept.active{display:block}
+  @media (max-width:900px){.phone{transform:scale(.86);transform-origin:top center;margin-bottom:-110px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="phead">
+    <div>
+      <h1>江熙追溯 · 安卓 APP 界面方案 A / B / C</h1>
+      <p>生产车间手持场景基线：<b>竖屏 390×844dp</b> · 单手拇指区主操作 · <b>触控目标 ≥56dp</b>（戴手套）· 正文 ≥15sp · 浅色高对比（强光）· 状态一律「颜色 + 文字」双编码，不靠颜色单独传达信息。</p>
+      <div class="legend">
+        <span class="lg"><i class="dot" style="background:#1D4ED8"></i>收货 / 到货</span>
+        <span class="lg"><i class="dot" style="background:#B54708"></i>生产 / 投料</span>
+        <span class="lg"><i class="dot" style="background:#067647"></i>质检 / 化验</span>
+        <span class="lg"><i class="dot" style="background:#0E7490"></i>出货 / 出场</span>
+        <span class="lg"><i class="dot" style="background:#6D28D9"></i>追溯 / 查询</span>
+        <span class="lg"><i class="dot" style="background:#B42318"></i>异常 / 作废</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-c="A">方案 A · 色块工作台</button>
+    <button class="tab" role="tab" aria-selected="false" data-c="B">方案 B · 今日任务流</button>
+    <button class="tab" role="tab" aria-selected="false" data-c="C">方案 C · 大按钮控制台</button>
+  </div>
+
+  <!-- ================= A ================= -->
+  <section class="concept active" id="cA">
+    <div class="cmeta">
+      <h2>方案 A · 色块工作台（推荐）</h2>
+      <p class="tagline">把「岗位今天要干什么」压成一屏 4 个彩色入口。颜色即岗位、即业务域，工人不看字也能秒认位置；点进去就是该业务的作业流。</p>
+      <div class="cgrid">
+        <div class="cbox"><h4>优势</h4><ul>
+          <li>入口面积足够大（2×2，单块 132dp 高），戴手套点击容错最高</li>
+          <li>颜色编码固定，培训一次即可形成肌肉记忆</li>
+          <li>扩展性好：新增业务＝加一个色块，不推翻布局</li>
+        </ul></div>
+        <div class="cbox"><h4>代价</h4><ul>
+          <li>「今天该做哪几件事」需要逐个色块点进去才知道，入口页信息偏弱</li>
+          <li>色块数量超过 6 个时，第一屏会开始拥挤</li>
+        </ul></div>
+        <div class="cbox"><h4>适合谁</h4><ul>
+          <li>收货员（动作固定 4 类，重复率高）</li>
+          <li>质检员（取样 / 录值 / 留样 三条线并行）</li>
+        </ul></div>
+      </div>
+      <span class="verdict">✓ 推荐：四个岗位通用，培训成本最低</span>
+    </div>
+
+    <div class="frames">
+      <!-- A1 -->
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top">
+            <div class="who"><div class="ava">刘</div><div><div class="n">刘川</div><div class="r">收货员 · 综合运营部</div></div></div>
+            <div class="iconbtn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+            </div>
+          </div>
+          <div class="body">
+            <div class="kpi">
+              <div><div class="big">3</div><div class="sub">车待收货</div></div>
+              <div class="sp"></div>
+              <div style="text-align:right"><div class="pill ok">已收 1 / 4 车</div><div class="sub" style="color:#667085">10月19日 周一</div></div>
+            </div>
+            <div class="blocks">
+              <div class="blk b-recv">
+                <span class="cnt">3</span>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+                <div><div class="tt">收货</div><div class="sb">预报 · 过磅 · 打码</div></div>
+              </div>
+              <div class="blk b-prod">
+                <span class="cnt">1</span>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+                <div><div class="tt">投料</div><div class="sb">当前批 2410-007</div></div>
+              </div>
+              <div class="blk b-qc">
+                <span class="cnt">5</span>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L5.5 17A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-3L14 8.5V3"/><path d="M8 14h8"/></svg>
+                <div><div class="tt">取样</div><div class="sb">待取样 5 个</div></div>
+              </div>
+              <div class="blk b-trace">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+                <div><div class="tt">追溯</div><div class="sb">扫码查谱系</div></div>
+              </div>
+            </div>
+            <div class="sec"><span>最近作业</span><span style="font-weight:600;color:#0B4F9E">全部</span></div>
+            <div class="row"><i class="bar"></i><div class="m"><div class="t">湘F·A1234 · 12 袋</div><div class="s">09:12 已贴码 12/40</div></div><div class="v">进行中</div></div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+            <div class="tb mid"><div class="fab"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+          </div>
+        </div></div>
+        <div class="fcap"><b>① 现场首页</b><br>4 色块 = 4 类业务；待办数直接标在角上</div>
+      </div>
+
+      <!-- A2 -->
+      <div class="fitem">
+        <div class="phone"><div class="screen" style="position:relative">
+          <div class="sbar" style="background:#0B0F14;color:#C7CDD6"><span>9:41</span><span class="mid" style="background:#000"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="scanbg">
+            <div class="scantop"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg><div class="ttl">扫码 · 原料吨袋</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 5 14h6l-1 8 8-12h-6z"/></svg></div>
+            <div class="finder"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i><i class="c c4"></i><div class="laser"></div></div>
+            <div class="hint">对准袋上二维码，自动识别<br><span style="opacity:.65;font-size:13px">扫码枪输入可直接提交</span></div>
+            <div class="manual">手输：先选父对象 → 输袋序</div>
+          </div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="okhead">
+              <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#067647" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></div>
+              <div><div class="h">已识别 · 原料吨袋</div><div class="v">湘F·A1234 第 12 袋</div></div>
+            </div>
+            <div class="code">1B 02 1019 0001 000123 00 012 000 4</div>
+            <div class="kv">
+              <div>物料<b>石油焦（硫&lt;1%）</b></div>
+              <div>毛重<b>1.02 t</b></div>
+              <div>客户<b>岳阳观盛</b></div>
+              <div>到货日<b>2026-10-19</b></div>
+            </div>
+            <div class="btnrow">
+              <button class="btn sec" style="flex:0 0 34%">重扫</button>
+              <button class="btn pri" style="flex:1">确认提交</button>
+            </div>
+            <div class="note">提交后自动打印 1 张 100×100 袋码标签</div>
+          </div>
+        </div></div>
+        <div class="fcap"><b>② 扫码 → 确认卡</b><br>回显只留「谁 + 第几袋 + 重量」，主按钮 60dp</div>
+      </div>
+
+      <!-- A3 -->
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="ava" style="background:#6D28D9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg></div><div><div class="n">追溯</div><div class="r">扫袋码 / 查谱系 / 看报告</div></div></div>
+            <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div></div>
+          <div class="body">
+            <div class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg><span class="ph">扫码，或输入车号 / 批号</span></div>
+            <div class="objcard">
+              <span class="tp">成品吨袋 · 已入库</span>
+              <h3>1E 02 1019 0002 000045 00 003 012 7</h3>
+              <div class="meta">石油焦成品 · 1.01 t · 2026-10-19 14:20</div>
+            </div>
+            <div class="tl">
+              <div class="node"><i class="pt"></i><div class="t">原料车次 A-0001</div><div class="s">湘F·A1234 · 岳阳观盛 · 40 袋 · 10-18 08:20</div></div>
+              <div class="node"><i class="pt p"></i><div class="t">生产批 B-2410-007</div><div class="s">投料 18 袋 · 1 号磨 · 10-19 09:40</div></div>
+              <div class="node"><i class="pt q"></i><div class="t">中间样 S-0031 <span class="tag">合格</span></div><div class="s">硫 0.62% · 灰分 0.31% · 10-19 11:05</div></div>
+              <div class="node"><i class="pt p"></i><div class="t">成品批 D-2410-002</div><div class="s">产出 24 袋 · 10-19 13:30</div></div>
+              <div class="node"><i class="pt q"></i><div class="t">成品样 S-0044 <span class="tag">合格</span></div><div class="s">硫 0.58% · 水分 0.42% · 10-19 14:10</div></div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/></svg>现场</div>
+            <div class="tb mid"><div class="fab"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+            <div class="tb on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+          </div>
+        </div></div>
+        <div class="fcap"><b>③ 追溯谱系</b><br>一屏看完「谁的料 → 哪批 → 测了什么」</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section class="concept" id="cB">
+    <div class="cmeta">
+      <h2>方案 B · 今日任务流</h2>
+      <p class="tagline">首页不是功能目录，而是「今天要做的活」按时间排开。工人从第一条往下做，做完一条划掉一条；扫码作为唯一常驻主按钮。</p>
+      <div class="cgrid">
+        <div class="cbox"><h4>优势</h4><ul>
+          <li>「现在该干什么」零思考，适合新人 / 换班交接</li>
+          <li>进度可视化，班组长一眼看出卡在哪一步</li>
+          <li>天然承载「下一步」引导，误操作率最低</li>
+        </ul></div>
+        <div class="cbox"><h4>代价</h4><ul>
+          <li>依赖后端「我的待办」聚合接口——现有 API 需拼装，接不通时首页会空</li>
+          <li>临时插入的活（如领导临时要查一个样）没有位置</li>
+          <li>任务多时列表变长，找特定功能要往下翻</li>
+        </ul></div>
+        <div class="cbox"><h4>适合谁</h4><ul>
+          <li>生产班组（跟着批次节奏走）</li>
+          <li>上岗 3 天内的新人</li>
+        </ul></div>
+      </div>
+      <span class="verdict warn">△ 次选：流程引导最强，但更依赖后端聚合能力</span>
+    </div>
+
+    <div class="frames">
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="ava" style="background:#B54708">王</div><div><div class="n">王建国</div><div class="r">生产班组 · 甲班</div></div></div>
+            <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+          </div>
+          <div class="body">
+            <div class="prog">
+              <div class="top2"><div class="n">今日 6 项作业</div><div class="p">已完成 3</div></div>
+              <div class="bar2"><i></i></div>
+              <div class="muted" style="margin-top:10px">当前：投料 B-2410-007 · 已投 18 / 40 袋</div>
+            </div>
+            <div class="task done"><i class="rail"></i><div class="in">
+              <div class="h"><span class="tt">收货 湘F·A1234</span><span class="tm">08:20</span></div>
+              <div class="s">40 袋全部贴码 · 岳阳观盛</div>
+              <div class="f"><span class="state st-done">已完成</span><span class="muted">刘川</span></div>
+            </div></div>
+            <div class="task prog2"><i class="rail"></i><div class="in">
+              <div class="h"><span class="tt">投料 B-2410-007</span><span class="tm">09:40</span></div>
+              <div class="s">1 号磨 · 已投 18 / 40 袋</div>
+              <div class="f"><span class="state st-doing">进行中</span><div class="go">继续扫码 ›</div></div>
+            </div></div>
+            <div class="task"><i class="rail" style="background:#067647"></i><div class="in">
+              <div class="h"><span class="tt">中间样 S-0031</span><span class="tm">11:00</span></div>
+              <div class="s">出磨 30 分钟后取样 · 留样 500g</div>
+              <div class="f"><span class="state st-todo">待开始</span><div class="go">去取样 ›</div></div>
+            </div></div>
+            <div class="task todo"><i class="rail"></i><div class="in">
+              <div class="h"><span class="tt">成品入账</span><span class="tm">13:30</span></div>
+              <div class="s">预计产出 24 袋 · 打成品袋码</div>
+              <div class="f"><span class="state st-todo">待开始</span></div>
+            </div></div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>任务</div>
+            <div class="tb mid"><div class="fab"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg></div><span>扫码</span></div>
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>追溯</div>
+            <div class="tb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>我的</div>
+          </div>
+        </div></div>
+        <div class="fcap"><b>① 今日任务流</b><br>左侧色条 ＝ 业务域，与方案 A 同一套颜色语义</div>
+      </div>
+
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="iconbtn" style="margin-right:2px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">投料</div><div class="r">B-2410-007 · 1 号磨</div></div></div></div>
+          <div class="body">
+            <div class="stepper"><i class="step on"></i><i class="step on"></i><i class="step"></i></div>
+            <div class="steptx">第 <b>2</b> / 3 步 · 确认投料</div>
+            <div class="objcard" style="padding:14px">
+              <span class="tp">原料吨袋 · 已校验</span>
+              <h3 style="font-size:17px;margin:8px 0 4px">1B 02 1019 0001 000123 00 012 000 4</h3>
+              <div class="meta">湘F·A1234 第 12 袋 · 石油焦 · 1.02 t</div>
+            </div>
+            <div class="fld"><div class="lb"><span>投入本批重量</span><span class="req">必填</span></div>
+              <div class="val"><span class="num">1.02</span><span class="u">吨</span><span class="rng">同袋记录 1.02 t</span></div></div>
+            <div class="fld"><div class="lb"><span>投料设备</span></div>
+              <div class="val"><span style="font-size:19px;font-weight:700">1 号磨</span><span class="rng">默认本批设备</span></div></div>
+            <div class="banner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+              本袋属车次 A-0001，与当前批物料一致
+            </div>
+          </div>
+          <div class="footnav"><button class="btn pri">确认投料</button>
+            <div class="note" style="margin-top:8px">确认后记录不可修改，如有误需作废并重新录入</div></div>
+        </div></div>
+        <div class="fcap"><b>② 步骤引导 + 单字段录入</b><br>一步只问一件事，重量已从袋记录预填</div>
+      </div>
+
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="ava" style="background:#067647">陈</div><div><div class="n">陈静</div><div class="r">质检员 · 质检技术部</div></div></div>
+            <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v3l-1.5 3h15L18 12V9a6 6 0 0 0-6-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+          </div>
+          <div class="body">
+            <div class="banner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+              网络中断，提交已暂停 · 已录内容不会丢失
+            </div>
+            <div class="kpi" style="margin-bottom:12px;padding:12px 14px">
+              <div><div class="n" style="font-size:15px;font-weight:700">中间样 S-0031</div><div class="sub">B-2410-007 · 出磨 30min</div></div>
+              <div class="sp"></div><div class="pill" style="background:#E4F4EC;color:#067647">已取样</div>
+            </div>
+            <div class="fld active"><div class="lb"><span>硫含量</span><span class="rng">标准 ≤ 1.00</span></div>
+              <div class="val"><span class="num">0.62</span><span class="u">%</span><span class="rng" style="color:#067647;font-weight:700">合格</span></div></div>
+            <div class="fld"><div class="lb"><span>灰分</span><span class="rng">标准 ≤ 0.50</span></div>
+              <div class="val"><span class="num">0.31</span><span class="u">%</span><span class="rng" style="color:#067647;font-weight:700">合格</span></div></div>
+            <div class="fld"><div class="lb"><span>挥发分</span><span class="rng">标准 ≤ 12.0</span></div>
+              <div class="val"><span class="num" style="color:#98A2B3">未录入</span><span class="u">%</span></div></div>
+            <div class="fld"><div class="lb"><span>水分</span><span class="rng">标准 ≤ 0.50</span></div>
+              <div class="val"><span class="num" style="color:#98A2B3">未录入</span><span class="u">%</span></div></div>
+          </div>
+          <div class="footnav"><button class="btn pri" style="background:#98A2B3">提交检验单</button></div>
+        </div></div>
+        <div class="fcap"><b>③ 录入页（断网态）</b><br>红条常驻 + 提交置灰，录入内容保留</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section class="concept" id="cC">
+    <div class="cmeta">
+      <h2>方案 C · 大按钮控制台</h2>
+      <p class="tagline">工业 PDA 风格：一屏 6 个巨型色块，每个占 1/6 屏、图标 48dp、文字 21sp。功能最少、字符最少、误触最少，代价是扩展性差。</p>
+      <div class="cgrid">
+        <div class="cbox"><h4>优势</h4><ul>
+          <li>戴厚手套、隔着防尘面罩也能一次点中</li>
+          <li>字符最少，老工人不认字也能靠颜色 + 图标操作</li>
+          <li>强光下可读性最好</li>
+        </ul></div>
+        <div class="cbox"><h4>代价</h4><ul>
+          <li>6 格封顶，加功能就要翻页或挪进二级</li>
+          <li>信息密度过低，质检员的参数录入页会与首页风格断裂</li>
+          <li>「待办多少」这类数量信息没地方放</li>
+        </ul></div>
+        <div class="cbox"><h4>适合谁</h4><ul>
+          <li>纯搬运型岗位（只有 3–4 个动作）</li>
+          <li>临时工 / 外包工轮换频繁的产线</li>
+        </ul></div>
+      </div>
+      <span class="verdict mute">△ 备选：上限低，建议只作为「收货岗专用模式」</span>
+    </div>
+
+    <div class="frames">
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top" style="padding-bottom:10px"><div class="who"><div class="ava" style="background:#1D4ED8">刘</div><div><div class="n">刘川 · 收货员</div><div class="r">10月19日 周一 · 待收 3 车</div></div></div></div>
+          <div class="body" style="padding:14px 16px 0">
+            <div class="grid6">
+              <div class="big b-recv"><span class="n">3</span>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+                <div><div class="tt">收货</div><div class="sb">预报 / 过磅</div></div></div>
+              <div class="big b-recv" style="background:#1E40AF"><span class="n">12</span>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><path d="M4 12h16"/></svg>
+                <div><div class="tt">贴码</div><div class="sb">逐袋打码</div></div></div>
+              <div class="big b-prod">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+                <div><div class="tt">投料</div><div class="sb">当前批 007</div></div></div>
+              <div class="big b-qc">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L5.5 17A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-3L14 8.5V3"/><path d="M8 14h8"/></svg>
+                <div><div class="tt">取样</div><div class="sb">待取样 5</div></div></div>
+              <div class="big b-ship">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16h12l3-4h3v4"/><path d="M3 16V8h12"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></svg>
+                <div><div class="tt">出货</div><div class="sb">出场登记</div></div></div>
+              <div class="big b-trace">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+                <div><div class="tt">追溯</div><div class="sb">查谱系</div></div></div>
+            </div>
+          </div>
+          <div class="footnav" style="padding:8px 18px 14px"><div class="c3tab">
+            <div class="on">作业</div><div>追溯</div><div>我的</div>
+          </div></div>
+        </div></div>
+        <div class="fcap"><b>① 六宫格控制台</b><br>单格 158dp 高、图标 48dp，手套误触率最低</div>
+      </div>
+
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475467" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></div><div><div class="n">录检验值</div><div class="r">中间样 S-0031 · 3 / 5 项</div></div></div></div>
+          <div class="body">
+            <div class="fld active"><div class="lb"><span>硫含量</span><span class="rng">≤ 1.00 %</span></div>
+              <div class="val"><span class="num">0.62</span><span class="u">%</span><span class="rng" style="color:#067647;font-weight:700">合格</span></div></div>
+            <div class="fld"><div class="lb"><span>灰分</span><span class="rng">≤ 0.50 %</span></div>
+              <div class="val"><span class="num">0.31</span><span class="u">%</span><span class="rng" style="color:#067647;font-weight:700">合格</span></div></div>
+            <div class="fld"><div class="lb"><span>挥发分</span><span class="rng">≤ 12.0 %</span></div>
+              <div class="val"><span class="num">11.4</span><span class="u">%</span><span class="rng" style="color:#067647;font-weight:700">合格</span></div></div>
+            <div class="fld"><div class="lb"><span>水分</span><span class="rng">≤ 0.50 %</span></div>
+              <div class="val"><span class="num" style="color:#98A2B3">未录入</span><span class="u">%</span></div></div>
+            <div class="sec">结论</div>
+            <div class="seg"><div class="o pass"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg>合格</div>
+              <div class="o fail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>不合格</div></div>
+          </div>
+          <div class="footnav"><button class="btn pri">提交并生成报告</button></div>
+        </div></div>
+        <div class="fcap"><b>② 参数录入</b><br>大数字 + 标准值常驻右上，合格与否即时判定</div>
+      </div>
+
+      <div class="fitem">
+        <div class="phone"><div class="screen">
+          <div class="sbar"><span>9:41</span><span class="mid"></span><span class="rt">4G ▮▮▮ 86%</span></div>
+          <div class="top"><div class="who"><div class="ava" style="background:#0B4F9E"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></div><div><div class="n">我的</div><div class="r">刘川 · 收货员</div></div></div></div>
+          <div class="body">
+            <div class="row"><i class="bar" style="background:#0B4F9E"></i><div class="m"><div class="t">打印机</div><div class="s">未连接 · 点击搜索车间公用机</div></div><div class="v">›</div></div>
+            <div class="row"><i class="bar" style="background:#067647"></i><div class="m"><div class="t">今日我的作业</div><div class="s">收货 4 车 · 贴码 40 袋</div></div><div class="v">›</div></div>
+            <div class="row"><i class="bar" style="background:#6D28D9"></i><div class="m"><div class="t">我的权限</div><div class="s">收货员 · 4 项业务权限</div></div><div class="v">›</div></div>
+            <div class="divider"></div>
+            <div class="row"><i class="bar" style="background:#B42318"></i><div class="m"><div class="t">退出登录</div><div class="s">飞书账号同步退出</div></div><div class="v">›</div></div>
+            <div class="muted" style="margin-top:14px;text-align:center">江熙追溯 v0.1.0 · 服务端 2026-10-18</div>
+          </div>
+          <div class="footnav" style="padding:8px 18px 14px"><div class="c3tab">
+            <div>作业</div><div>追溯</div><div class="on">我的</div>
+          </div></div>
+        </div></div>
+        <div class="fcap"><b>③ 我的 / 打印机</b><br>公用蓝牙打印机的入口与连接状态</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cmeta" style="margin-top:34px">
+    <h2>三方案差异速览</h2>
+    <div class="cgrid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div class="cbox"><h4>一眼看懂</h4><ul>
+        <li>A：入口看<span style="color:#1D4ED8;font-weight:700">颜色和数量</span>（这活有多少待办）</li>
+        <li>B：入口看<span style="color:#B54708;font-weight:700">顺序和进度</span>（下一步做什么）</li>
+        <li>C：入口看<span style="color:#0E7490;font-weight:700">位置和大小</span>（闭眼也能点中）</li>
+      </ul></div>
+      <div class="cbox"><h4>与现有后端的关系</h4><ul>
+        <li>A / C：全部依赖已有列表与扫码接口，<b>零后端改动</b></li>
+        <li>B：需要「我的待办」聚合，<b>需后端配合或客户端多次拼装</b></li>
+      </ul></div>
+      <div class="cbox"><h4>我的建议</h4><ul>
+        <li>主体走 <b>A</b>（四岗通用、扩展性强）</li>
+        <li>把 B 的<b>「进行中任务 + 进度条」</b>做成 A 首页顶部的一条横向卡片</li>
+        <li>C 的<b>大图标 + 高对比</b>作为全局规范继承</li>
+      </ul></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const tabs = [...document.querySelectorAll('.tab')];
+  const secs = {A:document.getElementById('cA'),B:document.getElementById('cB'),C:document.getElementById('cC')};
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.setAttribute('aria-selected','false'));
+    t.setAttribute('aria-selected','true');
+    Object.values(secs).forEach(s=>s.classList.remove('active'));
+    secs[t.dataset.c].classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+</script>
+</body>
+</html>

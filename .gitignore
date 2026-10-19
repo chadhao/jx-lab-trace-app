@@ -1,0 +1,32 @@
+# Android / Gradle
+*.iml
+.gradle/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时
+_scratch/
+*.log
+!docs/**/*.log
+
+# 密钥与本地配置
+.env
+.env.local
+secrets.properties

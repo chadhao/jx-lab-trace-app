@@ -102,6 +102,7 @@ class ApiErrorMappingTest {
         val result = post()
         assertTrue(result is ApiResult.Failure)
         val error = (result as ApiResult.Failure).error
+        println("诊断：Parse 用例实际 error = $error")
         assertTrue("期望 Parse，实际 $error", error is ApiError.Parse)
         assertTrue(error.userMessage.isNotBlank())
     }

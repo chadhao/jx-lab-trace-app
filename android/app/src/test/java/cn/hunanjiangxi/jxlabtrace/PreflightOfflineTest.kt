@@ -37,7 +37,7 @@ class PreflightOfflineTest {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 if (request.path?.startsWith("/healthz") != true) realRequestCount.incrementAndGet()
                 return if (request.path?.startsWith("/healthz") == true) {
-                    MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START)
+                    MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE)
                 } else {
                     MockResponse().setResponseCode(200).setBody("""{"ok":true}""")
                 }

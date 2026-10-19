@@ -130,7 +130,15 @@ class ApiClient(
                 ApiResult.Failure(ApiError.Server(response.code))
             }
             else -> {
-                bizCodeOf(bodyText)?.let { (code, message) ->
+                // 口径：2xx 的 body 必须是合法 JSON envelope，否则一律 Parse——
+                // 防止垃圾 body 被恒等 parse 静默吞成 Success（SCOPE-APP 错误五分类）。
+                val element: JsonElement = try {
+                    json.parseToJsonElement(bodyText)
+                } catch (e: Exception) {
+                    logger.log(LogLevel.E, TAG, "2xx 响应非合法 JSON → Parse：${e.javaClass.simpleName}")
+                    return ApiResult.Failure(ApiError.Parse(e))
+                }
+                bizCodeOf(element)?.let { (code, message) ->
                     logger.log(LogLevel.W, TAG, "业务错误码 $code → Biz")
                     return ApiResult.Failure(ApiError.Biz(code, message))
                 }
@@ -145,19 +153,15 @@ class ApiClient(
     }
 
     /** 解析统一 envelope 的业务码：`{"code": <非0>, "message": "…"}` → Pair(code, message)。 */
-    private fun bizCodeOf(bodyText: String): Pair<String, String>? {
-        if (bodyText.isBlank()) return null
-        return try {
-            val element: JsonElement = json.parseToJsonElement(bodyText)
-            val map = element as? JsonObject ?: return null
+    private fun bizCodeOf(element: JsonElement): Pair<String, String>? {
+        val map = element as? JsonObject ?: return null
+        return run {
             val codeElement = map["code"] ?: return null
             val code = codeElement.jsonPrimitive.content
             val isZero = code == "0" || code == "0.0" || code.toLongOrNull() == 0L
             if (isZero) return null
             val message = map["message"]?.jsonPrimitive?.content.orEmpty()
             code to message
-        } catch (_: Exception) {
-            null
         }
     }
 

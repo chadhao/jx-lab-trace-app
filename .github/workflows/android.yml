@@ -30,6 +30,15 @@ jobs:
             exit 1
           }
 
+      - name: Upload test-results XML (always, for acceptance)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: android/app/build/test-results/testDebugUnitTest/*.xml
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: Upload build log (always, for acceptance)
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,5 +1,6 @@
 package cn.hunanjiangxi.jxlabtrace
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,13 +15,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import cn.hunanjiangxi.jxlabtrace.auth.LoginWebViewActivity
 import cn.hunanjiangxi.jxlabtrace.ui.theme.JxLabTheme
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
 
-/** 工程壳 Activity：仅展示应用名与版本号，不做任何业务页面。 */
+/** 占位主页：仅展示应用名与版本号（导航图明确不做）；无会话时先去 S01 登录。 */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val app = application as JxLabTraceApp
+        if (app.sidStore.read().isNullOrBlank()) {
+            startActivity(Intent(this, LoginWebViewActivity::class.java))
+        }
         setContent {
             MaterialTheme(
                 colorScheme = JxLabTheme.lightColorScheme(),

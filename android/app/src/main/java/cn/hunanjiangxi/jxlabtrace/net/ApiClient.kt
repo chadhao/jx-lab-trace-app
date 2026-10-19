@@ -41,6 +41,8 @@ class ApiClient(
     cookieJar: CookieJar,
     private val json: Json = Json { ignoreUnknownKeys = true },
     private val logger: JxLogger = JxLogger.Default,
+    /** 全局网络态（M12）：false ⇒ 直接 Offline，不发出任何请求（生产注入 NetworkMonitor.online）。 */
+    private val online: () -> Boolean = { true },
 ) {
 
     val httpClient: OkHttpClient = OkHttpClient.Builder()
@@ -75,8 +77,35 @@ class ApiClient(
         }
     }
 
+    /** 全局网络态直读（M04 扫码解析等不走前置探测的读路径自行判离线）。 */
+    fun currentlyOnline(): Boolean = online()
+
+    /** 拼接站内绝对地址（供需自定义状态码映射的请求使用，如 /api/recv/scan）。 */
+    fun urlOf(path: String): HttpUrl = resolve(path)
+
     /**
-     * 写请求统一入口：先 [preflight]，断网直接返回 [ApiError.Offline]，**不发出真实请求**。
+     * 读请求统一入口（M03 起）：无前置探测（读操作），但受全局网络态门禁——
+     * NetworkMonitor=false ⇒ 直接 [ApiError.Offline]，不发出任何请求（M12）。
+     */
+    suspend fun <T> executeRead(
+        path: String,
+        parse: (String) -> T,
+    ): ApiResult<T> = withContext(Dispatchers.IO) {
+        if (!online()) {
+            logger.log(LogLevel.W, TAG, "全局网络态为离线，跳过读请求 GET $path（返回 Offline）")
+            return@withContext ApiResult.Failure(ApiError.Offline())
+        }
+        val request = Request.Builder().url(resolve(path)).get().build()
+        try {
+            httpClient.newCall(request).execute().use { response -> mapResponse(response, parse) }
+        } catch (e: IOException) {
+            logger.log(LogLevel.E, TAG, "读请求 IO 失败 GET $path：${e.javaClass.simpleName}")
+            ApiResult.Failure(ApiError.Offline())
+        }
+    }
+
+    /**
+     * 写请求统一入口：全局网络态门禁 → 前置 [preflight]，断网直接返回 [ApiError.Offline]，**不发出真实请求**。
      * [parse] 把 2xx 响应体解析为领域对象；envelope 业务码非 0 映射为 [ApiError.Biz]。
      */
     suspend fun <T> executeWrite(
@@ -85,6 +114,13 @@ class ApiClient(
         body: String? = null,
         parse: (String) -> T,
     ): ApiResult<T> = withContext(Dispatchers.IO) {
+        if (!online()) {
+            logger.log(
+                LogLevel.E, TAG,
+                "全局网络态为离线，跳过写请求 $method $path（返回 Offline，无任何请求发出）",
+            )
+            return@withContext ApiResult.Failure(ApiError.Offline())
+        }
         if (!preflight()) {
             logger.log(
                 LogLevel.E, TAG,

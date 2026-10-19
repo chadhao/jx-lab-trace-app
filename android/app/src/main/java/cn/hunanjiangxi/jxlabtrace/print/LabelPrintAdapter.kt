@@ -49,8 +49,9 @@ internal class LabelPrintAdapter(
             return
         }
         // 72pt/inch；1 inch = 25.4mm
-        val pageW = PrinterProfile.SIZE_MM * 72 / 25
-        val pageH = PrinterProfile.SIZE_MM * 72 / 25
+        val ptPerMm = 72f / 25.4f
+        val pageW = (PrinterProfile.SIZE_MM * ptPerMm).toInt()
+        val pageH = (PrinterProfile.SIZE_MM * ptPerMm).toInt()
         val doc = PdfDocument()
         val page = doc.startPage(PdfDocument.PageInfo.Builder(pageW, pageH, 1).create())
         val canvas = page.canvas

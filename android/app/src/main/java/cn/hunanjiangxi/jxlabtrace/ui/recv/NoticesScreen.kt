@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,9 +52,11 @@ fun NoticesScreen(
     val confirmed by viewModel.confirmed.collectAsState()
     val message by viewModel.message.collectAsState()
 
-    confirmed?.let { truck ->
-        onConfirmed(truck.id)
-        viewModel.clearConfirmed()
+    LaunchedEffect(confirmed) {
+        confirmed?.let { truck ->
+            onConfirmed(truck.id)
+            viewModel.clearConfirmed()
+        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {

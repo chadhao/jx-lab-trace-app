@@ -2,6 +2,7 @@ package cn.hunanjiangxi.jxlabtrace
 
 import cn.hunanjiangxi.jxlabtrace.print.PrintSession
 import cn.hunanjiangxi.jxlabtrace.print.ByteArraySpp
+import cn.hunanjiangxi.jxlabtrace.print.PrinterProfile
 import cn.hunanjiangxi.jxlabtrace.print.SppFactory
 import cn.hunanjiangxi.jxlabtrace.print.TsplPrinter
 import cn.hunanjiangxi.jxlabtrace.print.LabelRenderer
@@ -68,7 +69,7 @@ class WeighAndSppTest {
         val sent = spp.written[0].toString(Charsets.US_ASCII)
         assertTrue(sent.contains("SIZE 100 mm"))
         assertTrue(sent.contains("PRINT 1"))
-        assertEquals(800, TsplPrinter.bitmapRowCount(spp.written[0]))
+        assertEquals(PrinterProfile.MAX_HEIGHT_DOTS, TsplPrinter.bitmapRowCount(spp.written[0]))
         assertFalse("发送后应关闭通道", spp.isOpen)
     }
 
@@ -77,7 +78,7 @@ class WeighAndSppTest {
         val spp = ByteArraySpp()
         val session = PrintSession(SppFactory { spp })
         spp.close()
-        val result = session.sendLabel("00:11:22:33:44:55", BooleanArray(800 * 800))
+        val result = session.sendLabel("00:11:22:33:44:55", BooleanArray(PrinterProfile.PIXEL_COUNT))
         assertTrue(result is PrintSession.PrintSendResult.Failed)
         assertNotNull((result as PrintSession.PrintSendResult.Failed).reason)
     }
@@ -85,7 +86,7 @@ class WeighAndSppTest {
     @Test
     fun `工厂抛IO - 映射连接失败`() {
         val session = PrintSession(SppFactory { throw java.io.IOException("refused") })
-        val result = session.sendLabel("00:11:22:33:44:55", BooleanArray(800 * 800))
+        val result = session.sendLabel("00:11:22:33:44:55", BooleanArray(PrinterProfile.PIXEL_COUNT))
         assertTrue(result is PrintSession.PrintSendResult.Failed)
         assertTrue((result as PrintSession.PrintSendResult.Failed).reason.contains("蓝牙"))
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -37,8 +38,8 @@ fun WeighScreen(
     val tare by viewModel.tare.collectAsState()
     val net = WeighLogic.netTons(gross, tare)
 
-    (state as? WeighUiState.Done)?.let {
-        onWeighed()
+    LaunchedEffect(state) {
+        if (state is WeighUiState.Done) onWeighed()
     }
 
     Column(modifier = modifier.fillMaxSize()) {

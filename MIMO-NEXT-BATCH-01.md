@@ -55,7 +55,7 @@ Compose BOM · activity-compose · core-ktx · lifecycle-runtime · okhttp · ko
 
 ### 2.2 十二个基础组件（`ui/components/`，全部 Compose）
 
-`DomainBlock`（色块入口，含角标）、`NowBar`（进行中条）、`StatusPill`、`FieldCard`、`BigButton`（高 60dp）、`NumPad`（大数字键盘，≥64dp 键位）、`EmptyState`、`InterceptPage`（原因+谁负责+拨号三要素）、`TopBar`、`TabBarWithScanFab`（中央圆形 66dp 上浮扫码键）、`Skeleton`、`ToastHaptic`（Toast+振动反馈封装）。
+`DomainBlock`（色块入口，含角标）、`NowBar`（进行中条）、`StatusPill`、`FieldCard`、`BigButton`（高 60dp）、`NumPad`（大数字键盘，≥64dp 键位）、`EmptyState`、`InterceptPage`（原因+谁负责+拨号三要素）、`TopBar`、`TabBar`（平级 3/4 项，角色自适应，无扫码键）、`ScanHero`（追溯页首屏大扫码入口，高 ≥120dp）、`Skeleton`、`ToastHaptic`（Toast+振动反馈封装）。
 
 ### 2.3 图标
 
@@ -80,7 +80,7 @@ Compose BOM · activity-compose · core-ktx · lifecycle-runtime · okhttp · ko
 | J4 | `grep -rn "#[0-9A-Fa-f]\{6\}" android/app/src` 命中 = 0（`Tokens.kt` 除外） | grep 输出粘贴 |
 | J5 | `check_tokens.py` 在 CI 绿（生成物与 tokens.json 一致） | CI 截图 |
 | J6 | 12 组件各有 `@Preview`（360/390/411 三档宽），无溢出 | Preview 截图拼图 |
-| J7 | 所有组件最小触控 ≥56dp，`BigButton`=60dp、`NumPad` 键位 ≥64dp、`TabBarWithScanFab` 中央键 66dp | 尺寸断言单测 |
+| J7 | 所有组件最小触控 ≥56dp，`BigButton`=60dp、`NumPad` 键位 ≥64dp、`ScanHero` 高 ≥120dp | 尺寸断言单测 |
 
 ## 5. 提交纪律（沿用后端项目，违者打回）
 

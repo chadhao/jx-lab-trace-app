@@ -9,7 +9,6 @@ r = subprocess.run(
 hits = [l for l in r.stdout.splitlines() if "ui/theme/Tokens.kt" not in l]
 if hits:
     print("裸色值命中 %d 处：" % len(hits))
-    print("
-".join(hits[:40]))
+    print("\n".join(hits[:40]))
     sys.exit(1)
 print("check_colors: OK — 无裸色值")

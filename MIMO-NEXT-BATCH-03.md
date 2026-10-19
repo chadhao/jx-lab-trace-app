@@ -55,3 +55,49 @@
 ## 5. 纪律与回执
 
 同前批次。**新增门禁已并入 CI**：check_colors.py。被过滤拦断 ⇒ 回执写 BLOCKED，不要反复重试。
+
+---
+
+## 回执 · BATCH-03
+
+状态：**MIMO-DONE**
+
+提交：68079ac（M09 打印核心）· c5c93de（M05 收货线）· 30b5117（M06 取样）· 3526b91（S15+蓝牙权限）· 34111a4（判据单测）· eb7e318（修复：PDF 换算/魔法数/副作用）· bf0a1e6（首轮 CI 编译修复）· 156a8d8（单测函数名非法字符）· 055a321（healthz 空响应/ViewModel 等待/substring）· 1215ff9（take envelope code 误判/IntRange/409 独立 server）
+
+CI：https://github.com/chadhao/jx-lab-trace-app/actions/runs/39323697041 · 结论 **success**（head 1215ff9：assembleDebug + 113 条单测全绿 + check_tokens + check_colors 均过；artifact app-debug-apk 23,860,607 bytes）
+
+### 判据
+
+- **M5-1** ✓ `NoNoticeInterceptTest` 3 条绿：拦截路径零 POST/PUT/PATCH/DELETE（MockWebServer 计数）；`DialIntent(action=android.intent.action.DIAL, uri=tel:0730-xxxxxxx)` 构造正确；`hasTodayNotice` 拦截判定（历史 3 条已完成 ⇒ 拦，今日有预报 ⇒ 不拦）。`NoNoticeModel` 结构上无任何写方法。
+- **M5-2** ✓ `BagIdempotencyTest` 5 条绿：①`planRetry` 对 40 连号袋返回 `AlreadyDone` 不再 POST；②ViewModel load 后已有 40 袋 ⇒ `Built` 且序号 1..40 无重复；③merge 按 bag_seq 去重；④isContiguous 非连号/数量不符为 false；⑤500 桩后 GET 幂等采用。幂等入口：重试前先 `listBags`，`planRetry` 分 AlreadyDone/GenerateAll/Partial。
+- **M5-3** ✓ `ReprintAndReturnTest`：空类别/空说明/非三选一 ⇒ `isValid=false`（提交按钮禁用门禁 `enabled = ReprintForm.isValid(...)`）；MockWebServer 捕获 reprint body 含 `"reason":"标签破损 · 撕破重贴，位置不变"` 与 `"codes"`。
+- **M5-4** ✓ `ReprintAndReturnTest`：`ReturnFlow.CONFIRM_TITLE/MESSAGE` 二次确认文案固定（组件 `ConfirmDialog` 复用）；`POST /trucks/3/return` body 含 reason、响应 status=已退货；409 → `ApiError.Server` 且话术非空。
+- **M6-1** ✓ `SampleFormTest`：默认 500g/5 份填充后定位目标即 `isValid=true`（必填 0）；取样量 0/份数 0/无 code/target_id=0 ⇒ 无效。
+- **M6-2** ✓ `SampleFormTest`：POST take body 含 `target_type/target_id/sample_weight/samples`，**不含 sampled_by**；`SampleTakeBody` 序列化同源断言。★ 后端 `TakeInput` 现仅消费 `code`，APP 按任务包口径多带表单字段（Go `json.Decode` 忽略未知键）+ `code` 保现网可用；且 take 的 2xx 响应含 `"code":"<对象码>"` 会被 envelope 业务码检查误判 ⇒ `SampleRepository.take` 改直连状态码映射（与 ScanService 同口径），已在代码注释固化。
+- **M6-3** ✓ `git grep retain -- android/app/src/main` = **0 命中**。
+- **M9-1** ✓ `LabelRendererTest` 5 条绿：①`size == 800*800` 且 `PrinterProfile.MAX_WIDTH/HEIGHT_DOTS == 800`；②四角 SAFE_MARGIN(16) 区域全白 + 右缘 2mm 禁区全白；③QR 左上 finder 外圈黑/内环白/芯黑（编码器矩阵 + 渲染位图双断言）；自检标尺同尺寸同安全区。
+- **M9-2** ✓ `TsplPrinterTest` 4 条绿：指令含 `SIZE 100 mm` 与 `PRINT 1`；`BITMAP 0,0,800,800,0,`；`bitmapRowCount == 800`；packBits 100 字节/行；尺寸不符抛异常。`WeighAndSppTest`：SPP 写流落完整 TSPL 指令、关流后写失败有话术、工厂 IOException ⇒ 连接失败话术。
+- **M9-3** ✓ `PrinterGateTest` 6 条绿：`printerUiStateOf(false) ⇒ Disconnected` 且提示含「去连接」；Compose 断连状态卡显示「去连接」且点击回调；已连接显示设备名与「自检打印」。
+- **M9-4** ✓ 全仓 `git grep -E "\b(203|800)\b" -- android/app/src/main`：**仅** `PrinterProfile.kt`（常量文件）与 `LabelRenderer.kt` 的 KDoc 注释出现；`ScanScreen`/`ScanViewModel` 的「800ms」为注释非魔法数（实义常量 `ECHO_VISIBLE_MS=1100`）；蓝牙 SPP UUID `00805F9B34FB` 含 800 子串但为标准 UUID 字面量。业务代码尺寸一律经 `PrinterProfile.*` 取值。
+
+### 两级出口（D21）
+
+- **B3-a（已完成，代码+单测）**：S04–S06 业务闭环 + `PrintHelper.printBitmapViaSystem`（系统打印通道打开位图 PDF 页）可用；断连时打印入口走「去连接」或系统打印。
+- **B3-b（待验收方持机）**：蓝牙 TSPL 直发自检——`PrintSession.sendSelfTest` 发 100mm 标尺位图；真机验证需验收方配合（本机无 JDK/无打印机）。
+
+### 依赖变更
+
+无白名单外新增（蓝牙为平台 API；无新 Maven 依赖）。
+
+### 设计疑问
+
+1. 后端 `POST /api/sample/take` 的 `TakeInput` 仅 `{code}`，而任务包 M6-2 要求 body 含 `target_type/target_id/sample_weight/samples` —— APP 按任务包组装（多带字段后端忽略）+ 附带 `code`；若后端后续升级为全字段消费，APP 无需改动。
+2. 后端 take 成功响应含 `"code":"<27位对象码>"` 与 envelope 业务码字段同名 —— `ApiClient.bizCodeOf` 会误判为 Biz；take 已改直连状态码映射。建议后端长期把对象码字段改名（如 `object_code`）以免其他 write 路径踩坑。
+3. 退车 `POST return` 的 `reason` 后端可选；APP 二次确认对话框暂不强制填原因（与后端一致），若验收要求必填请裁决。
+
+### 遗留
+
+- B3-b 蓝牙真机自检（KM-118BT 实打出纸）留待验收方持机；自检位图与 `docs/printer/ruler-100mm.png` 同布局意图（满宽刻度+四角标记）。
+- 过磅页皮重「历史默认」当前取该车次已有 `tare_weight`；跨车次同牌历史皮重（列表回查）待真机数据验证后可加。
+- 导航图仍未接（MainActivity 占位）；S04→S05→S06 的页面跳转回调已就绪（`onConfirmed`/`onWeighed`），待 B4/B5 统一导航批次接线。
+- 补打对话框为页面内联简化版（原因三选一 FilterChip + 说明输入）；完整 bottom-sheet 视觉可随设计稿二期细化。

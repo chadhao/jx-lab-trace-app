@@ -1,6 +1,6 @@
 package cn.hunanjiangxi.jxlabtrace.ui.theme
 
-import androidx.compose.foundation.shape.Shapes
+import androidx.compose.material3.Shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme

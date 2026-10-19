@@ -35,7 +35,7 @@ fun FieldCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(Tokens.Radius.md))
             .background(Tokens.Color.Surface.card)
-            .border(1.dp, RoundedCornerShape(Tokens.Radius.md))
+            .border(1.dp, Tokens.Color.Surface.border, RoundedCornerShape(Tokens.Radius.md))
             .padding(Tokens.Space.space4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.space1),
     ) {

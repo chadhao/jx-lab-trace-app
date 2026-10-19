@@ -53,7 +53,7 @@ fun DomainBlock(
             modifier = Modifier
                 .size(Tokens.Size.entryIcon)
                 .clip(RoundedCornerShape(Tokens.Radius.md))
-                .background(Color.copy(alpha = 0.18f, red = contentColor.red, green = contentColor.green, blue = contentColor.blue)),
+                .background(contentColor.copy(alpha = 0.18f)),
             contentAlignment = Alignment.Center,
         ) {
             androidx.compose.material3.Icon(

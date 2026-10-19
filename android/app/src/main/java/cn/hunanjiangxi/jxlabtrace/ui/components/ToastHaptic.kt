@@ -113,7 +113,7 @@ fun ToastHaptic(
 }
 
 private fun vibrate(context: Context, tone: ToastTone) {
-    val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         context.getSystemService(VibratorManager::class.java)?.defaultVibrator
     } else {
         @Suppress("DEPRECATION")

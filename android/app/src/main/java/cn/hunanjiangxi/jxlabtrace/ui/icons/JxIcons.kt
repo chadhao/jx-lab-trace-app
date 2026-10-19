@@ -185,6 +185,12 @@ object JxIcons {
         fillType = PathFillType.EvenOdd,
     )
 
+    /** 手电筒（S03 取景右上角，M04）。 */
+    val Torch: ImageVector = icon(
+        "Torch",
+        "M13,2 5,14h6l-1,8 8,-12h-6z",
+    )
+
     private fun icon(
         name: String,
         pathData: String,

@@ -8,6 +8,8 @@ plugins {
 // versionName = 提交短号（CI 注入 GITHUB_SHA）；versionCode = CI 运行号（递增整数）
 val gitSha: String = (System.getenv("GITHUB_SHA") ?: "local00").take(7)
 val buildNumber: Int = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toIntOrNull() ?: 1
+// 服务端基址（真机联调用环境变量 JX_BASE_URL 覆盖；默认取设计稿内网示例地址）
+val baseUrl: String = (System.getenv("JX_BASE_URL") ?: "http://10.0.0.12").trimEnd('/')
 
 android {
     namespace = "cn.hunanjiangxi.jxlabtrace"
@@ -19,6 +21,7 @@ android {
         targetSdk = 35
         versionCode = buildNumber
         versionName = gitSha
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -69,6 +72,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // B2 白名单新增（MIMO-NEXT-BATCH-02 §2）：相机三件套 + ML Kit 条码识别
+    implementation("androidx.camera:camera-camera2:1.3.4")
+    implementation("androidx.camera:camera-lifecycle:1.3.4")
+    implementation("androidx.camera:camera-view:1.3.4")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

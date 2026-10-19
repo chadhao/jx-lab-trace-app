@@ -1,0 +1,33 @@
+name: android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build debug APK + unit tests
+        working-directory: android
+        run: ./gradlew assembleDebug testDebugUnitTest
+
+      - name: Upload app-debug.apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
+
+      - name: Check design tokens consistency
+        run: python3 scripts/check_tokens.py

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 色值纪律：禁止手写色值，直接引用系统色（品牌色由 Compose 侧 Tokens.kt 提供） -->
+    <style name="Theme.JxLabTrace" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

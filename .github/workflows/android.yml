@@ -25,7 +25,10 @@ jobs:
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew assembleDebug testDebugUnitTest 2>&1 | tee ../build.log
+          ./gradlew assembleDebug testDebugUnitTest 2>&1 | tee ../build.log || {
+            grep "^e: " ../build.log | head -60 | while IFS= read -r l; do echo "::error $l"; done
+            exit 1
+          }
 
       - name: Upload build log (always, for acceptance)
         if: always()
@@ -37,15 +40,17 @@ jobs:
 
       - name: Push build log to ci/logs branch (failure only)
         if: failure()
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.email "ci-bot@example.local"
           git config user.name "ci-bot"
-          git fetch origin main --depth=1
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/chadhao/jx-lab-trace-app.git"
+          git fetch origin main
           git checkout -B ci/logs origin/main
-          cp build.log ./build.log 2>/dev/null || true
           git add build.log
           git commit -m "ci: build log for ${GITHUB_SHA}" || true
-          git push origin ci/logs
+          git push -f origin ci/logs
 
       - name: Upload app-debug.apk
         uses: actions/upload-artifact@v4

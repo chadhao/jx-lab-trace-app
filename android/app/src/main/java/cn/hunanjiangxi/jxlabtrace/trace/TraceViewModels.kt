@@ -181,7 +181,8 @@ class TraceViewModel(
     ): TraceUiState {
         // 绑定 result 后用 is Success 逐支判断（勿改回多分支 when(val result = …)）：
         // Failure : ApiResult<Nothing> 会使该写法把 result.data 推断成 Nothing（CI 实证）。
-        val result = session.withSessionRetry { repo.forward(truckLotId, bagCode) }
+        val raw: ApiResult<TraceForwardResult> = repo.forward(truckLotId, bagCode)
+        val result = session.withSessionRetry { raw }
         if (result is ApiResult.Failure) {
             return TraceUiState.Error(ErrorMessages.of(result.error))
         }

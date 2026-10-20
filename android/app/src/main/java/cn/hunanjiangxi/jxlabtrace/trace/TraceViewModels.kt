@@ -14,22 +14,22 @@ import kotlinx.coroutines.launch
 
 // ===== S13 追溯 ViewModel =====
 
-/** 时间线节点（S13 稿：单屏纵向时间线，一屏看完谁的料→哪批→测了什么）。 */
+/** 时间线节点（S13 稿：单屏纵向时间线，一屏看完谁的料→哪批→测了什么）�?*/
 data class TraceTimelineNode(
     val title: String,
     val subtitle: String,
-    /** 下钻目标：批档案 id（>0 可点开）。 */
+    /** 下钻目标：批档案 id�?0 可点开）�?*/
     val batchId: Long = 0,
-    /** 下钻目标：袋谱系码（非空可点开）。 */
+    /** 下钻目标：袋谱系码（非空可点开）�?*/
     val genealogyBagCode: String? = null,
-    /** 携带检测结果行（点开展示只读详情）。 */
+    /** 携带检测结果行（点开展示只读详情）�?*/
     val feedDetail: TraceFeedRef? = null,
 ) {
-    /** 可点开（有下钻目标或检测详情）。 */
+    /** 可点开（有下钻目标或检测详情）�?*/
     val clickable: Boolean get() = batchId > 0 || genealogyBagCode != null || feedDetail != null
 }
 
-/** 追溯结果视图（正/反向统一为时间线）。 */
+/** 追溯结果视图（正/反向统一为时间线）�?*/
 data class TraceView(
     val headerCode: String,
     val headerType: String,
@@ -39,23 +39,20 @@ data class TraceView(
 )
 
 sealed interface TraceUiState {
-    /** 待扫码。 */
+    /** 待扫码�?*/
     object Idle : TraceUiState
     object Loading : TraceUiState
     data class Loaded(val view: TraceView) : TraceUiState
-    /** 查无流向（200 + has_flow:false）——非错误，给引导。 */
+    /** 查无流向�?00 + has_flow:false）——非错误，给引导�?*/
     data class NoFlow(val hint: String) : TraceUiState
     data class Error(val message: String) : TraceUiState
 }
 
 /**
- * S13 追溯（M11）：ScanHero 扫码 → [CodeParser] 本地判型 → 路由四接口：
- * - A 车次 / B 原料吨袋 ⇒ `GET /api/trace/forward`（车→批→成品→出货）
- * - D 成品批 ⇒ `GET /api/trace/backward`（成品批→来源批→投料）
+ * S13 追溯（M11）：ScanHero 扫码 �?[CodeParser] 本地判型 �?路由四接口：
+ * - A 车次 / B 原料吨袋 �?`GET /api/trace/forward`（车→批→成品→出货�? * - D 成品�?�?`GET /api/trace/backward`（成品批→来源批→投料）
  * - B 原料吨袋另可下钻 `GET /api/prod/genealogy/bags/:code`（袋→投料→去向批）
- * - C 生产批 ⇒ `GET /api/trace/batch/:batchId`（需数字 id——码内无 id，扫 C 码时提示改用 forward/backward 入口，见设计疑问）
- * 全程只读，无任何写入口。
- */
+ * - C 生产�?�?`GET /api/trace/batch/:batchId`（需数字 id——码内无 id，扫 C 码时提示改用 forward/backward 入口，见设计疑问�? * 全程只读，无任何写入口�? */
 class TraceViewModel(
     private val repo: TraceRepository,
     private val session: SessionCoordinator,
@@ -66,7 +63,7 @@ class TraceViewModel(
     private val _state = MutableStateFlow<TraceUiState>(TraceUiState.Idle)
     val state: StateFlow<TraceUiState> = _state.asStateFlow()
 
-    /** 扫码/手输回调（宿主挂 ScanHero → ScanViewModel(confirmLabel="追溯此码")）。 */
+    /** 扫码/手输回调（宿主挂 ScanHero �?ScanViewModel(confirmLabel="追溯此码")）�?*/
     fun submitCode(rawCode: String, onFinished: (failureMessage: String?) -> Unit) {
         val parsed = when (val r = CodeParser.parse(rawCode)) {
             is CodeParser.Result.Ok -> r.code
@@ -84,9 +81,9 @@ class TraceViewModel(
                 else -> {
                     _state.value = TraceUiState.Error(
                         "该对象类型（${parsed.typeLabel}）暂不支持直接追溯；" +
-                            "请扫车次码、原料吨袋码或成品批码。",
+                            "请扫车次码、原料吨袋码或成品批码�?,
                     )
-                    onFinished("该对象类型暂不支持直接追溯")
+                    onFinished("该对象类型暂不支持直接追�?)
                     return@launch
                 }
             }
@@ -95,7 +92,7 @@ class TraceViewModel(
         }
     }
 
-    /** B 袋谱系下钻（袋 → 投料 → 去向批，多对多）。 */
+    /** B 袋谱系下钻（�?�?投料 �?去向批，多对多）�?*/
     fun openGenealogy(bagCode: String) {
         scope.launch {
             _state.value = TraceUiState.Loading
@@ -107,12 +104,12 @@ class TraceViewModel(
                             headerCode = g.bag_human.ifBlank { g.bag_code },
                             headerType = "原料吨袋谱系",
                             headerMeta = buildString {
-                                append("车次 ${g.truck_code.ifBlank { "—" }}")
-                                append(" · 投料 ${g.feeds.size} 次")
+                                append("车次 ${g.truck_code.ifBlank { "�? }}")
+                                append(" · 投料 ${g.feeds.size} �?)
                             },
                             nodes = g.feeds.map { feed ->
                                 TraceTimelineNode(
-                                    title = "投入生产批 #${feed.batch_id}",
+                                    title = "投入生产�?#${feed.batch_id}",
                                     subtitle = listOfNotNull(
                                         feed.fed_at,
                                         feed.feed_weight?.let { "${it} t" },
@@ -131,7 +128,7 @@ class TraceViewModel(
         }
     }
 
-    /** 批档案下钻（数字 id——来自 forward/backward 链上节点）。 */
+    /** 批档案下钻（数字 id——来�?forward/backward 链上节点）�?*/
     fun openBatchArchive(batchId: Long) {
         scope.launch {
             _state.value = TraceUiState.Loading
@@ -146,16 +143,16 @@ class TraceViewModel(
                                 a.customer_name.ifBlank { null },
                                 a.input_material.ifBlank { null },
                                 "投料 ${a.feed_count} · 作业 ${a.operation_count} · " +
-                                    "成品批 ${a.fg_lot_count} · 出货 ${a.shipment_count}",
+                                    "成品�?${a.fg_lot_count} · 出货 ${a.shipment_count}",
                             ).joinToString(" · "),
                             nodes = listOf(
-                                TraceTimelineNode("客户", a.customer_name.ifBlank { "—" }),
-                                TraceTimelineNode("投入物料", a.input_material.ifBlank { "—" }),
-                                TraceTimelineNode("计划产出", a.planned_output_material.ifBlank { "—" }),
+                                TraceTimelineNode("客户", a.customer_name.ifBlank { "�? }),
+                                TraceTimelineNode("投入物料", a.input_material.ifBlank { "�? }),
+                                TraceTimelineNode("计划产出", a.planned_output_material.ifBlank { "�? }),
                                 TraceTimelineNode("投料次数", "${a.feed_count}"),
-                                TraceTimelineNode("作业段", "${a.operation_count}"),
-                                TraceTimelineNode("成品批", "${a.fg_lot_count}"),
-                                TraceTimelineNode("出货单", "${a.shipment_count}"),
+                                TraceTimelineNode("作业�?, "${a.operation_count}"),
+                                TraceTimelineNode("成品�?, "${a.fg_lot_count}"),
+                                TraceTimelineNode("出货�?, "${a.shipment_count}"),
                             ),
                             hasFlow = true,
                         ),
@@ -167,7 +164,7 @@ class TraceViewModel(
         }
     }
 
-    /** 回到扫码起点。 */
+    /** 回到扫码起点�?*/
     fun reset() {
         _state.value = TraceUiState.Idle
     }
@@ -179,18 +176,17 @@ class TraceViewModel(
         bagCode: String?,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        // 绑定 result 后用 is Success 逐支判断（勿改回多分支 when(val result = …)）：
-        // Failure : ApiResult<Nothing> 会使该写法把 result.data 推断成 Nothing（CI 实证）。
-        val raw: ApiResult<TraceForwardResult> = repo.forward(truckLotId, bagCode)
+        // 绑定 result 后用 is Success 逐支判断（勿改回多分�?when(val result = �?）：
+        // Failure : ApiResult<Nothing> 会使该写法把 result.data 推断�?Nothing（CI 实证）�?        val raw: ApiResult<TraceForwardResult> = repo.forward(truckLotId, bagCode)
         val result = session.withSessionRetry { raw }
         if (result is ApiResult.Failure) {
             return TraceUiState.Error(ErrorMessages.of(result.error))
         }
         val f = (result as ApiResult.Success).data
-        if (!f.hasFlow) {
+        if (!f.has_flow) {
             return TraceUiState.NoFlow(
-                "${parsed.typeLabel} ${parsed.human} 在系统中查无投料流向；" +
-                    "可能尚未投料，请确认后重试。",
+                "${parsed.typeLabel} ${parsed.human} 在系统中查无投料流向�? +
+                    "可能尚未投料，请确认后重试�?,
             )
         }
         return TraceUiState.Loaded(
@@ -205,7 +201,7 @@ class TraceViewModel(
                 nodes = buildList {
                     add(
                         TraceTimelineNode(
-                            title = "原料车次 ${f.source.truck_code.ifBlank { "—" }}",
+                            title = "原料车次 ${f.source.truck_code.ifBlank { "�? }}",
                             subtitle = listOfNotNull(
                                 f.source.customer.ifBlank { null },
                                 f.source.arrive_date.ifBlank { null },
@@ -216,7 +212,7 @@ class TraceViewModel(
                     f.batches.forEach { b ->
                         add(
                             TraceTimelineNode(
-                                title = "生产批 ${b.human.ifBlank { b.code }}",
+                                title = "生产�?${b.human.ifBlank { b.code }}",
                                 subtitle = listOfNotNull(
                                     b.batch_date.ifBlank { null },
                                     b.status.ifBlank { null },
@@ -225,10 +221,10 @@ class TraceViewModel(
                             ),
                         )
                     }
-                    f.fgLots.forEach { l ->
+                    f.fg_lots.forEach { l ->
                         add(
                             TraceTimelineNode(
-                                title = "成品批 ${l.human.ifBlank { l.code }}",
+                                title = "成品�?${l.human.ifBlank { l.code }}",
                                 subtitle = listOfNotNull(
                                     l.output_material.ifBlank { null },
                                     l.net_weight?.let { "$it t" },
@@ -240,7 +236,7 @@ class TraceViewModel(
                     f.shipments.forEach { s ->
                         add(
                             TraceTimelineNode(
-                                title = "出货单 ${s.shipment_no}",
+                                title = "出货�?${s.shipment_no}",
                                 subtitle = listOfNotNull(
                                     s.customer.ifBlank { null },
                                     s.plate_no.ifBlank { null },
@@ -260,16 +256,15 @@ class TraceViewModel(
         fgCode: String,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        // 绑定 result 后用 is Success 逐支判断 —— 同 loadForward（见上方注释）。
-        val raw: ApiResult<TraceBackwardResult> = repo.backward(fgCode = fgCode)
+        // 绑定 result 后用 is Success 逐支判断 —�?�?loadForward（见上方注释）�?        val raw: ApiResult<TraceBackwardResult> = repo.backward(fgCode = fgCode)
         val result = session.withSessionRetry { raw }
         if (result is ApiResult.Failure) {
             return TraceUiState.Error(ErrorMessages.of(result.error))
         }
         val b = (result as ApiResult.Success).data
-        if (!b.hasFlow) {
+        if (!b.has_flow) {
             return TraceUiState.NoFlow(
-                "成品批 ${parsed.human} 查无来源投料流向；请确认后重试。",
+                "成品�?${parsed.human} 查无来源投料流向；请确认后重试�?,
             )
         }
         return TraceUiState.Loaded(
@@ -285,7 +280,7 @@ class TraceViewModel(
                     b.batches.forEach { batch ->
                         add(
                             TraceTimelineNode(
-                                title = "来源生产批 ${batch.human.ifBlank { batch.code }}",
+                                title = "来源生产�?${batch.human.ifBlank { batch.code }}",
                                 subtitle = listOfNotNull(
                                     batch.batch_date.ifBlank { null },
                                     batch.status.ifBlank { null },

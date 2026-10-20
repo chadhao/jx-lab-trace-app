@@ -56,3 +56,11 @@ CI 轮询结果：run [39402878900](https://github.com/chadhao/jx-lab-trace-app/
 2. 单测/资源不动；判据：grep BASE_URL 构建值 = 新地址；CI 全绿。
 
 **背景信息**：诊断日志实证手机 WebView 对 10.0.0.12 的 /api/auth/feishu/start 得到 `net::ERR_EMPTY_RESPONSE`（那台设备不认识该路径）；/healthz 的 200 是其它服务的假阳性。
+
+---
+
+## 追加任务二（2026-10-20 18:25）· BASE_URL 终值：公网端点
+
+**公网端点已实测打通**（验收方 curl 实证）：`http://office.hunanyichu.com:5502/healthz` → 200（version 18c9c21）；`/api/auth/feishu/start` → 302 飞书，redirect_uri 自动为 `http://office.hunanyichu.com:5502/api/auth/feishu/callback`（反代透传 Host 正确）。
+
+**任务**：`android/app/build.gradle.kts` 的 BASE_URL 默认值改为 **`http://office.hunanyichu.com:5502`**（保留 JX_BASE_URL 覆盖）。判据：CI 全绿 + 构建 APK 内 BASE_URL=新值。

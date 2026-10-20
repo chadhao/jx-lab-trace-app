@@ -110,6 +110,8 @@ class FeedProgressViewModelTest {
             viewModel.state.first { (it as? FeedUiState.Active)?.fedCount == before + 1 }
         } as FeedUiState.Active
         assertEquals(1, after.fedCount)
+        // 回调与状态更新分属两步，等待回调落地（10s 超时 ⇒ 真问题）
+        withTimeout(10_000) { while (failure == "unset") kotlinx.coroutines.delay(50) }
         assertEquals("成功回调应传 null", null, failure)
         assertEquals(1, feedPostCount)
         // 新记录插入列表头部（不依赖再次 GET feeds）

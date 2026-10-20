@@ -988,7 +988,7 @@
 
   <!-- ==================== S09 ==================== -->
   <div class="sec-h" id="s09"><span class="no">S09</span><h2>生产 · 投料（含班次内更正）</h2></div>
-  <p class="sec-desc">进入本页＝连续扫码模式（D25）：扫一袋确认一袋，进度条实时。更正入口只对<b>本班次内</b>的记录开放，超时置灰并给 PC 指引（时间判定用服务端时间，防手机改时间）。</p>
+  <p class="sec-desc">进入本页＝连续扫码模式（D25）：扫一袋确认一袋，进度条实时。更正<b>随时可做、不限班次</b>（用户 2026-10-20 裁决：系统只做如实记录+留痕）——每次更正必须填原因并留版本链，审计靠记录而非窗口。</p>
   <div class="frames">
     <div class="fitem">
       <div class="phone"><div class="screen">
@@ -998,11 +998,11 @@
           <div class="kpi"><div><div class="big">19<span style="font-size:15px;color:#667085">/40</span></div><div class="sub">已投袋数（实时）</div></div>
             <div class="sp"></div><div class="pill ok">进行中</div></div>
           <div class="bar3"><i style="width:47%"></i></div>
-          <div class="sech"><span>最近投料</span><span style="color:#B54708;font-weight:700">更正 ›</span></div>
+          <div class="sech"><span>最近投料</span><span style="color:#B54708;font-weight:700">随时可更正 ›</span></div>
           <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 19 袋 · 1.02 t</div><div class="s">10:22 · 1B 02 1020 …019 8</div></div><div class="v">更正</div></div>
           <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 18 袋 · 1.01 t</div><div class="s">10:19</div></div><div class="v">更正</div></div>
-          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 17 袋 · 1.02 t</div><div class="s">10:16 · 已过本班次？否</div></div><div class="v">更正</div></div>
-          <div class="note-inline" style="margin:0">更正须填原因并留版本链；<b>跨班次转 PC 端</b>。误扫的袋在确认卡上「作废此扫码」即可，不入库。</div>
+          <div class="row"><i class="bar" style="background:#B54708"></i><div><div class="t">第 17 袋 · 1.02 t</div><div class="s">10:16 · v1</div></div><div class="v">更正</div></div>
+          <div class="note-inline" style="margin:0">更正随时可做：<b>必须填原因并留版本链</b>（原记录作废可查，新记录 v2）。误扫的袋在确认卡上「作废此扫码」即可，不入库。</div>
         </div>
         <div class="footnav"><button class="btn pri" style="background:#B54708">扫下一袋</button></div>
       </div></div>
@@ -1086,7 +1086,7 @@
     <thead><tr><th>页面</th><th>接口（后端已存在）</th><th>自动化要点</th></tr></thead>
     <tbody>
       <tr><td>S08 建批</td><td>GET /api/prod/batches（上批默认）· POST /api/prod/batches</td><td>配方/设备/班组三默认；批号只读；必填 0</td></tr>
-      <tr><td>S09 投料</td><td>POST /api/prod/batches/:id/feeds · PATCH /api/prod/feeds/:id（更正）</td><td>进入即连续扫；更正限本班次（服务端时间判定）；重试幂等</td></tr>
+      <tr><td>S09 投料</td><td>POST /api/prod/batches/:id/feeds · PATCH /api/prod/feeds/:id（更正）</td><td>进入即连续扫；更正随时可做、原因+版本链即审计（无班次窗口）；重试幂等</td></tr>
       <tr><td>S10 作业段</td><td>POST /api/prod/batches/:id/operations</td><td>开始/结束两点；时长前端只展示，以服务端时间为准</td></tr>
       <tr><td>S11 成品打码</td><td>POST /api/prod/batches/:id/fg-lots · POST /api/prod/fg-lots/:id/bags · POST /api/prod/fg-lots/:id/print</td><td>袋数默认折算；连打复用 M09 队列；谱系自动挂接</td></tr>
     </tbody>

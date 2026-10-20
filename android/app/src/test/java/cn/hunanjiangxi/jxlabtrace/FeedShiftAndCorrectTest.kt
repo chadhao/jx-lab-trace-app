@@ -12,7 +12,6 @@ import cn.hunanjiangxi.jxlabtrace.prod.FeedViewModel
 import cn.hunanjiangxi.jxlabtrace.prod.ProdRepository
 import cn.hunanjiangxi.jxlabtrace.prod.ServerClock
 import cn.hunanjiangxi.jxlabtrace.prod.ServerTimeSource
-import cn.hunanjiangxi.jxlabtrace.prod.ShiftRules
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -33,7 +32,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * M7-3：班次判定 —— 手机时间改为未来 ⇒ 更正入口仍置灰（服务端时间注入单测）。
+ * M7-3/M7-4：投料更正 —— 无班次窗口（用户 2026-10-20 裁决：系统只做如实记录+留痕），原因+版本链即审计。
  * M7-4：更正请求体含 feed_id/new_weight/reason/version；PATCH 成功后列表显示 v2。
  */
 class FeedShiftAndCorrectTest {
@@ -123,66 +122,7 @@ class FeedShiftAndCorrectTest {
         )
     }
 
-    // ---- 纯逻辑 ----
-
-    @Test
-    fun `M7-3 同班次 - 可更正`() {
-        assertTrue(ShiftRules.withinSameShift(serverNow, serverNow, zone))
-        val sameShift = LocalDateTime.now().withHour(9).withMinute(30)
-            .atZone(zone).toInstant().toEpochMilli()
-        assertTrue(ShiftRules.withinSameShift(sameShift, serverNow, zone))
-    }
-
-    @Test
-    fun `M7-3 跨班次 - 不可更正`() {
-        assertFalse(ShiftRules.withinSameShift(fedAtPrevShift, serverNow, zone))
-    }
-
-    @Test
-    fun `M7-3 手机时间未来不影响判定 - 注入的服务端时间决定班次`() {
-        // 场景：手机时间被改到明天（未来），但服务端时间注入为今天 10:00。
-        // 判定只吃 [serverNow]（注入值），fed_at 是昨天投的 ⇒ 跨班次 ⇒ 置灰。
-        val fedYesterday = fedAtPrevShift - 24 * 3600 * 1000L
-        assertFalse(ShiftRules.withinSameShift(fedYesterday, serverNow, zone))
-        // 即便「手机现在」是未来任何时刻，本函数签名根本没有手机时间入口
-    }
-
-    @Test
-    fun `M7-3 shiftKey 边界 - 12h班制 08点整进白班`() {
-        val base = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
-        val h759 = base.withHour(7).withMinute(59).atZone(zone).toInstant().toEpochMilli()
-        val h800 = base.withHour(8).withMinute(0).atZone(zone).toInstant().toEpochMilli()
-        assertFalse(ShiftRules.withinSameShift(h759, h800, zone))
-        // 07:59 属「前一日夜班」（班序 1）；08:00 起属当日白班（班序 0）
-        assertEquals("1", ShiftRules.shiftKey(h759, zone).substringAfter('#'))
-        assertEquals("0", ShiftRules.shiftKey(h800, zone).substringAfter('#'))
-    }
-
-    @Test
-    fun `M7-3 12h夜班跨午夜 - 昨晚20点与今晨3点同班次`() {
-        val base = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
-        val night2000 = base.minusDays(1).withHour(20).withMinute(0)
-            .atZone(zone).toInstant().toEpochMilli()
-        val early0300 = base.withHour(3).withMinute(0)
-            .atZone(zone).toInstant().toEpochMilli()
-        // 同属「前一日 20:00 开始的夜班」——更正窗口跨午夜不断
-        assertTrue(ShiftRules.withinSameShift(night2000, early0300, zone))
-        // 但与今天 10:00（白班）不同班次
-        val now1000 = base.withHour(10).withMinute(0)
-            .atZone(zone).toInstant().toEpochMilli()
-        assertFalse(ShiftRules.withinSameShift(early0300, now1000, zone))
-    }
-
-    @Test
-    fun `M7-3 parseFedAt - 后端时间格式解析`() {
-        val parsed = ShiftRules.parseFedAt("2026-10-20 06:00:00", zone)
-        assertNotNull(parsed)
-        val expected = LocalDateTime.parse("2026-10-20 06:00:00", fmt)
-            .atZone(zone).toInstant().toEpochMilli()
-        assertEquals(expected, parsed)
-        assertEquals(null, ShiftRules.parseFedAt(null))
-        assertEquals(null, ShiftRules.parseFedAt(""))
-    }
+    // ---- 纯逻辑（更正随时可做：用户 2026-10-20 裁决——系统只做如实记录+留痕，无班次窗口） ----
 
     @Test
     fun `M7-3 ServerClock解析Date头`() {
@@ -203,33 +143,23 @@ class FeedShiftAndCorrectTest {
     // ---- ViewModel ----
 
     @Test
-    fun `M7-3 跨班次 - 更正入口置灰且不发请求`() = runBlocking {
-        val viewModel = vm(clockNow = serverNow)
-        viewModel.load()
-        withTimeout(10_000) { viewModel.state.first { it is FeedUiState.Active } }
-
-        viewModel.openCorrect(feed(fedAtPrevShift))
-        val session = withTimeout(10_000) {
-            viewModel.correcting.first { it != null }
-        } as FeedCorrectSession
-        assertFalse("跨班次应置灰", session.withinShift)
-
-        // 置灰时提交被 UI 门禁挡住；即使调用 submitCorrect 也不发 PATCH（方法内二次门禁）
-        viewModel.submitCorrect("磅读错", "测试", 1.2)
-        kotlinx.coroutines.delay(200)
-        assertEquals("置灰提交不得发 PATCH", 0, patchCount)
-    }
-
-    @Test
-    fun `M7-3 服务端时间不可达 - 按超班次置灰`() = runBlocking {
+    fun `M7-3 更正无班次窗口 - 旧记录随时可更正且 PATCH 正常发出`() = runBlocking {
         val viewModel = vm(clockNow = null)
         viewModel.load()
         withTimeout(10_000) { viewModel.state.first { it is FeedUiState.Active } }
-        viewModel.openCorrect(feed(serverNow))
+
+        // 昨天的投料记录（原「跨班次置灰」场景）——现在直接进入更正态并可提交
+        val fedYesterday = serverNow - 24 * 3600 * 1000L
+        viewModel.openCorrect(feed(fedYesterday))
         val session = withTimeout(10_000) {
             viewModel.correcting.first { it != null }
         } as FeedCorrectSession
-        assertFalse("服务端时间不可达宁灰不错放", session.withinShift)
+        assertEquals(feed(fedYesterday).id, session.feed.id)
+
+        viewModel.submitCorrect("磅读错", "昨日漏更，今日补正", 1.2)
+        withTimeout(10_000) { viewModel.correctDone.first { it != null } }
+        val body = requireNotNull(patchBody)
+        assertTrue("PATCH 应发出且含原因", body.contains("\"reason\""))
     }
 
     @Test
@@ -245,7 +175,6 @@ class FeedShiftAndCorrectTest {
         val session = withTimeout(10_000) {
             viewModel.correcting.first { it != null }
         } as FeedCorrectSession
-        assertTrue("同班次应可更正", session.withinShift)
 
         viewModel.submitCorrect("磅读错", "磅显示看错一位", 1.2)
         withTimeout(10_000) { viewModel.correctDone.first { it != null } }

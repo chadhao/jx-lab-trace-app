@@ -103,8 +103,6 @@ sealed interface FeedUiState {
 /** 更正页状态（列表行点「更正」进入）。 */
 data class FeedCorrectSession(
     val feed: FeedRecord,
-    /** 是否仍在本班次内（服务端时间判定；不可达按 false＝置灰处理）。 */
-    val withinShift: Boolean,
 )
 
 /**
@@ -185,18 +183,9 @@ class FeedViewModel(
         }
     }
 
-    /** 点「更正」：取服务端时间判班次（M7-3）。 */
+    /** 点「更正」：随时可更正（用户 2026-10-20 裁决：系统只做如实记录+留痕，无班次窗口）。 */
     fun openCorrect(feed: FeedRecord) {
-        scope.launch {
-            val serverNow = clock.nowMillis()
-            val fedAt = ShiftRules.parseFedAt(feed.fed_at)
-            val within = if (serverNow == null || fedAt == null) {
-                false
-            } else {
-                ShiftRules.withinSameShift(fedAt, serverNow)
-            }
-            _correcting.value = FeedCorrectSession(feed = feed, withinShift = within)
-        }
+        _correcting.value = FeedCorrectSession(feed = feed)
     }
 
     fun cancelCorrect() {
@@ -209,7 +198,6 @@ class FeedViewModel(
      */
     fun submitCorrect(reasonCategory: String?, detail: String, newWeightTons: Double?) {
         val sessionState = _correcting.value ?: return
-        if (!sessionState.withinShift) return
         val category = reasonCategory ?: return
         if (!FeedCorrectForm.isValid(category, detail, newWeightTons)) return
         val body = FeedCorrectForm.build(

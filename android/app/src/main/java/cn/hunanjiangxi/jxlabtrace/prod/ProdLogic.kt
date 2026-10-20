@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 // 判据挂钩：
 //   M7-1 建批零输入：默认值来自上批；无上批 ⇒ 空 + 逐项校验；
 //   M7-2 投料进度：本地累计（FeedProgress）；
-//   M7-3 班次判定：**只吃服务端时间**（ShiftRules），手机时间不可达；
+//   M7-3 更正随时可做（用户 2026-10-20 裁决：系统只做如实记录+留痕，无班次窗口；原因+版本链即审计）；
 //   M7-4 更正请求体：FeedCorrectForm 组装（feed_id/new_weight/reason/version）；
 //   M7-5 作业段：重复点「结束」幂等（OperationTracker）。
 
@@ -81,39 +81,6 @@ object FeedProgress {
  * 班次窗口：按服务端时区把一天切为 3 班（00–08 / 08–16 / 16–24）。
  * 「本班次内」＝投料时刻与当前服务端时刻落在同一班次窗口。
  */
-object ShiftRules {
-
-    /** 班制（项目方 2026-10-20 确认）：**12 小时 × 2 班**——白班 08:00–20:00、夜班 20:00–次日 08:00。 */
-    const val SHIFT_HOURS = 12
-
-    /** 白班起始小时。 */
-    const val SHIFT_START_HOUR = 8
-
-    /** 服务端时间戳（epoch millis）→ 班次键 `yyyy-MM-dd#班序(0=白/1=夜)`。
-     *  夜班跨午夜：凌晨 00:00–07:59 归属「前一日 20:00 开始的夜班」（键的日期取班次开始日）。 */
-    fun shiftKey(serverMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String {
-        val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(serverMillis), zone)
-        val adj = if (ldt.hour < SHIFT_START_HOUR) ldt.minusDays(1) else ldt
-        val idx = ((adj.hour - SHIFT_START_HOUR + 24) % 24) / SHIFT_HOURS
-        return "${adj.toLocalDate()}#$idx"
-    }
-
-    /** 投料是否仍在本班次内可更正（两个入参都必须是**服务端时间**）。 */
-    fun withinSameShift(fedAtMillis: Long, serverNowMillis: Long, zone: ZoneId = ZoneId.systemDefault()): Boolean =
-        shiftKey(fedAtMillis, zone) == shiftKey(serverNowMillis, zone)
-
-    /** 后端 fed_at（`yyyy-MM-dd HH:mm:ss`，服务端时区）→ epoch millis。 */
-    fun parseFedAt(fedAt: String?, zone: ZoneId = ZoneId.systemDefault()): Long? {
-        val text = fedAt?.trim().orEmpty()
-        if (text.isEmpty()) return null
-        return runCatching {
-            LocalDateTime.parse(text, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                .atZone(zone)
-                .toInstant()
-                .toEpochMilli()
-        }.getOrNull()
-    }
-}
 
 /**
  * S09 更正表单（判据 M7-4）：原因三选一 + 说明必填；请求体含

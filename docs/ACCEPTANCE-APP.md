@@ -7,11 +7,11 @@
 
 | 项 | 命令 | 状态 |
 |---|---|---|
-| tokens 一致性 | `python3 scripts/check_tokens.py` | ☐ |
-| 裸色值 = 0 | `python3 scripts/check_colors.py` | ☐ |
-| 白名单零命中 | `python3 scripts/check_scope.py` | ☐ |
-| lint + 单测 + APK | `scripts/check_app.sh`（CI 内跑） | ☐ |
-| APK artifact | CI `app-debug-apk`（90 天） | ☐ |
+| tokens 一致性 | `python3 scripts/check_tokens.py` | ✅ OK（验收方本机复核 2026-10-20） |
+| 裸色值 = 0 | `python3 scripts/check_colors.py` | ✅ OK |
+| 白名单零命中 | `python3 scripts/check_scope.py` | ✅ OK（终扫 2026-10-20） |
+| lint + 单测 + APK | `scripts/check_app.sh`（CI 内跑） | ✅ 168 单测 + assembleDebug（run 39353825386 success） |
+| APK artifact | CI `app-debug-apk`（90 天） | ✅ 23,996,016 bytes |
 
 ## 1. B1（M01 工程骨架 + M02 设计系统）
 

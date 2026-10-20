@@ -6,7 +6,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -64,9 +66,23 @@ class LoginWebViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // 远程调试（chrome://inspect）：真机排查登录卡点用，须在 WebView 创建前开启。
+        WebView.setWebContentsDebuggingEnabled(true)
+
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                    consoleMessage?.let {
+                        AppLogger.i(
+                            "LoginWeb",
+                            "console[${it.messageLevel()}] ${it.message()} (${it.sourceId()}:${it.lineNumber()})",
+                        )
+                    }
+                    return true
+                }
+            }
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
                     view: WebView,
@@ -120,6 +136,7 @@ class LoginWebViewActivity : ComponentActivity() {
                         onLogin = { beginAuthorize() },
                         onManualOpen = { beginAuthorize() },
                         onCancel = ::handleCancel,
+                        onExportDiag = ::handleExportDiag,
                         onRetry = { beginAuthorize() },
                         onAcknowledge = ::handleCancel,
                         onCallSupport = ::handleSupportCall,
@@ -246,6 +263,17 @@ class LoginWebViewActivity : ComponentActivity() {
         // 排查指引 = 一键拨号综合运营部（拦截三要素口径；号码待 WorkBuddy 定稿）。
         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$SUPPORT_PHONE"))
         runCatching { startActivity(intent) }
+    }
+
+    /** Authorizing 态「导出诊断日志」：全量缓冲 → 系统分享面板（text/plain）。 */
+    private fun handleExportDiag() {
+        val text = LoginDiag.exportText(AppLogger.snapshot())
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "登录诊断日志")
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        runCatching { startActivity(Intent.createChooser(send, "登录诊断日志")) }
     }
 
     override fun onDestroy() {

@@ -91,6 +91,7 @@ fun LoginScreen(
     onRetry: () -> Unit,
     onAcknowledge: () -> Unit,
     onCallSupport: () -> Unit,
+    onExportDiag: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val exposeWebContent = (state as? LoginUiState.Authorizing)?.onRemotePage == true
@@ -105,7 +106,7 @@ fun LoginScreen(
             state is LoginUiState.Initial -> InitialContent(versionName, serverHost, onLogin)
 
             state is LoginUiState.Authorizing ->
-                AuthorizingContent(state, onManualOpen, onCancel)
+                AuthorizingContent(state, onManualOpen, onCancel, onExportDiag)
 
             state is LoginUiState.Success -> SuccessContent(state.me)
 
@@ -194,12 +195,13 @@ private fun InitialContent(
     }
 }
 
-/** 授权中：转圈 + 超时后的手动打开兜底 + 取消。 */
+/** 授权中：转圈 + 超时后的手动打开兜底 + 导出诊断日志 + 取消。 */
 @Composable
 private fun AuthorizingContent(
     state: LoginUiState.Authorizing,
     onManualOpen: () -> Unit,
     onCancel: () -> Unit,
+    onExportDiag: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -246,6 +248,16 @@ private fun AuthorizingContent(
                 Text("手动打开授权页", color = Tokens.Color.Brand.onPrimary)
             }
         }
+        Text(
+            text = "导出诊断日志",
+            color = Tokens.Color.Brand.onPrimary,
+            fontSize = Tokens.Type.Label.size,
+            modifier = Modifier
+                .padding(top = Tokens.Space.space4)
+                .clip(RoundedCornerShape(Tokens.Radius.sm))
+                .clickable(onClick = onExportDiag)
+                .padding(horizontal = Tokens.Space.space4, vertical = Tokens.Space.space2),
+        )
         Text(
             text = "取消登录",
             color = Tokens.Color.Brand.onPrimary,

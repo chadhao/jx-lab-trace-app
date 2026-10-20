@@ -22,3 +22,23 @@
 ## 纪律
 
 同前（显式路径提交、`mimo: 诊断增强` 前缀、push 后用 `.env.local` token 轮询 CI 到 success）。完成后回执 `MIMO-DONE` 写在本文件末尾。
+
+---
+
+## MIMO-DONE（2026-10-20 · mimo）
+
+三项需求全部落地：
+
+1. **导出诊断日志按钮**：`LoginScreen.AuthorizingContent` 在「取消登录」上方新增「导出诊断日志」（新参数 `onExportDiag`，`LoginWebViewActivity` 接线）；点击 ⇒ `LoginDiag.exportText(AppLogger.snapshot())` 全量（含 `LoginWeb`）→ `Intent.ACTION_SEND`（`text/plain`，EXTRA_SUBJECT「登录诊断日志」）系统分享面板；空缓冲兜底「(缓冲为空)」。
+2. **WebChromeClient**：`LoginWebViewActivity` 挂 `onConsoleMessage` ⇒ `AppLogger.i("LoginWeb", "console[${messageLevel}] ${message} (${sourceId}:${lineNumber})")`，返回 true。
+3. **远程调试**：`onCreate` 中 WebView 创建前调用 `WebView.setWebContentsDebuggingEnabled(true)`。
+
+判据证据：
+
+- **D-1 ✅** 格式化抽纯函数 `LoginDiag.exportText(entries)` / `LoginDiag.formatLine`（`auth/LoginDiag.kt`，纯 JVM 无 Android 依赖）；单测 `LoginDiagTest.kt` 4 用例断言逐行格式 `HH:mm:ss.SSS LEVEL [tag] message`、多条按序拼接、空缓冲「(缓冲为空)」兜底。本地 `gradlew testDebugUnitTest` BUILD SUCCESSFUL：`LoginDiagTest tests=4 failures=0`，全套 166 用例 0 失败（test-results XML 实证）。
+- **D-2 ✅** `onConsoleMessage → AppLogger.i` 落于 `LoginWebViewActivity.kt`（代码审查+`compileDebugKotlin` 通过；按判据不强制单测）。
+- **D-3 ✅** 本地复跑：`check_scope.py` OK（11 组 PC 专属词零命中）、`check_colors.py` OK（零裸色值）、`check_tokens.py` OK；`gradlew testDebugUnitTest` 绿、Kotlin 编译零错（仅存量 deprecation 警告）。lint 由 CI `android.yml` `lintDebug` 执行，以本轮推送 CI success 为准（结果见下一行补记）。
+
+CI 轮询结果：（push 后补记）
+
+设计疑问：无

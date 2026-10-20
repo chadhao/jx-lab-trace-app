@@ -72,6 +72,8 @@ class LoginWebViewActivity : ComponentActivity() {
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            // accounts.feishu.cn 识别 WebView 默认 UA 会降级渲染（蓝底不出登录 UI）——改用系统标准 Chrome UA
+            settings.userAgentString = android.webkit.WebSettings.getDefaultUserAgent(this)
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
                     consoleMessage?.let {

@@ -148,13 +148,29 @@ class FeedShiftAndCorrectTest {
     }
 
     @Test
-    fun `M7-3 shiftKey 边界 - 08点整进新班次`() {
+    fun `M7-3 shiftKey 边界 - 12h班制 08点整进白班`() {
         val base = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
         val h759 = base.withHour(7).withMinute(59).atZone(zone).toInstant().toEpochMilli()
         val h800 = base.withHour(8).withMinute(0).atZone(zone).toInstant().toEpochMilli()
         assertFalse(ShiftRules.withinSameShift(h759, h800, zone))
-        assertEquals("0", ShiftRules.shiftKey(h759, zone).substringAfter('#'))
-        assertEquals("1", ShiftRules.shiftKey(h800, zone).substringAfter('#'))
+        // 07:59 属「前一日夜班」（班序 1）；08:00 起属当日白班（班序 0）
+        assertEquals("1", ShiftRules.shiftKey(h759, zone).substringAfter('#'))
+        assertEquals("0", ShiftRules.shiftKey(h800, zone).substringAfter('#'))
+    }
+
+    @Test
+    fun `M7-3 12h夜班跨午夜 - 昨晚20点与今晨3点同班次`() {
+        val base = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
+        val night2000 = base.minusDays(1).withHour(20).withMinute(0)
+            .atZone(zone).toInstant().toEpochMilli()
+        val early0300 = base.withHour(3).withMinute(0)
+            .atZone(zone).toInstant().toEpochMilli()
+        // 同属「前一日 20:00 开始的夜班」——更正窗口跨午夜不断
+        assertTrue(ShiftRules.withinSameShift(night2000, early0300, zone))
+        // 但与今天 10:00（白班）不同班次
+        val now1000 = base.withHour(10).withMinute(0)
+            .atZone(zone).toInstant().toEpochMilli()
+        assertFalse(ShiftRules.withinSameShift(early0300, now1000, zone))
     }
 
     @Test

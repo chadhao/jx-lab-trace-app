@@ -83,13 +83,19 @@ object FeedProgress {
  */
 object ShiftRules {
 
-    const val SHIFT_HOURS = 8
+    /** 班制（项目方 2026-10-20 确认）：**12 小时 × 2 班**——白班 08:00–20:00、夜班 20:00–次日 08:00。 */
+    const val SHIFT_HOURS = 12
 
-    /** 服务端时间戳（epoch millis）→ 班次键 `yyyy-MM-dd#班序(0/1/2)`。 */
+    /** 白班起始小时。 */
+    const val SHIFT_START_HOUR = 8
+
+    /** 服务端时间戳（epoch millis）→ 班次键 `yyyy-MM-dd#班序(0=白/1=夜)`。
+     *  夜班跨午夜：凌晨 00:00–07:59 归属「前一日 20:00 开始的夜班」（键的日期取班次开始日）。 */
     fun shiftKey(serverMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String {
         val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(serverMillis), zone)
-        val shift = (ldt.hour / SHIFT_HOURS).coerceIn(0, 2)
-        return "${ldt.toLocalDate()}#$shift"
+        val adj = if (ldt.hour < SHIFT_START_HOUR) ldt.minusDays(1) else ldt
+        val idx = ((adj.hour - SHIFT_START_HOUR + 24) % 24) / SHIFT_HOURS
+        return "${adj.toLocalDate()}#$idx"
     }
 
     /** 投料是否仍在本班次内可更正（两个入参都必须是**服务端时间**）。 */

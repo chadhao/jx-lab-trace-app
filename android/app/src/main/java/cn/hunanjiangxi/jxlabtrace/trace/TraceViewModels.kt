@@ -179,142 +179,140 @@ class TraceViewModel(
         bagCode: String?,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        // 语句式 when（勿改回表达式 return）：Failure : ApiResult<Nothing> 会把多分支
-        // when 的公共类型收成 Failure，令 Success 分支的 result.data 丢类型（CI 实证）。
-        when (val result = session.withSessionRetry { repo.forward(truckLotId, bagCode) }) {
-            is ApiResult.Failure -> return TraceUiState.Error(ErrorMessages.of(result.error))
-            is ApiResult.Success -> {
-                val f = result.data
-                if (!f.hasFlow) {
-                    return TraceUiState.NoFlow(
-                        "${parsed.typeLabel} ${parsed.human} 在系统中查无投料流向；" +
-                            "可能尚未投料，请确认后重试。",
-                    )
-                }
-                return TraceUiState.Loaded(
-                    TraceView(
-                        headerCode = parsed.human,
-                        headerType = parsed.typeLabel,
-                        headerMeta = listOfNotNull(
-                            f.source.customer.ifBlank { null },
-                            f.source.material.ifBlank { null },
-                            f.source.arrive_date.ifBlank { null },
-                        ).joinToString(" · "),
-                        nodes = buildList {
-                            add(
-                                TraceTimelineNode(
-                                    title = "原料车次 ${f.source.truck_code.ifBlank { "—" }}",
-                                    subtitle = listOfNotNull(
-                                        f.source.customer.ifBlank { null },
-                                        f.source.arrive_date.ifBlank { null },
-                                        f.source.status.ifBlank { null },
-                                    ).joinToString(" · "),
-                                ),
-                            )
-                            f.batches.forEach { b ->
-                                add(
-                                    TraceTimelineNode(
-                                        title = "生产批 ${b.human.ifBlank { b.code }}",
-                                        subtitle = listOfNotNull(
-                                            b.batch_date.ifBlank { null },
-                                            b.status.ifBlank { null },
-                                        ).joinToString(" · "),
-                                        batchId = b.batch_id,
-                                    ),
-                                )
-                            }
-                            f.fgLots.forEach { l ->
-                                add(
-                                    TraceTimelineNode(
-                                        title = "成品批 ${l.human.ifBlank { l.code }}",
-                                        subtitle = listOfNotNull(
-                                            l.output_material.ifBlank { null },
-                                            l.net_weight?.let { "$it t" },
-                                            l.status.ifBlank { null },
-                                        ).joinToString(" · "),
-                                    ),
-                                )
-                            }
-                            f.shipments.forEach { s ->
-                                add(
-                                    TraceTimelineNode(
-                                        title = "出货单 ${s.shipment_no}",
-                                        subtitle = listOfNotNull(
-                                            s.customer.ifBlank { null },
-                                            s.plate_no.ifBlank { null },
-                                            s.ship_at,
-                                            s.status.ifBlank { null },
-                                        ).joinToString(" · "),
-                                    ),
-                                )
-                            }
-                        },
-                        hasFlow = true,
-                    ),
-                )
-            }
+        // 绑定 result 后用 is Success 逐支判断（勿改回多分支 when(val result = …)）：
+        // Failure : ApiResult<Nothing> 会使该写法把 result.data 推断成 Nothing（CI 实证）。
+        val result = session.withSessionRetry { repo.forward(truckLotId, bagCode) }
+        if (result is ApiResult.Failure) {
+            return TraceUiState.Error(ErrorMessages.of(result.error))
         }
+        val f = (result as ApiResult.Success).data
+        if (!f.hasFlow) {
+            return TraceUiState.NoFlow(
+                "${parsed.typeLabel} ${parsed.human} 在系统中查无投料流向；" +
+                    "可能尚未投料，请确认后重试。",
+            )
+        }
+        return TraceUiState.Loaded(
+            TraceView(
+                headerCode = parsed.human,
+                headerType = parsed.typeLabel,
+                headerMeta = listOfNotNull(
+                    f.source.customer.ifBlank { null },
+                    f.source.material.ifBlank { null },
+                    f.source.arrive_date.ifBlank { null },
+                ).joinToString(" · "),
+                nodes = buildList {
+                    add(
+                        TraceTimelineNode(
+                            title = "原料车次 ${f.source.truck_code.ifBlank { "—" }}",
+                            subtitle = listOfNotNull(
+                                f.source.customer.ifBlank { null },
+                                f.source.arrive_date.ifBlank { null },
+                                f.source.status.ifBlank { null },
+                            ).joinToString(" · "),
+                        ),
+                    )
+                    f.batches.forEach { b ->
+                        add(
+                            TraceTimelineNode(
+                                title = "生产批 ${b.human.ifBlank { b.code }}",
+                                subtitle = listOfNotNull(
+                                    b.batch_date.ifBlank { null },
+                                    b.status.ifBlank { null },
+                                ).joinToString(" · "),
+                                batchId = b.batch_id,
+                            ),
+                        )
+                    }
+                    f.fgLots.forEach { l ->
+                        add(
+                            TraceTimelineNode(
+                                title = "成品批 ${l.human.ifBlank { l.code }}",
+                                subtitle = listOfNotNull(
+                                    l.output_material.ifBlank { null },
+                                    l.net_weight?.let { "$it t" },
+                                    l.status.ifBlank { null },
+                                ).joinToString(" · "),
+                            ),
+                        )
+                    }
+                    f.shipments.forEach { s ->
+                        add(
+                            TraceTimelineNode(
+                                title = "出货单 ${s.shipment_no}",
+                                subtitle = listOfNotNull(
+                                    s.customer.ifBlank { null },
+                                    s.plate_no.ifBlank { null },
+                                    s.ship_at,
+                                    s.status.ifBlank { null },
+                                ).joinToString(" · "),
+                            ),
+                        )
+                    }
+                },
+                hasFlow = true,
+            ),
+        )
     }
 
     private suspend fun loadBackward(
         fgCode: String,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        // 语句式 when —— 同 loadForward（见上方注释）。
-        when (val result = session.withSessionRetry { repo.backward(fgCode = fgCode) }) {
-            is ApiResult.Failure -> return TraceUiState.Error(ErrorMessages.of(result.error))
-            is ApiResult.Success -> {
-                val b = result.data
-                if (!b.hasFlow) {
-                    return TraceUiState.NoFlow(
-                        "成品批 ${parsed.human} 查无来源投料流向；请确认后重试。",
-                    )
-                }
-                return TraceUiState.Loaded(
-                    TraceView(
-                        headerCode = parsed.human,
-                        headerType = parsed.typeLabel,
-                        headerMeta = listOfNotNull(
-                            b.fg_lot.output_material.ifBlank { null },
-                            b.fg_lot.net_weight?.let { "$it t" },
-                            b.fg_lot.status.ifBlank { null },
-                        ).joinToString(" · "),
-                        nodes = buildList {
-                            b.batches.forEach { batch ->
-                                add(
-                                    TraceTimelineNode(
-                                        title = "来源生产批 ${batch.human.ifBlank { batch.code }}",
-                                        subtitle = listOfNotNull(
-                                            batch.batch_date.ifBlank { null },
-                                            batch.status.ifBlank { null },
-                                        ).joinToString(" · "),
-                                        batchId = batch.batch_id,
-                                    ),
-                                )
-                            }
-                            b.feeds.forEach { feed ->
-                                val judgeLine = feed.results
-                                    .filter { it.judge.isNotBlank() }
-                                    .joinToString(" · ") { "${it.item_name} ${it.judge}" }
-                                add(
-                                    TraceTimelineNode(
-                                        title = "原料吨袋 ${feed.bag_human.ifBlank { feed.bag_code }}",
-                                        subtitle = listOfNotNull(
-                                            feed.truck_code.ifBlank { null },
-                                            feed.customer.ifBlank { null },
-                                            feed.fed_at,
-                                            judgeLine.ifBlank { null },
-                                        ).joinToString(" · "),
-                                        genealogyBagCode = feed.bag_code.ifBlank { null },
-                                        feedDetail = feed.takeIf { it.results.isNotEmpty() },
-                                    ),
-                                )
-                            }
-                        },
-                        hasFlow = true,
-                    ),
-                )
-            }
+        // 绑定 result 后用 is Success 逐支判断 —— 同 loadForward（见上方注释）。
+        val result = session.withSessionRetry { repo.backward(fgCode = fgCode) }
+        if (result is ApiResult.Failure) {
+            return TraceUiState.Error(ErrorMessages.of(result.error))
         }
+        val b = (result as ApiResult.Success).data
+        if (!b.hasFlow) {
+            return TraceUiState.NoFlow(
+                "成品批 ${parsed.human} 查无来源投料流向；请确认后重试。",
+            )
+        }
+        return TraceUiState.Loaded(
+            TraceView(
+                headerCode = parsed.human,
+                headerType = parsed.typeLabel,
+                headerMeta = listOfNotNull(
+                    b.fg_lot.output_material.ifBlank { null },
+                    b.fg_lot.net_weight?.let { "$it t" },
+                    b.fg_lot.status.ifBlank { null },
+                ).joinToString(" · "),
+                nodes = buildList {
+                    b.batches.forEach { batch ->
+                        add(
+                            TraceTimelineNode(
+                                title = "来源生产批 ${batch.human.ifBlank { batch.code }}",
+                                subtitle = listOfNotNull(
+                                    batch.batch_date.ifBlank { null },
+                                    batch.status.ifBlank { null },
+                                ).joinToString(" · "),
+                                batchId = batch.batch_id,
+                            ),
+                        )
+                    }
+                    b.feeds.forEach { feed ->
+                        val judgeLine = feed.results
+                            .filter { it.judge.isNotBlank() }
+                            .joinToString(" · ") { "${it.item_name} ${it.judge}" }
+                        add(
+                            TraceTimelineNode(
+                                title = "原料吨袋 ${feed.bag_human.ifBlank { feed.bag_code }}",
+                                subtitle = listOfNotNull(
+                                    feed.truck_code.ifBlank { null },
+                                    feed.customer.ifBlank { null },
+                                    feed.fed_at,
+                                    judgeLine.ifBlank { null },
+                                ).joinToString(" · "),
+                                genealogyBagCode = feed.bag_code.ifBlank { null },
+                                feedDetail = feed.takeIf { it.results.isNotEmpty() },
+                            ),
+                        )
+                    }
+                },
+                hasFlow = true,
+            ),
+        )
     }
 }

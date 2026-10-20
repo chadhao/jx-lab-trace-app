@@ -105,6 +105,7 @@ class NoticesViewModel(
 /**
  * 无预报拦截模型：只读列表本地过滤 + 拨号。
  * 判据 M5-1：本类**没有任何写方法** —— 结构上保证拦截页零 POST。
+ * M12：[interceptKind] 区分「无预报 / 无车辆档案」文案变体（同一拦截页）。
  */
 class NoNoticeModel(private val allNoticesProvider: () -> List<RecvNotice>) {
 
@@ -112,6 +113,10 @@ class NoNoticeModel(private val allNoticesProvider: () -> List<RecvNotice>) {
         NoticesFilter.recentByPlate(allNoticesProvider(), plate)
 
     fun dialIntent(): DialIntent = DialActions.operationsDial()
+
+    /** M12 拦截文案变体（无记录 ⇒ 档案缺失；有记录但今日无预报 ⇒ 无预报）。 */
+    fun interceptKind(plate: String): ArrivalInterceptKind =
+        arrivalInterceptKind(allNoticesProvider(), plate)
 }
 
 // ===== S05 过磅 ViewModel =====

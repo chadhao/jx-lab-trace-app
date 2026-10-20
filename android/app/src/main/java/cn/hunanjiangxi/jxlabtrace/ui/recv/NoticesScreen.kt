@@ -178,8 +178,9 @@ private fun NoticeCard(notice: RecvNotice, onConfirm: (() -> Unit)?) {
 }
 
 /**
- * 无预报拦截页（S04 ② · M5-1）：原因 + 最近 3 条 + 一键拨号。
+ * 无预报 / 无车辆档案拦截页（S04 ② · M5-1 + M12 文案变体）：原因 + 最近 3 条 + 一键拨号。
  * 结构上无写请求 —— 只消费 [NoNoticeModel]（只读）。
+ * [NoNoticeModel.interceptKind] 区分两变体（同一拦截页、同一出路）。
  */
 @Composable
 fun NoNoticeInterceptScreen(
@@ -189,8 +190,9 @@ fun NoNoticeInterceptScreen(
 ) {
     val context = LocalContext.current
     val recent = model.recentNotices(plate)
+    val kind = model.interceptKind(plate)
     Column(modifier = modifier.fillMaxSize()) {
-        TopBar(title = "无预报登记")
+        TopBar(title = if (recent.isEmpty()) "车辆档案" else "无预报登记")
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -198,12 +200,12 @@ fun NoNoticeInterceptScreen(
             verticalArrangement = Arrangement.spacedBy(Tokens.Space.space4),
         ) {
             Text(
-                text = "该车牌今日无预报，暂不能收货",
+                text = kind.title,
                 color = Tokens.Color.Status.danger,
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = "请先电话联系综合运营部补预报，补录后下拉刷新本页即可继续",
+                text = kind.guidance,
                 color = Tokens.Color.Text.secondary,
                 style = MaterialTheme.typography.bodyMedium,
             )

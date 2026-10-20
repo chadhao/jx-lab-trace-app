@@ -57,6 +57,37 @@ object NoticesFilter {
  */
 data class DialIntent(val action: String, val uri: String)
 
+/**
+ * M12 四类拦截之「无预报 / 无车辆档案」文案变体（并入同一拦截页——SCOPE §5：
+ * 两者出路相同：电话报车号/建档 → PC 处理 → APP 刷新重试）。
+ */
+enum class ArrivalInterceptKind(val title: String, val guidance: String) {
+    NO_NOTICE(
+        title = "该车牌今日无预报，暂不能收货",
+        guidance = "请先电话联系综合运营部补预报，补录后下拉刷新本页即可继续",
+    ),
+    NO_VEHICLE_FILE(
+        title = "车辆档案不存在，暂不能收货",
+        guidance = "该车牌未在系统建档；请电话联系综合运营部先建档，建档后下拉刷新本页即可继续",
+    ),
+}
+
+/**
+ * 拦截文案选择（纯本地判定，零写请求）：
+ * 车牌在给定列表**完全无任何记录** ⇒ 档案缺失变体；有历史记录但今日无待确认预报 ⇒ 无预报变体。
+ */
+fun arrivalInterceptKind(
+    notices: List<RecvNotice>,
+    plate: String,
+): ArrivalInterceptKind {
+    val matched = notices.filter { NoticesFilter.matchPlate(it, plate) }
+    return if (matched.isEmpty()) {
+        ArrivalInterceptKind.NO_VEHICLE_FILE
+    } else {
+        ArrivalInterceptKind.NO_NOTICE
+    }
+}
+
 object DialActions {
 
     /** 系统拨号 Action（Intent.ACTION_DIAL 的字符串等价，避免 JVM 单测依赖 Android 框架）。 */

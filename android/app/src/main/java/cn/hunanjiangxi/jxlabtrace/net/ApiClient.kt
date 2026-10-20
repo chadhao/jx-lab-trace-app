@@ -161,6 +161,14 @@ class ApiClient(
                 logger.log(LogLevel.W, TAG, "HTTP 403 → Forbidden")
                 ApiResult.Failure(ApiError.Forbidden())
             }
+            response.code == 409 -> {
+                // M12：业务状态冲突（409）——后端 jsonErrorHandler 统一 `{"error":"中文"}`，
+                // 无机器码（B2 裁决 3）⇒ 映射为 Biz(HTTP_409, 后端话术)，
+                // 交 ErrorMessages 按已知 409 文案增强「下一步」指引；未识别的原样透传。
+                val text = extractConflictMessage(bodyText)
+                logger.log(LogLevel.W, TAG, "HTTP 409 → Biz(HTTP_409)：$text")
+                ApiResult.Failure(ApiError.Biz("HTTP_409", text))
+            }
             !response.isSuccessful -> {
                 logger.log(LogLevel.W, TAG, "HTTP ${response.code} → Server")
                 ApiResult.Failure(ApiError.Server(response.code))
@@ -204,6 +212,23 @@ class ApiClient(
             val message = map["message"]?.jsonPrimitive?.content.orEmpty()
             code to message
         }
+    }
+
+    /**
+     * M12：409 冲突体取话术——后端统一 `{"error": "…"}`（jsonErrorHandler），
+     * 兼容 `{"message": "…"}`；均缺失时回退通用文案。
+     */
+    private fun extractConflictMessage(bodyText: String): String {
+        val element = try {
+            json.parseToJsonElement(bodyText)
+        } catch (_: Exception) {
+            null
+        }
+        val map = element as? JsonObject
+        val text = map?.get("error")?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }
+            ?: map?.get("message")?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }
+        return text?.takeIf { it.isNotBlank() }
+            ?: "业务状态冲突，请稍后重试；若反复出现请联系综合运营部。"
     }
 
     private fun resolve(path: String): HttpUrl =

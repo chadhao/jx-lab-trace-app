@@ -69,4 +69,45 @@ class ErrorMessagesTest {
         assertTrue("空 message 应有兜底话术", blank.isNotBlank())
         assertNotEquals("", blank)
     }
+
+    @Test
+    fun `M12 后端409中文原文 - 按包含匹配专属话术`() {
+        // ship：重复归集（跨单/单内）——后端 {"error":"该成品袋已被出货单归集：出货单 CH261020-001"}
+        val dup = ErrorMessages.of(
+            ApiError.Biz("HTTP_409", "该成品袋已被出货单归集：出货单 CH261020-001"),
+        )
+        assertTrue("已归集应给专属话术，实际：$dup", dup.contains("已在本次出货单中"))
+        assertTrue("应指引 PC 撤销出路", dup.contains("PC"))
+
+        // ship：重复出场
+        val departed = ErrorMessages.of(
+            ApiError.Biz("HTTP_409", "该出货单已登记出场，不得重复登记"),
+        )
+        assertTrue("已登记出场应给专属话术，实际：$departed", departed.contains("已登记出场"))
+
+        // ship：空单出场
+        val empty = ErrorMessages.of(ApiError.Biz("HTTP_409", "出货单无明细，不得出场登记：出货单 #3"))
+        assertTrue("无明细应引导先装车，实际：$empty", empty.contains("先扫码装车"))
+
+        // recv：无退货判定（机器码缺失时按原文兜底，与 KNOWN_409 同话术口径）
+        val noReturn = ErrorMessages.of(ApiError.Biz("HTTP_409", "该车尚无退货判定，不能退车"))
+        assertTrue("无退货判定应给专属话术，实际：$noReturn", noReturn.contains("综合运营部"))
+
+        // 互不相同
+        val set = setOf(dup, departed, empty, noReturn)
+        assertEquals("四条 409 文案话术应互不相同", 4, set.size)
+    }
+
+    @Test
+    fun `M12 机器码优先于文案匹配 - ALREADY_FED 不被原文规则覆盖`() {
+        // message 含「已投料」但 code 精确命中 ⇒ 仍走 KNOWN_409（优先级①>②）
+        val byCode = ErrorMessages.of(ApiError.Biz("ALREADY_FED", "该袋已投料"))
+        assertTrue(byCode.contains("投料更正"))
+    }
+
+    @Test
+    fun `M12 409 未知原文 - 透传后端中文`() {
+        val passthrough = ErrorMessages.of(ApiError.Biz("HTTP_409", "某个未收录的冲突原因"))
+        assertEquals("某个未收录的冲突原因", passthrough)
+    }
 }

@@ -21,11 +21,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Build debug APK + unit tests
+      - name: Build debug APK + unit tests + lint
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew assembleDebug testDebugUnitTest 2>&1 | tee ../build.log || {
+          ./gradlew lintDebug assembleDebug testDebugUnitTest 2>&1 | tee ../build.log || {
             grep "^e: " ../build.log | head -60 | while IFS= read -r l; do echo "::error $l"; done
             exit 1
           }
@@ -73,3 +73,6 @@ jobs:
 
       - name: Check no hardcoded colors (J4)
         run: python3 scripts/check_colors.py
+
+      - name: Check PC-only whitelist scope (M13-1)
+        run: python3 scripts/check_scope.py

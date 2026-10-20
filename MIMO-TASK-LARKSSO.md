@@ -52,7 +52,7 @@
 6. **工作区现状处置**：删除 `AuthApplink.kt`（deep-link 专属：`redirect_uri` 替换 / `APPLINK_PREFIX`）、删除 `AuthCallbackActivity.kt` 与其 manifest `jxlabtrace://` intent-filter、清理 `handleAuthCallbackIfAny`（上一轮半成品，原地不可编译）；**保留复用** state 生成（`FeishuSsoLogin.newState`）、percent-encode、`FeishuAuthRepo.exchange` 与错误处理、`LoginFlow.ExchangeRejected`/拒绝信号、WebView 兜底。**重构落点：`AuthApplink.kt` → 新建 `FeishuSsoLogin.kt`**（纯函数：state / encode / SDK 错误码分类；未并入 FeishuAuthRepo，便于与网络层分测）；`LoginSignal.ApplinkDenied` 更名 `SsoDenied`（deep-link 语义已不存在）。
 
 ### 判据
-- **S-1 本机全绿**：`./gradlew assembleDebug testDebugUnitTest lintDebug` 通过；**177 条单测全绿**（≥166，含新增 FeishuAuthRepoTest 5 + FeishuSsoLoginTest 6）；三门禁本地 `check_tokens/check_colors/check_scope` 均 OK。**Gitea CI 见下方「CI 回执」段。**
+- **S-1 ✅ CI（Gitea）run 13 全绿**：head `381fbc9`，`BUILD SUCCESSFUL in 7m 5s`（`assembleDebug` + `testDebugUnitTest` + `lintDebug`），**177 tests PASSED / 0 FAILED**（≥166），`check_tokens OK` + `check_colors OK` + `check_scope OK`，APK 已产出 `/srv/jx-lab-trace/ci/apk/app-debug-latest.apk`；本机同口径复跑亦全绿。
 - **S-2 ✅** 新增 `FeishuAuthRepoTest.kt`（MockWebServer 桩）：2xx→Ok（断言 POST /api/auth/feishu/exchange、body `{"code":…,"state":…}`、Set-Cookie 落 CookieJar）、401→Rejected(后端 error 原文)、403、5xx、全局离线零请求——全部 PASSED。
 - **S-3 ✅（代码区）**：`git grep` 该 deep-link scheme 限定 `-- android scripts` = **0**（命令原文见判据第 32 行）。全仓剩余命中**全部在派发/需求文档**：本任务包（处置段与判据原文、回执引用的命令行）、`MIMO-TASK-APPLINK.md`（上一轮任务包原始派发记录，不改写历史）、`docs/BACKEND-REQ-03.md` 1 处（已在其头部补「状态更新：deep-link 链路作废，端点规格不变」）——判据自身文本即含该串，字面全仓归零在逻辑上不可达成，故按代码区口径判定。
 - **S-4 ✅**：`git grep FEISHU_CLIENT_ID -- android/app/src/main` 仅 1 处 `LoginWebViewActivity.kt:224 .setAppId(BuildConfig.FEISHU_CLIENT_ID)`；`git grep "cli_aa40b8435439dd0c" -- android/app/src/main` = **0**（字面量只在 `build.gradle.kts` 与 manifest scheme）。
@@ -69,4 +69,5 @@
 - 处置：SSH 到 CI 宿主清理可再生下载缓存（`/home/chadhao/.npm/_cacache`），根分区 15M → **2.4G 可用（91%）**；未触碰任何项目/服务数据（`projects/`、`services/`、gitea-data、APK、CI SDK 均未动）。无免密 sudo，`journalctl`/`apt` 等系统级清理**未执行**（如再涨满需运维介入）。
 - 复跑 **run 12（head 1115ea8）失败**——**编译/三门禁前的单测 1 条红**：`ShipLoadTest > M10-1 同码两次 … expected:<null> but was:<unset>`（177 completed / 1 failed）。根因是**既有用例的竞态**（与本次改动无关）：`submitBag` 为 fire-and-forget，慢机（CI `--no-daemon` 满载）上 `state.first{Collecting}` **先于**回调满足，断言读到初值 `"unset"`；本机快所以一直绿（run8/run10 亦绿，属概率性 flake）。
 - 处置：给该用例补 `awaitCallback { 回调已落定 }`（10s 超时轮询）三处（首袋/重复码/第三码），**仅改测试时序等待，不改任何被测逻辑**；本机 `--tests "*ShipLoadTest*"` 7/7 PASSED 后推送复跑。
-- **run 13 结果：待回填**（本回执随该修复提交触发）。
+- **run 13（head `381fbc9`）✅ success**（22:06–22:14）：`BUILD SUCCESSFUL in 7m 5s`、**177 PASSED / 0 FAILED**、三门禁 OK、APK 产出 → **S-1 达成**。
+- 本行之后的回执文本回填提交**不作判据**（代码与 run 13 `381fbc9` 完全一致，其触发的 run 属文档自触发）。

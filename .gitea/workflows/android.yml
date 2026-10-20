@@ -1,0 +1,58 @@
+# 内网 CI 入口：http://192.168.10.50:3010 （Gitea Actions · 宿主执行 labels: ubuntu-latest）
+# 与 .github/workflows/android.yml 双通道并存：GitHub Actions 走 .github/，Gitea 优先读 .gitea/。
+# 全 run: 步骤（内网拉不到 actions/*，禁止 container:），服务器环境按任务包 JDK17/AndroidSDK 宿主路径。
+name: android
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JAVA_HOME: /home/chadhao/ci/jdk17
+      ANDROID_HOME: /home/chadhao/ci/android-sdk
+    steps:
+      - name: Checkout（git clone，无 actions/checkout）
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Gitea 注入 GITEA_* / GITHUB_* 两套变量名均兼容；实测名回执注明
+          SERVER_URL="${GITEA_SERVER_URL:-${GITHUB_SERVER_URL:-http://192.168.10.50:3010}}"
+          REPOSITORY="${GITEA_REPOSITORY:-${GITHUB_REPOSITORY:-chadhao/jx-lab-trace-app}}"
+          REF_NAME="${GITEA_REF_NAME:-${GITHUB_REF_NAME:-main}}"
+          SHA="${GITEA_SHA:-${GITHUB_SHA:-}}"
+          HOST_PATH="${SERVER_URL#*://}"
+          echo "env: SERVER_URL=$SERVER_URL REPOSITORY=$REPOSITORY REF_NAME=$REF_NAME SHA=$SHA"
+          git clone --depth 1 --branch "$REF_NAME" "http://x-access-token:${TOKEN}@${HOST_PATH}/${REPOSITORY}.git" repo
+          cd repo
+          git checkout "$SHA" || { git fetch --depth 50 origin "$REF_NAME"; git checkout "$SHA"; }
+          echo "checked out: $(git rev-parse HEAD)"
+
+      - name: Build（assembleDebug + 单测 + lint）
+        run: |
+          set -euo pipefail
+          export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          java -version
+          cd repo/android
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug
+
+      - name: Gates（三门禁）
+        run: |
+          set -euo pipefail
+          cd repo
+          python3 scripts/check_tokens.py
+          python3 scripts/check_colors.py
+          python3 scripts/check_scope.py
+
+      - name: Publish APK 到服务器产出目录
+        run: |
+          set -euo pipefail
+          mkdir -p /srv/jx-lab-trace/ci/apk
+          cp repo/android/app/build/outputs/apk/debug/app-debug.apk /srv/jx-lab-trace/ci/apk/app-debug-latest.apk
+          ls -l /srv/jx-lab-trace/ci/apk/app-debug-latest.apk
+          echo "APK 产出: /srv/jx-lab-trace/ci/apk/app-debug-latest.apk"
+          echo "Gitea: ${GITEA_SERVER_URL:-${GITHUB_SERVER_URL}}/${GITEA_REPOSITORY:-${GITHUB_REPOSITORY}}/actions/runs/${GITEA_RUN_ID:-${GITHUB_RUN_ID}}"

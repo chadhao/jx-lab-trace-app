@@ -59,3 +59,15 @@ git push gitea --tags
 - 探针假阳性修复（/healthz 校验 version 特征）
 - Applink 二期（拉起飞书 App 授权，依赖 BACKEND-REQ-03 的 exchange 端点上线）
 - 后端 REQ-02 可选增强（B-req-2/3 建议随 REQ-03 同批）
+
+## 7. 项目签名 keystore（2026-10-20 新增）
+
+| 项 | 值 |
+|---|---|
+| 文件 | `android/app/jx-lab-trace.keystore`（强制入库，gitignore 对其豁免） |
+| alias | `jxlabtrace` |
+| store/key 密码 | `9a057608abc94c2e4284`（store 与 key 相同） |
+| 有效期 | 10950 天（30 年） |
+| 证书 MD5 | `674aa3ad761ac673012a6d876cc63342`（飞书移动应用登录用；带冒号格式 `67:4A:A3:AD:76:1A:C6:73:01:2A:6D:87:6C:C6:33:42`） |
+
+用途：LarkSSO SDK（飞书移动应用登录）要求包名+签名 MD5 匹配。**所有构建环境（Gitea runner / GitHub runner / 本机）统一用此 keystore 签名** ⇒ 签名恒定，飞书后台配一次终身有效。gradle `signingConfigs` 接入由 APP 开发流程完成。

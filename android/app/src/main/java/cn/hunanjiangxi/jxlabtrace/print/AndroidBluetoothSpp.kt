@@ -1,6 +1,7 @@
 package cn.hunanjiangxi.jxlabtrace.print
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -15,6 +16,8 @@ import java.io.OutputStream
 /**
  * Android 蓝牙 SPP 实现（M09）：扫描已配对设备 / 连接 / 写流。
  * 权限：API 31+ 需 BLUETOOTH_CONNECT/SCAN；低版本需 BLUETOOTH。
+ * 每个入口先 [hasPermission] 运行时校验——lint 的 MissingPermission 无法穿透
+ * 自定义守卫方法，故在守卫后的调用点抑制（B5 lint 门禁首跑修正）。
  */
 class AndroidBluetoothSpp(private val context: Context) : SppFactory {
 
@@ -35,12 +38,14 @@ class AndroidBluetoothSpp(private val context: Context) : SppFactory {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
+    @SuppressLint("MissingPermission") // 入口已 hasPermission() 守卫
     fun bondedDevices(): List<BondedItem> {
         if (!hasPermission()) return emptyList()
         val bonded = adapter?.bondedDevices ?: return emptyList()
         return bonded.map { BondedItem(it.name ?: it.address, it.address) }
     }
 
+    @SuppressLint("MissingPermission") // 入口已 hasPermission() 守卫
     override fun open(address: String): SppChannel {
         if (!hasPermission()) throw SecurityException("缺少蓝牙权限")
         val ad = adapter ?: throw IOException("设备不支持蓝牙")

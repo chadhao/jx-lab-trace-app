@@ -30,9 +30,28 @@ android {
         vectorDrawables { useSupportLibrary = true }
     }
 
+    // 统一签名（飞书移动应用登录的 MD5 绑定）：debug/release 同一证书，
+    // keystore 已强制入库（gitignore 豁免，见 MIMO-TASK-LARKSSO 回执 §签名）。
+    signingConfigs {
+        create("jxlabtrace") {
+            storeFile = file("jx-lab-trace.keystore")
+            storePassword = "9a057608abc94c2e4284"
+            keyAlias = "jxlabtrace"
+            keyPassword = "9a057608abc94c2e4284"
+            // AGP 8 默认只出 v2+ 签名块，`keytool -printcert -jarfile` 只认 v1（META-INF）——
+            // 显式开 v1 以保证 CI 侧该命令可读出证书指纹（校验口径）。
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("jxlabtrace")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("jxlabtrace")
         }
     }
 

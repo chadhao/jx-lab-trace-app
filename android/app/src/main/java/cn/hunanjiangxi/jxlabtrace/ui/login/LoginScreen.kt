@@ -221,19 +221,18 @@ private fun AuthorizingContent(
         )
         Text(
             text = "若 5 秒内没有自动跳转，点下面手动打开",
-
-            Spacer(Modifier.height(Tokens.Space.space3))
-            Text(
-                text = "正在加载：" + state.diagUrl.ifBlank { "(等待首个跳转)" },
-                color = Tokens.Color.Brand.onPrimary.copy(alpha = 0.75f),
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 3,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
             color = Tokens.Color.Brand.onPrimary,
             fontSize = Tokens.Type.Label.size,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = Tokens.Space.space3),
+        )
+        Spacer(Modifier.height(Tokens.Space.space3))
+        Text(
+            text = "正在加载：" + state.diagUrl.ifBlank { "(等待首个跳转)" },
+            color = Tokens.Color.Brand.onPrimary.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 3,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         )
         if (state.manualAvailable) {
             OutlinedButton(

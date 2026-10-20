@@ -100,7 +100,9 @@ private class BarcodeAnalyzer(
             .build(),
     )
 
-    @OptIn(ExperimentalGetImage::class)
+    // androidx.annotation.OptIn（markerClass）——lint UnsafeOptInUsageError 只认该形态；
+    // kotlin.OptIn 对 CameraX 实验标记不被 lint 放行（B5 lint 门禁首跑实证）。
+    @androidx.annotation.OptIn(markerClass = [ExperimentalGetImage::class])
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         if (mediaImage == null) {

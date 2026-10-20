@@ -44,7 +44,8 @@ docs/                    决策与需求
   MODULES.md             开发模块划分（12 模块 / 5 批次）
   DECISIONS.md           决策记录 D01–D19
   PRINTER-KM118BT.md     打印机能力核查
-  BACKEND-REQ-01.md      后端需求：取样授权调整（已转达）
+  BACKEND-REQ-01.md      后端需求：取样授权调整（已落地）
+  BACKEND-REQ-02.md      后端可选需求 B-req ×4（不阻塞上线）
   PRINTER-SELFTEST.md    打印机自测指引（宽度/指令集先行验证）
   MIMO-NEXT-BATCH-01.md  任务包 B1（已发 mimo）
   DESIGN-REVIEW-01.md    设计全量复核报告

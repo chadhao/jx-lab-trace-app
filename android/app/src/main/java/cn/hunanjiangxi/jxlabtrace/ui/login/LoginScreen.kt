@@ -1,6 +1,7 @@
 package cn.hunanjiangxi.jxlabtrace.ui.login
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import cn.hunanjiangxi.jxlabtrace.R
 import cn.hunanjiangxi.jxlabtrace.auth.LoginFailure
 import cn.hunanjiangxi.jxlabtrace.auth.LoginFailureKind
 import cn.hunanjiangxi.jxlabtrace.auth.Me
@@ -52,6 +55,8 @@ sealed interface LoginUiState {
     data class Authorizing(
         val manualAvailable: Boolean = false,
         val onRemotePage: Boolean = false,
+        /** 诊断：WebView 最近一次开始加载的 URL（透出在过渡屏小字）。 */
+        val diagUrl: String = "",
     ) : LoginUiState
 
     /** ④ 成功过渡：1.2s 自动进占位主页。 */
@@ -127,7 +132,7 @@ private fun InitialContent(
         BrandMark()
         Spacer(Modifier.height(Tokens.Space.space5))
         Text(
-            text = "江熙追溯",
+            text = "江熙生产端",
             color = Tokens.Color.Brand.onPrimary,
             fontSize = Tokens.Type.Display.size,
             lineHeight = Tokens.Type.Display.lineHeight,
@@ -216,6 +221,15 @@ private fun AuthorizingContent(
         )
         Text(
             text = "若 5 秒内没有自动跳转，点下面手动打开",
+
+            Spacer(Modifier.height(Tokens.Space.space3))
+            Text(
+                text = "正在加载：" + state.diagUrl.ifBlank { "(等待首个跳转)" },
+                color = Tokens.Color.Brand.onPrimary.copy(alpha = 0.75f),
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 3,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
             color = Tokens.Color.Brand.onPrimary,
             fontSize = Tokens.Type.Label.size,
             textAlign = TextAlign.Center,
@@ -385,43 +399,11 @@ private fun FailedContent(
 /** 品牌几何标：实心方块（码）+ 空格（袋）+ 右下三笔（检），取自设计稿描述。 */
 @Composable
 private fun BrandMark() {
-    Box(
-        modifier = Modifier
-            .size(Tokens.Size.entryIcon * 2f)
-            .clip(RoundedCornerShape(Tokens.Radius.lg))
-            .background(Tokens.Color.Brand.onPrimary),
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(Tokens.Size.entryIcon)) {
-            val u = size.minDimension / 6f
-            drawRect(
-                color = Tokens.Color.Brand.primary,
-                topLeft = Offset(0f, 0f),
-                size = Size(u * 2f, u * 2f),
-            )
-            drawRect(
-                color = Tokens.Color.Brand.primary,
-                topLeft = Offset(u * 3.4f, 0f),
-                size = Size(u * 2f, u * 2f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = u * 0.5f),
-            )
-            drawRect(
-                color = Tokens.Color.Brand.primary,
-                topLeft = Offset(0f, u * 3.4f),
-                size = Size(u * 2f, u * 2f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = u * 0.5f),
-            )
-            val stroke = u * 0.6f
-            for (i in 0..2) {
-                drawLine(
-                    color = Tokens.Color.Brand.primary,
-                    start = Offset(u * 3.4f + i * stroke * 1.4f, u * 5f - i * stroke * 0.9f),
-                    end = Offset(u * 3.4f + i * stroke * 1.4f + stroke, u * 5f - i * stroke * 0.9f),
-                    strokeWidth = stroke,
-                )
-            }
-        }
-    }
+    Image(
+        painter = painterResource(R.drawable.ic_brand),
+        contentDescription = "江熙生产端",
+        modifier = Modifier.size(Tokens.Size.entryIcon * 2f),
+    )
 }
 
 @Preview(name = "w360", widthDp = 360, showBackground = true)

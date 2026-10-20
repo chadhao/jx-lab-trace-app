@@ -251,7 +251,7 @@ class ShipLoadTest {
 
         // 空车牌 ⇒ 拦截不发请求
         viewModel.confirmDepart("", "张三")
-        val message = withTimeout(10_000) { viewModel.message.first { it != null } }
+        val message = withTimeout(10_000) { viewModel.message.first { it != null } }.orEmpty()
         assertTrue("空车牌应提示必填：$message", message.contains("必填"))
         assertEquals("空车牌不发 depart", 0, departCount)
         viewModel.clearMessage()

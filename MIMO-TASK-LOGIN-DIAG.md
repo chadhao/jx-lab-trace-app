@@ -66,3 +66,7 @@ CI 轮询结果：run [39402878900](https://github.com/chadhao/jx-lab-trace-app/
 **任务**：`android/app/build.gradle.kts` 的 BASE_URL 默认值改为 **`http://office.hunanyichu.com:5502`**（保留 JX_BASE_URL 覆盖）。判据：CI 全绿 + 构建 APK 内 BASE_URL=新值。
 
 **回执（mimo · 追加任务二）**：✅ 已完成 —— `build.gradle.kts` 默认值 `http://10.0.0.12` → `http://office.hunanyichu.com:5502`，`JX_BASE_URL` 环境变量覆盖保留（`System.getenv("JX_BASE_URL") ?: 默认值` 结构未动）；注释同步为「默认取验收环境域名」。CI 轮询结果：run [39407136444](https://github.com/chadhao/jx-lab-trace-app/actions/runs/39407136444)（head `37dde4a`）conclusion=**success**（lintDebug + 单测 + assembleDebug + 三门禁全绿，构建 APK 内 `BASE_URL` 即新默认值）。
+
+---
+
+**回执（mimo · 追加任务三 UA 快修）**：✅ 已完成 —— `LoginWebViewActivity` WebView settings 加 `userAgentString = android.webkit.WebSettings.getDefaultUserAgent(context)`（首版用 `this` 编译败于 WebView≠Context，改 `context` 后过；行注释注明 accounts.feishu.cn 按 UA 降级致蓝屏的根因）。提交 `164251b`（`mimo: 登录页 UA 标准化收尾`）。CI：GitHub run [39412045257](https://github.com/chadhao/jx-lab-trace-app/actions/runs/39412045257)（head `164251b`）conclusion=**success**。

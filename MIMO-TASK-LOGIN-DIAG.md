@@ -39,6 +39,8 @@
 - **D-2 ✅** `onConsoleMessage → AppLogger.i` 落于 `LoginWebViewActivity.kt`（代码审查+`compileDebugKotlin` 通过；按判据不强制单测）。
 - **D-3 ✅** 本地复跑：`check_scope.py` OK（11 组 PC 专属词零命中）、`check_colors.py` OK（零裸色值）、`check_tokens.py` OK；`gradlew testDebugUnitTest` 绿、Kotlin 编译零错（仅存量 deprecation 警告）。lint 由 CI `android.yml` `lintDebug` 执行，以本轮推送 CI success 为准（结果见下一行补记）。
 
-CI 轮询结果：（push 后补记）
+CI 轮询结果：run [39402878900](https://github.com/chadhao/jx-lab-trace-app/actions/runs/39402878900)（head `66f300b`）conclusion=**success** —— `lintDebug` + `testDebugUnitTest` + `assembleDebug` + `check_tokens/check_colors/check_scope` 三门禁全绿。
+
+证据汇总：D-1 纯函数 `LoginDiag.exportText` + `LoginDiagTest` 4/4 过（本地 XML `failures=0`，全套 166 绿）；D-2 `WebChromeClient.onConsoleMessage → AppLogger.i("LoginWeb", …)` 落码且随 CI 编译过；D-3 三脚本本地 OK + CI success。
 
 设计疑问：无

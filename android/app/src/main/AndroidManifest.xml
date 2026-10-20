@@ -14,6 +14,17 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 
+    <!-- LarkSSO SDK：飞书客户端可见性（官方 Demo 口径：lark://ssoclient 探测 + 包名） -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data
+                android:host="ssoclient"
+                android:scheme="lark" />
+        </intent>
+        <package android:name="com.ss.android.lark" />
+    </queries>
+
     <application
         android:name=".JxLabTraceApp"
         android:allowBackup="false"
@@ -32,10 +43,19 @@
             </intent-filter>
         </activity>
 
-        <!-- S01 登录 · 飞书授权（M03） -->
+        <!-- S01 登录 · 飞书授权（M03 / MIMO-TASK-LARKSSO）：
+             singleTop + app_id 去下划线 scheme 回跳（官方 SDK Guide），供 LarkSSO parseIntent 消费 -->
         <activity
             android:name=".auth.LoginWebViewActivity"
-            android:exported="false" />
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cliaa40b8435439dd0c" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

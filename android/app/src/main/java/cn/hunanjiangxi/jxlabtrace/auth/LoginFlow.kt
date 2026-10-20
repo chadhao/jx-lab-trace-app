@@ -26,6 +26,15 @@ sealed interface LoginSignal {
     /** 授权被拒或回调缺失（回到站内但没有拿到 jx_sid）。 */
     object AuthorizationRejected : LoginSignal
 
+    /** LarkSSO 回调：飞书侧拒绝授权（用户在飞书中取消，SDK -3）。 */
+    object SsoDenied : LoginSignal
+
+    /** LarkSSO 回调：state 校验未通过（防重放，拒绝处理，SDK -1）。 */
+    object StateMismatch : LoginSignal
+
+    /** exchange 拒绝（401 等）：[message] 为后端 error 话术，原样进拒绝卡。 */
+    data class ExchangeRejected(val message: String) : LoginSignal
+
     /** GET /api/me 成功返回。 */
     data class MeLoaded(val me: Me) : LoginSignal
 
@@ -61,6 +70,42 @@ fun loginOutcomeOf(signal: LoginSignal): LoginOutcome = when (signal) {
             title = "授权未完成",
             reason = "飞书授权被取消或回调缺失，请重新发起登录",
             errorCode = "AUTH_REJECTED",
+            canRetry = true,
+            actionLabel = "重新登录",
+        ),
+    )
+
+    // SDK -3（用户取消）⇒ 拒绝卡（用户在飞书中点了取消）。
+    LoginSignal.SsoDenied -> LoginOutcome.Failed(
+        LoginFailure(
+            kind = LoginFailureKind.Rejected,
+            title = "授权未完成",
+            reason = "您在飞书内取消了授权，请重新发起登录",
+            errorCode = "AUTH_DENIED",
+            canRetry = true,
+            actionLabel = "重新登录",
+        ),
+    )
+
+    // state 不匹配 ⇒ 拒绝处理（不消费 code，拒绝卡引导重来）。
+    LoginSignal.StateMismatch -> LoginOutcome.Failed(
+        LoginFailure(
+            kind = LoginFailureKind.Rejected,
+            title = "授权未完成",
+            reason = "登录状态校验未通过，请重新发起登录",
+            errorCode = "AUTH_STATE_MISMATCH",
+            canRetry = true,
+            actionLabel = "重新登录",
+        ),
+    )
+
+    // exchange 401：拒绝卡原样展示后端 error 话术。
+    is LoginSignal.ExchangeRejected -> LoginOutcome.Failed(
+        LoginFailure(
+            kind = LoginFailureKind.Rejected,
+            title = "授权未完成",
+            reason = signal.message,
+            errorCode = "AUTH_EXCHANGE",
             canRetry = true,
             actionLabel = "重新登录",
         ),

@@ -2,6 +2,10 @@
 
 > 提出方：APP 设计侧 ｜ 日期：2026-10-20 ｜ 优先级：高（真机飞书授权体验升级的依赖项）
 > **说明：本需求由项目方转达后端开发实施；APP 仓库会话不触碰服务器端代码。**
+> **状态更新（2026-10-20 项目方裁决，见 MIMO-TASK-LARKSSO.md）**：APP 侧授权改为
+> LarkSSO SDK 拉起飞书 App（回调 scheme = app_id 去下划线），下文 deep-link 链路描述作废；
+> **本端点规格 `{code,state}` 与错误语义不变，仍为 APP 唯一换会话入口**（WebView 兜底走既有
+> `GET /api/auth/feishu/callback`）。
 
 ## 背景
 

@@ -10,6 +10,9 @@ val gitSha: String = (System.getenv("GITHUB_SHA") ?: "local00").take(7)
 val buildNumber: Int = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toIntOrNull() ?: 1
 // 服务端基址（真机联调用环境变量 JX_BASE_URL 覆盖；默认取验收环境域名）
 val baseUrl: String = (System.getenv("JX_BASE_URL") ?: "http://office.hunanyichu.com:5502").trimEnd('/')
+// 飞书开放平台 app_id（公开标识符；真机联调用 JX_FEISHU_CLIENT_ID 覆盖，与 BASE_URL 同法）。
+// 业务代码只经 BuildConfig 引用，不出现字面量（A-5 修订口径）。
+val feishuClientId: String = (System.getenv("JX_FEISHU_CLIENT_ID") ?: "cli_aa40b8435439dd0c").trim()
 
 android {
     namespace = "cn.hunanjiangxi.jxlabtrace"
@@ -22,6 +25,7 @@ android {
         versionCode = buildNumber
         versionName = gitSha
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+        buildConfigField("String", "FEISHU_CLIENT_ID", "\"$feishuClientId\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -72,6 +76,14 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // LarkSSO 官方 SDK（飞书 SDK Guide「下载 LarkSSO Android lib」→ LarkSSOSDKAndroid-3.0.10.zip，
+    // 解出 aar 入库 libs/）。不用 flatDir：settings.gradle.kts 为 FAIL_ON_PROJECT_REPOS，
+    // 工程级仓库声明会被拒绝；files() 本地文件依赖无需仓库（S-1 编译实证口径）。
+    implementation(files("libs/larksso-3.0.10.aar"))
+    // SDK 的 LarkSSOActivity 继承 AppCompatActivity、主题引用 Theme.AppCompat（反编译 aar 实证），
+    // 必须运行时依赖；文档另列的 com.githang:status-bar-compat 反编译零引用 ⇒ 不引入（回执注明）。
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // B2 白名单新增（MIMO-NEXT-BATCH-02 §2）：相机三件套 + ML Kit 条码识别
     implementation("androidx.camera:camera-camera2:1.3.4")

@@ -260,7 +260,8 @@ class TraceViewModel(
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
         // 绑定 result 后用 is Success 逐支判断 —— 同 loadForward（见上方注释）。
-        val result = session.withSessionRetry { repo.backward(fgCode = fgCode) }
+        val raw: ApiResult<TraceBackwardResult> = repo.backward(fgCode = fgCode)
+        val result = session.withSessionRetry { raw }
         if (result is ApiResult.Failure) {
             return TraceUiState.Error(ErrorMessages.of(result.error))
         }

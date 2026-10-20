@@ -8,8 +8,8 @@ plugins {
 // versionName = 提交短号（CI 注入 GITHUB_SHA）；versionCode = CI 运行号（递增整数）
 val gitSha: String = (System.getenv("GITHUB_SHA") ?: "local00").take(7)
 val buildNumber: Int = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toIntOrNull() ?: 1
-// 服务端基址（真机联调用环境变量 JX_BASE_URL 覆盖；默认取设计稿内网示例地址）
-val baseUrl: String = (System.getenv("JX_BASE_URL") ?: "http://10.0.0.12").trimEnd('/')
+// 服务端基址（真机联调用环境变量 JX_BASE_URL 覆盖；默认取验收环境域名）
+val baseUrl: String = (System.getenv("JX_BASE_URL") ?: "http://office.hunanyichu.com:5502").trimEnd('/')
 
 android {
     namespace = "cn.hunanjiangxi.jxlabtrace"

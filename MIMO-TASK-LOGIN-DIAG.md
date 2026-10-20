@@ -64,3 +64,5 @@ CI 轮询结果：run [39402878900](https://github.com/chadhao/jx-lab-trace-app/
 **公网端点已实测打通**（验收方 curl 实证）：`http://office.hunanyichu.com:5502/healthz` → 200（version 18c9c21）；`/api/auth/feishu/start` → 302 飞书，redirect_uri 自动为 `http://office.hunanyichu.com:5502/api/auth/feishu/callback`（反代透传 Host 正确）。
 
 **任务**：`android/app/build.gradle.kts` 的 BASE_URL 默认值改为 **`http://office.hunanyichu.com:5502`**（保留 JX_BASE_URL 覆盖）。判据：CI 全绿 + 构建 APK 内 BASE_URL=新值。
+
+**回执（mimo · 追加任务二）**：✅ 已完成 —— `build.gradle.kts` 默认值 `http://10.0.0.12` → `http://office.hunanyichu.com:5502`，`JX_BASE_URL` 环境变量覆盖保留（`System.getenv("JX_BASE_URL") ?: 默认值` 结构未动）；注释同步为「默认取验收环境域名」。CI 轮询结果：（push 后补记）

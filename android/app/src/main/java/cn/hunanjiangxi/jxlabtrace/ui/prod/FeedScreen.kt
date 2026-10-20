@@ -185,7 +185,7 @@ private fun FeedCorrectSheet(
     }
     var editingWeight by remember { mutableStateOf(false) }
     val weight = weightText.toDoubleOrNull()
-    val valid = session.withinShift && FeedCorrectForm.isValid(reason, detail, weight)
+    val valid = FeedCorrectForm.isValid(reason, detail, weight)
 
     Column(
         modifier = modifier
@@ -204,17 +204,6 @@ private fun FeedCorrectSheet(
             hint = session.feed.bag_human.ifBlank { session.feed.bag_code },
         )
 
-        if (!session.withinShift) {
-            // 超班次：置灰 + PC 指引（M7-3；不发请求）
-            FieldCard(
-                label = "更正",
-                value = "已过本班次，不可在手机更正",
-                hint = "请到 PC 端更正；电话告知生产主管",
-                valueColor = Tokens.Color.Status.danger,
-            )
-            BigButton(text = "返回", onClick = onCancel, style = BigButtonStyle.Quiet)
-            return
-        }
 
         FieldCard(label = "更正为（吨）", value = weightText.ifBlank { "0" }, hint = "t")
         if (editingWeight) {

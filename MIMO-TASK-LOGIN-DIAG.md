@@ -44,3 +44,15 @@ CI 轮询结果：run [39402878900](https://github.com/chadhao/jx-lab-trace-app/
 证据汇总：D-1 纯函数 `LoginDiag.exportText` + `LoginDiagTest` 4/4 过（本地 XML `failures=0`，全套 166 绿）；D-2 `WebChromeClient.onConsoleMessage → AppLogger.i("LoginWeb", …)` 落码且随 CI 编译过；D-3 三脚本本地 OK + CI success。
 
 设计疑问：无
+
+---
+
+## 后续任务（2026-10-20 18:10 追加）· BASE_URL 指向真实后端
+
+**根因已定位（验收方 SSH 实证）**：真机连不上后端的根因是 **APP 的 `BASE_URL` 仍是设计稿示例地址 `http://10.0.0.12`**（gradle 默认值）——那是工厂网络里另一台设备（对 /healthz 误回 200 造成探针假阳性），真正的后端在 `http://192.168.10.50:18080`（已实测：healthz 200、/api/auth/feishu/start 正确 302 到飞书，redirect_uri=`http://192.168.10.50:18080/api/auth/feishu/callback`）。
+
+**任务**：
+1. `android/app/build.gradle.kts` 第 12 行默认值改为 `http://192.168.10.50:18080`（保留 JX_BASE_URL 环境变量覆盖能力）。
+2. 单测/资源不动；判据：grep BASE_URL 构建值 = 新地址；CI 全绿。
+
+**背景信息**：诊断日志实证手机 WebView 对 10.0.0.12 的 /api/auth/feishu/start 得到 `net::ERR_EMPTY_RESPONSE`（那台设备不认识该路径）；/healthz 的 200 是其它服务的假阳性。

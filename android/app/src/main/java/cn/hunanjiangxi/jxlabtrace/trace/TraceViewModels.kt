@@ -179,10 +179,10 @@ class TraceViewModel(
         bagCode: String?,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        return when (
-            val result = session.withSessionRetry { repo.forward(truckLotId, bagCode) }
-        ) {
-            is ApiResult.Failure -> TraceUiState.Error(ErrorMessages.of(result.error))
+        // 语句式 when（勿改回表达式 return）：Failure : ApiResult<Nothing> 会把多分支
+        // when 的公共类型收成 Failure，令 Success 分支的 result.data 丢类型（CI 实证）。
+        when (val result = session.withSessionRetry { repo.forward(truckLotId, bagCode) }) {
+            is ApiResult.Failure -> return TraceUiState.Error(ErrorMessages.of(result.error))
             is ApiResult.Success -> {
                 val f = result.data
                 if (!f.hasFlow) {
@@ -191,7 +191,7 @@ class TraceViewModel(
                             "可能尚未投料，请确认后重试。",
                     )
                 }
-                TraceUiState.Loaded(
+                return TraceUiState.Loaded(
                     TraceView(
                         headerCode = parsed.human,
                         headerType = parsed.typeLabel,
@@ -260,10 +260,9 @@ class TraceViewModel(
         fgCode: String,
         parsed: CodeParser.ParsedCode,
     ): TraceUiState {
-        return when (
-            val result = session.withSessionRetry { repo.backward(fgCode = fgCode) }
-        ) {
-            is ApiResult.Failure -> TraceUiState.Error(ErrorMessages.of(result.error))
+        // 语句式 when —— 同 loadForward（见上方注释）。
+        when (val result = session.withSessionRetry { repo.backward(fgCode = fgCode) }) {
+            is ApiResult.Failure -> return TraceUiState.Error(ErrorMessages.of(result.error))
             is ApiResult.Success -> {
                 val b = result.data
                 if (!b.hasFlow) {
@@ -271,7 +270,7 @@ class TraceViewModel(
                         "成品批 ${parsed.human} 查无来源投料流向；请确认后重试。",
                     )
                 }
-                TraceUiState.Loaded(
+                return TraceUiState.Loaded(
                     TraceView(
                         headerCode = parsed.human,
                         headerType = parsed.typeLabel,

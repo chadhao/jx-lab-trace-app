@@ -10,6 +10,7 @@ import android.webkit.CookieManager
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import cn.hunanjiangxi.jxlabtrace.log.AppLogger
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

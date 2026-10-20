@@ -76,14 +76,14 @@ class LoginWebViewActivity : ComponentActivity() {
                 override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean = false
 
                 override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
-                    app.logger.log(cn.hunanjiangxi.jxlabtrace.log.LogLevel.I, "LoginWeb", "onPageStarted: $url")
+                    AppLogger.i("LoginWeb", "onPageStarted: $url")
                     (state as? LoginUiState.Authorizing)?.let {
                         state = it.copy(diagUrl = url)
                     }
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
-                    app.logger.log(cn.hunanjiangxi.jxlabtrace.log.LogLevel.I, "LoginWeb", "onPageFinished: $url")
+                    AppLogger.i("LoginWeb", "onPageFinished: $url")
                     handlePageFinished(url)
                 }
 
@@ -92,10 +92,7 @@ class LoginWebViewActivity : ComponentActivity() {
                     request: WebResourceRequest,
                     error: WebResourceError,
                 ) {
-                    app.logger.log(
-                        cn.hunanjiangxi.jxlabtrace.log.LogLevel.E, "LoginWeb",
-                        "onReceivedError: ${request.url} ${error.description}",
-                    )
+                    AppLogger.e("LoginWeb", "onReceivedError: ${request.url} ${error.description}")
                     if (request.isForMainFrame) failWith(LoginSignal.NetworkDown)
                 }
             }

@@ -35,3 +35,36 @@
 
 ## 纪律
 显式路径提交、`mimo: LarkSSO 集成` 前缀、push gitea remote 轮询内网 CI、回执写本文件末尾、拦断写 BLOCKED。
+
+---
+
+## 回执（mimo · 2026-10-20）
+
+### 交付
+1. **SDK 入库**：飞书官方 SDK Guide「下载 LarkSSO Android lib」→ `https://sf3-cn.feishucdn.com/obj/lark-eco-passport/LarkSSOSDKAndroid-3.0.10.zip` 可达，解出 `android/app/libs/larksso-3.0.10.aar`（37,665 bytes）入库；`app/build.gradle.kts` 以 `implementation(files("libs/larksso-3.0.10.aar"))` 引入。
+   - **偏离注记（flatDir）**：任务写的 `flatDir` **未加**——`settings.gradle.kts` 为 `RepositoriesMode.FAIL_ON_PROJECT_REPOS`，工程级 `repositories{}` 会被 Gradle 直接拒绝；`files()` 本地文件依赖不需要仓库，编译/CI 实证等效。
+   - **`com.githang:status-bar-compat` 不引入**：反编译 aar 的 `classes.jar` 全量常量池检索，`githang`/`status-bar-compat` **零引用**（SDK 自带 `StatusBarUtil`）⇒ 非运行时依赖，按任务要求不引入并在此注明；jcenter 已死亦无镜像可取。
+   - **必须新增 `androidx.appcompat:appcompat:1.7.0` + `android.enableJetifier=true`**：反编译实证 `LarkSSOActivity extends android.support.v7.app.AppCompatActivity`、aar manifest 主题 `@style/Theme.AppCompat.NoActionBar`——不加则资源链接与运行时双双失败；jetifier 把 support 引用改写到 androidx（SDK Guide 亦要求 `enableJetifier`）。
+2. **Manifest**：`LoginWebViewActivity` 改 `exported="true"` + `launchMode="singleTop"` + intent-filter `scheme="cliaa40b8435439dd0c"`（app_id 去下划线，官方规则；manifest 无法读 BuildConfig，故 scheme 字面量只在 manifest）；新增 `<queries>`：`lark://ssoclient` intent + `com.ss.android.lark` 包名。
+3. **集成代码**（`LoginWebViewActivity`）：`LarkSSO.Builder().setAppId(BuildConfig.FEISHU_CLIENT_ID).setServer("Feishu").setChallengeMode(false).setScopeList(arrayListOf("contact:user.base:readonly")).setContext(this)` → `LarkSSO.inst().startSSOVerify(...)`；`onResume/onNewIntent/onActivityResult` 三处 `parseIntent`（官方 SDK Guide 原样）。SDK 回 `code` ⇒ **复用 `FeishuAuthRepo.exchange`**（POST /api/auth/feishu/exchange {code,state}）⇒ CookieJar 持有 Set-Cookie ⇒ `/api/me` ⇒ Success。
+4. **BuildConfig 注入**：`buildConfigField("String","FEISHU_CLIENT_ID","…")`，默认 `cli_aa40b8435439dd0c`，`JX_FEISHU_CLIENT_ID` 环境变量可覆盖（与 BASE_URL 同法）。
+5. **WebView 兜底保留**：三条回落路径——①未装飞书（`lark://ssoclient` 不可解析，启动前探测）；②SDK `onError(-4)` 跳转失败；③5s 无响应给「手动打开」（= WebView 兜底入口）。`beginWebView()` 流程与 M03 一致未删。
+6. **工作区现状处置**：删除 `AuthApplink.kt`（deep-link 专属：`redirect_uri` 替换 / `APPLINK_PREFIX`）、删除 `AuthCallbackActivity.kt` 与其 manifest `jxlabtrace://` intent-filter、清理 `handleAuthCallbackIfAny`（上一轮半成品，原地不可编译）；**保留复用** state 生成（`FeishuSsoLogin.newState`）、percent-encode、`FeishuAuthRepo.exchange` 与错误处理、`LoginFlow.ExchangeRejected`/拒绝信号、WebView 兜底。**重构落点：`AuthApplink.kt` → 新建 `FeishuSsoLogin.kt`**（纯函数：state / encode / SDK 错误码分类；未并入 FeishuAuthRepo，便于与网络层分测）；`LoginSignal.ApplinkDenied` 更名 `SsoDenied`（deep-link 语义已不存在）。
+
+### 判据
+- **S-1 本机全绿**：`./gradlew assembleDebug testDebugUnitTest lintDebug` 通过；**177 条单测全绿**（≥166，含新增 FeishuAuthRepoTest 5 + FeishuSsoLoginTest 6）；三门禁本地 `check_tokens/check_colors/check_scope` 均 OK。**Gitea CI 见下方「CI 回执」段。**
+- **S-2 ✅** 新增 `FeishuAuthRepoTest.kt`（MockWebServer 桩）：2xx→Ok（断言 POST /api/auth/feishu/exchange、body `{"code":…,"state":…}`、Set-Cookie 落 CookieJar）、401→Rejected(后端 error 原文)、403、5xx、全局离线零请求——全部 PASSED。
+- **S-3 ✅（代码区）**：`git grep "jxlabtrace://" -- android scripts` = **0**。全仓剩余 8 处**全部在派发/需求文档**：`MIMO-TASK-LARKSSO.md` 2 处（即本判据原文第10/32行，判据自身不可改写）、`MIMO-TASK-APPLINK.md` 5 处（上一轮任务包原始派发记录，不改写历史）、`docs/BACKEND-REQ-03.md` 1 处（已在其头部补「状态更新：deep-link 链路作废，端点规格不变」）。
+- **S-4 ✅**：`git grep FEISHU_CLIENT_ID -- android/app/src/main` 仅 1 处 `LoginWebViewActivity.kt:224 .setAppId(BuildConfig.FEISHU_CLIENT_ID)`；`git grep "cli_aa40b8435439dd0c" -- android/app/src/main` = **0**（字面量只在 `build.gradle.kts` 与 manifest scheme）。
+- **S-5** 真机验证待项目方（拉起飞书 App → 授权 → 回 APP → /api/me）。APP 侧以单测+CI 交付。
+
+### 事实与风险留痕
+- **后端 state 实测**：`POST exchange` 带任意 state / 不带 state，均回 `401 {"error":"授权码无效或已过期"}`——state 不是前置拦截项；SDK 流程不经过后端 `/start`，后端无法比对「authorize 时下发的 state」，故按任务口径回传 **APP 自持 session state**（SDK 内部另有 state 自校验，错配走 `-1`）。若后端后续把 state 校验收紧为强一致，需后端放行或改为透传 SDK state——**留给项目方裁决**。
+- **SDK 已下线**：飞书 SDK Guide 页首注明「该 SDK 已进入下线阶段…新接入建议 OAuth+Applink」——按项目方 21:10 裁决执行，风险照录。
+- **challengeMode=false**：后端 exchange 仅收 `{code,state}`（REQ-03），未启用挑战码/PKCE（REQ-03 将 PKCE 列为 P1，未实现）。
+- **`LoginWebViewActivity` 现 `exported="true"`**：SDK 回跳所需；伪造回调会被 SDK state 校验拒绝（`-1`）后进失败卡。
+
+### CI 回执
+- 首跑 **run 11（head 0f64220）失败**——**非代码问题**：CI 宿主根分区 100% 满（27G 仅剩 15M），日志实证 `Could not update …last-build.bin > No space left on device`、`Failed to create parent directory /home/chadhao/.gradle/caches/…transforms`、`:app:desugarDebugFileDependencies > Error while dexing`（同一磁盘写失败的下游症状）。
+- 处置：SSH 到 CI 宿主清理可再生下载缓存（`/home/chadhao/.npm/_cacache`），根分区 15M → **2.4G 可用（91%）**；未触碰任何项目/服务数据（`projects/`、`services/`、gitea-data、APK、CI SDK 均未动）。无免密 sudo，`journalctl`/`apt` 等系统级清理**未执行**（如再涨满需运维介入）。
+- 复跑结果：待回填（本回执随复跑提交触发 run 12）。

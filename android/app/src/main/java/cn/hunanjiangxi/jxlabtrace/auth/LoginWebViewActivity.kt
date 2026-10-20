@@ -156,7 +156,7 @@ class LoginWebViewActivity : ComponentActivity() {
                         onCancel = ::handleCancel,
                         onExportDiag = ::handleExportDiag,
                         onRetry = { beginAuthorize() },
-                        onAcknowledge = ::handleCancel,
+                        onAcknowledge = ::handleAcknowledge,
                         onCallSupport = ::handleSupportCall,
                     )
                 }
@@ -401,6 +401,31 @@ class LoginWebViewActivity : ComponentActivity() {
         } else {
             state = LoginUiState.Initial
         }
+    }
+
+    /**
+     * 失败卡「我知道了」（LOGIN-FLOW-FIX ③）：清会话后 finish 返回主屏——
+     * 主屏 onResume 见空 sid 自动再拉起登录屏，形成可恢复循环。
+     * AUTH_NO_ROLE 路径 exchange 成功时 sid 已被 CookieJar 落盘：不清则主屏判非空，
+     * 永远停在白屏占位页（真机首验 bug 根因）。
+     */
+    private fun handleAcknowledge() {
+        handler.removeCallbacksAndMessages(null)
+        webView.stopLoading()
+        flowMode = FlowMode.Idle
+        pendingState = null
+        meFetched = false
+        failed = false
+        app.sidStore.write(null)
+        runCatching {
+            // CookieManager 无单 Cookie 删除 API，用过期指令清 jx_sid（与 fetchMe 陈旧 sid 同法）
+            CookieManager.getInstance().setCookie(baseHost, "$SID_COOKIE=; Max-Age=0")
+            CookieManager.getInstance().flush()
+        }
+        if (isReauth) {
+            ReauthBridge.complete(false)
+        }
+        finish()
     }
 
     private fun handleSupportCall() {

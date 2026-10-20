@@ -62,7 +62,7 @@ sealed interface LoginUiState {
     /** ④ 成功过渡：1.2s 自动进占位主页。 */
     data class Success(val me: Me) : LoginUiState
 
-    /** ③ 失败卡：三类分因，NoRole 无重试按钮。 */
+    /** ③ 失败卡：三类分因；NoRole 给「重试登录」+「我知道了」双出路（LOGIN-FLOW-FIX）。 */
     data class Failed(val failure: LoginFailure) : LoginUiState
 }
 
@@ -309,7 +309,7 @@ private fun SuccessContent(me: Me) {
     }
 }
 
-/** 失败卡：原因 + 错误码 + 出路（NoRole 无重试，改为「我知道了」）。 */
+/** 失败卡：原因 + 错误码 + 出路（NoRole 双出路：「我知道了」finish 返回 +「重试登录」）。 */
 @Composable
 private fun FailedContent(
     failure: LoginFailure,
@@ -383,16 +383,31 @@ private fun FailedContent(
                     Text(failure.actionLabel, style = MaterialTheme.typography.titleMedium)
                 }
             } else {
-                // ③未分配角色：业务问题，重试无意义 ⇒ 只出「我知道了」（M3-1）。
-                OutlinedButton(
+                // ③未分配角色：业务问题主出路仍是「我知道了」（finish 返回主屏，onResume 可再路由登录）；
+                // LOGIN-FLOW-FIX：另加「重试登录」（beginAuthorize，防误触换号/后台已补角色时白跑一趟）。
+                Button(
                     onClick = onAcknowledge,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Tokens.Space.space5)
                         .height(Tokens.Size.primaryButton),
                     shape = RoundedCornerShape(Tokens.Radius.md),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Tokens.Color.Brand.primary,
+                        contentColor = Tokens.Color.Brand.onPrimary,
+                    ),
                 ) {
                     Text(failure.actionLabel, style = MaterialTheme.typography.titleMedium)
+                }
+                OutlinedButton(
+                    onClick = onRetry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Tokens.Space.space3)
+                        .height(Tokens.Size.primaryButton),
+                    shape = RoundedCornerShape(Tokens.Radius.md),
+                ) {
+                    Text("重试登录", style = MaterialTheme.typography.titleMedium)
                 }
             }
             Text(

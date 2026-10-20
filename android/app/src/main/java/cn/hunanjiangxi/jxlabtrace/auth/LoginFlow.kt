@@ -7,7 +7,8 @@ enum class LoginFailureKind { Network, Rejected, NoRole }
 
 /**
  * S01 失败卡：三类各有专属文案与出路（M3-1）。
- * [canRetry] 为 false 时界面**不得**出现「重试」按钮——未分配角色是业务问题，重试无意义。
+ * [canRetry]=false（NoRole）时主出路为 [actionLabel]（「我知道了」→ finish 返回）；
+ * LOGIN-FLOW-FIX 另在 UI 加「重试登录」副按钮（数据层标志不变，单测仍断言 canRetry=false）。
  */
 data class LoginFailure(
     val kind: LoginFailureKind,

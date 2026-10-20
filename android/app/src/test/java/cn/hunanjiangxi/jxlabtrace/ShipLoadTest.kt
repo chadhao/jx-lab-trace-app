@@ -14,6 +14,7 @@ import cn.hunanjiangxi.jxlabtrace.ship.LoadViewModel
 import cn.hunanjiangxi.jxlabtrace.ship.ShipRepository
 import cn.hunanjiangxi.jxlabtrace.ship.ShipSummary
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -158,6 +159,7 @@ class ShipLoadTest {
         val viewModel = vm()
         var firstFailure: String? = "unset"
         viewModel.submitBag(bagA) { firstFailure = it }
+        awaitCallback { firstFailure != "unset" }
         withTimeout(10_000) {
             viewModel.state.first { it is LoadUiState.Collecting }
         }
@@ -168,6 +170,7 @@ class ShipLoadTest {
         // 第二次同码 —— 本地拦截，不发任何请求
         var secondFailure: String? = "unset"
         viewModel.submitBag(bagA) { secondFailure = it }
+        awaitCallback { secondFailure != "unset" }
         assertEquals(
             "第二次应本地拦截并给话术",
             LoadViewModel.DUPLICATE_BAG_MESSAGE,
@@ -179,6 +182,7 @@ class ShipLoadTest {
         // 第三码正常追加 ⇒ items=1
         var thirdFailure: String? = "unset"
         viewModel.submitBag(bagB) { thirdFailure = it }
+        awaitCallback { thirdFailure != "unset" }
         withTimeout(10_000) {
             viewModel.state.first {
                 (it as? LoadUiState.Collecting)?.summary?.bagCount == 2
@@ -186,6 +190,18 @@ class ShipLoadTest {
         }
         assertEquals(null, thirdFailure)
         assertEquals("不同码应发 items", 1, addItemCount)
+    }
+
+    /**
+     * 回调落定等待：submitBag 为 fire-and-forget，慢机（CI）上 state 流可能**先于**回调满足，
+     * 直接断言会读到初值 "unset"（run12 实证的假阴性竞态）。轮询到回调落定或超时。
+     */
+    private suspend fun awaitCallback(timeoutMs: Long = 10_000, done: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (!done()) {
+            if (System.currentTimeMillis() > deadline) error("回调等待超时（${timeoutMs}ms）")
+            delay(10)
+        }
     }
 
     @Test

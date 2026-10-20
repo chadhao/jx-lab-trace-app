@@ -37,6 +37,9 @@ jobs:
         run: |
           set -euo pipefail
           export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          # 服务器暂存的 cmdline-tools 丢失执行位（run5: Permission denied），先修复
+          chmod +x "$ANDROID_HOME"/cmdline-tools/latest/bin/* 2>/dev/null || true
+          chmod +x "$ANDROID_HOME"/platform-tools/* 2>/dev/null || true
           # pipefail 下 yes 会收 SIGPIPE（141），许可步骤允许非零；以下安装步骤做功能性兜底
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platforms;android-35" "build-tools;34.0.0"

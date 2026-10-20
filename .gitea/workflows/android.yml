@@ -31,6 +31,17 @@ jobs:
           git checkout "$SHA" || { git fetch --depth 50 origin "$REF_NAME"; git checkout "$SHA"; }
           echo "checked out: $(git rev-parse HEAD)"
 
+      - name: SDK 预检（接受许可 + 补装 compileSdk 35）
+        # 任务包环境表只列了 android-34/build-tools34 且许可未接受；本工程 compileSdk=35，
+        # 首跑败于 "licences have not been accepted"（run3/run4 实证）——在此幂等补齐。
+        run: |
+          set -euo pipefail
+          export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          # pipefail 下 yes 会收 SIGPIPE（141），许可步骤允许非零；以下安装步骤做功能性兜底
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-35" "build-tools;34.0.0"
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+
       - name: Build（assembleDebug + 单测 + lint）
         run: |
           set -euo pipefail

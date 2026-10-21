@@ -97,3 +97,15 @@
 
 ### CI 回执
 - push：`82edea0..b30777c → gitea`（显式路径 1 文件）；run34 success；提交 `b30777c mimo: S02-NAV 追加 系统栏/刘海避让 …`。
+
+---
+
+## 追加任务（2026-10-21 14:58）· workflow 自动发布 Release（免手动）
+
+**需求**：`.gitea/workflows/android.yml` 构建成功后自动把 APK 发布到 Gitea Release（tag `apk-latest`，删旧重建，避免同名资产并存）：
+1. 删旧：`GET /api/v1/repos/{owner}/{repo}/releases/tags/apk-latest` → `DELETE /releases/{id}`（tag 保留，GET 404 则跳过删除）；
+2. 重建：`POST /releases`（tag_name=apk-latest，body 含构建 commit 短号）；
+3. 上传：`POST /releases/{id}/assets?name=jx-lab-trace-debug.apk`（attachment=@ 服务器 APK 产物）；
+4. 认证：优先 `secrets.GITHUB_TOKEN`（act_runner 注入）；权限不足（403/404）则回执注明并改用 runner 上配置的专用 token 方案（写 BLOCKED 等项目方）；
+5. **失败容错**：发布步骤失败不阻塞 CI 绿红判定？——**不**，发布失败应标红（产物发布是交付的一部分）；只在「删旧 404」时视为正常首跑。
+**判据**：本任务 push 触发的这轮 CI 自身就含发布步骤——run 绿且 Release apk-latest 更新为本轮产物（size 变化可查）。

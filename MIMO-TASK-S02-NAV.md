@@ -109,3 +109,23 @@
 4. 认证：优先 `secrets.GITHUB_TOKEN`（act_runner 注入）；权限不足（403/404）则回执注明并改用 runner 上配置的专用 token 方案（写 BLOCKED 等项目方）；
 5. **失败容错**：发布步骤失败不阻塞 CI 绿红判定？——**不**，发布失败应标红（产物发布是交付的一部分）；只在「删旧 404」时视为正常首跑。
 **判据**：本任务 push 触发的这轮 CI 自身就含发布步骤——run 绿且 Release apk-latest 更新为本轮产物（size 变化可查）。
+
+## 追加任务回执（mimo · 2026-10-21）· Release 自动发布 + GitHub 停用 + HOME 骨架
+
+### A. workflow 自动发布 Release（14:58 追加段，commit `913d160`）
+- **交付**：`.gitea/workflows/android.yml` 构建后新增 `Release（apk-latest 删旧重建 + 上传 APK · Gitea API）` 步骤——GET by tag →（200 则 DELETE，404 视为首跑跳过）→ POST 重建（body 含 `commit 短号 · run 号`）→ multipart 上传 `jx-lab-trace-debug.apk`；认证用 `secrets.GITHUB_TOKEN`（`token` 头）；删旧非 404 的任何失败（含 401/403）与建/传非 201 一律 `exit 1` 标红（发布失败不放行）。
+- **判据 ✅**：本任务 push（913d160）触发的 run37 被后到 push 顶掉为 `cancelled`（run36/37 两连取消 = 并发顶替链，非本步骤所致）；**run38 = 首个含发布步骤的完整绿 run**（body `commit 99762b0 · run 38`，资产 id 7→8 于 15:14 重建）；**run39 再绿并再次删旧重建**（body `commit 5170f67 · run 39`，资产 **id=9**，size **36,555,574 → 36,571,959** 变化可查，created 15:26:17）。Release `apk-latest` 现为本轮产物 ✅。
+- **留痕**：token 权限足，未触发 BLOCKED；release 行 `created_at` 保留 10-20 旧值（Gitea 删建复用行为），以 body / 资产 id / size / 创建时间三项为准；「删旧 404 首跑」分支本轮未触发（既有 release 存在，走删旧路径）。
+
+### B. ① GitHub Actions 停用（`5170f67`）
+- `.github/workflows/android.yml` 的 `on:` 由 `push(main) + pull_request` 改为 **`workflow_dispatch` 仅手动**；文件保留（GitHub 备份通道），永不自动触发；`permissions/jobs/steps` 未动。
+- 留痕：W-4 纪律「.github/workflows/android.yml byte-untouched」被本指令**显式取代**（回执存证）；变更随 main（gitea 权威）入库，GitHub 远端下次同步生效（GitHub push 按惯例延后，当前无自动触发源）。
+
+### C. ② HOME 骨架 GET /api/app/home（`5170f67`）
+- **交付**：`ui/home/HomeScreen.kt` 内新增提案模型（`HomeOverview{ongoing, todo_recv, todo_bag, todo_load, recent}`，字段语义 = `docs/BACKEND-REQ-06.md` 批次 A；字段级契约未定，`ignoreUnknownKeys` + 缺省值容忍，兼容裸对象与 `data` 包裹两形）+ `HomeRepository.overview()`（走 `executeRead` 统一读通道）+ `HomeOverviewState` 三态；`OverviewSection` 渲染：**Loading→「--」占位 / Unavailable（失败·404·解析错）→ EmptyState 占位不报错 / Ready→真实聚合值（无数据显「无」，不造假）**；`MainActivity` 宿主装载：首载与「回到现场 Tab」刷新（`LaunchedEffect(pushStack.isEmpty())`），`withSessionRetry` 包裹，任何失败不踢会话；今日待办角标仍 `badgeCount=null` + TODO（随接口就绪接计数）。
+- **判据 ✅**：run39 = **success**（head `5170f67`）：构建 + 全部单测 + 三门禁 + lint + 新 APK + Release 发布；本地先证三门禁 OK + `testDebugUnitTest` 全绿 + `assembleDebug` 成功。
+- **真机 ⏳**（项目方）：后端未实现期间首页应见数据区空态占位、入口功能不受影响。
+
+### CI 回执（合并）
+- push：`913d160`（Release 步骤）、`5170f67`（①+②）→ gitea（显式路径）；runs：37 cancelled（被 99762b0 顶替）→ **38 success（99762b0）** → **39 success（5170f67）**；Release `apk-latest` = run39 产物（asset id=9，size 36,571,959）。
+- 无 BLOCKED；本地证据：三门禁 OK + 单测全绿 + assembleDebug 成功。

@@ -8,12 +8,20 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -163,6 +171,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // targetSdk 35 强制 edge-to-edge：内容延伸系统栏后，避让统一在宿主根布局处理（追加任务）
+        enableEdgeToEdge()
         setContent {
             MaterialTheme(
                 colorScheme = JxLabTheme.lightColorScheme(),
@@ -326,10 +336,18 @@ private fun AppShell(versionName: String, onSessionDead: () -> Unit, modifier: M
 
     Surface(modifier = modifier.fillMaxSize(), color = Tokens.Color.Surface.canvas) {
         Column(Modifier.fillMaxSize()) {
+            // 系统栏/刘海避让（追加任务）：内容区一次生效 HomeScreen 与全部推入屏——
+            // TabBar 可见时底部交给 TabBar 容器（背景延伸到导航条后），推入屏无 TabBar 则全量 safeDrawing
+            val contentInsets = if (pushStack.isEmpty()) {
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            } else {
+                WindowInsets.safeDrawing
+            }
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .windowInsetsPadding(contentInsets),
                 contentAlignment = Alignment.Center,
             ) {
                 val me = meState ?: Me()
@@ -365,18 +383,26 @@ private fun AppShell(versionName: String, onSessionDead: () -> Unit, modifier: M
             }
             // TabBar 仅在 Tab 宿主层显示：入口屏推入期间隐藏（MIMO-TASK-S02-NAV）
             if (pushStack.isEmpty()) {
-                TabBar(
-                    items = HOME_TABS.map { spec ->
-                        TabBarItem(
-                            id = spec.id,
-                            label = spec.label,
-                            icon = tabIcon(spec.id),
-                            tint = tabTint(spec.id),
-                        )
-                    },
-                    selectedId = tab,
-                    onSelect = { tab = it },
-                )
+                // 可选优化：背景延伸到底部导航条后面，仅内容被 navigationBars 推起
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Tokens.Color.Surface.card)
+                        .windowInsetsPadding(WindowInsets.navigationBars),
+                ) {
+                    TabBar(
+                        items = HOME_TABS.map { spec ->
+                            TabBarItem(
+                                id = spec.id,
+                                label = spec.label,
+                                icon = tabIcon(spec.id),
+                                tint = tabTint(spec.id),
+                            )
+                        },
+                        selectedId = tab,
+                        onSelect = { tab = it },
+                    )
+                }
             }
         }
     }

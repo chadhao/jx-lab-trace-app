@@ -58,7 +58,11 @@ class FeishuAuthRepoTest {
         val recorded = server.takeRequest()
         assertEquals("POST", recorded.method)
         assertEquals("/api/auth/feishu/exchange", recorded.path)
-        assertEquals("""{"code":"code-1","state":"state-1"}""", recorded.body.readUtf8())
+        // REQ-05：序列化含 source=sdk（后端据此走 passport 移动端契约）
+        assertEquals(
+            """{"code":"code-1","state":"state-1","source":"sdk"}""",
+            recorded.body.readUtf8(),
+        )
         assertEquals("application/json; charset=utf-8", recorded.getHeader("Content-Type"))
     }
 

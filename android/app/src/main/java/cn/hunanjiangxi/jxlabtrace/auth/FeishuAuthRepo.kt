@@ -15,9 +15,23 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/** exchange 请求体（后端 REQ-03 口径：{code,state}）。 */
+/**
+ * REQ-05：exchange 请求体 source 标识——后端收到 `"source":"sdk"` 才走
+ * passport.feishu.cn/suite/passport/oauth/token 移动端契约（与网页端 v2 端点可区分，
+ * 错误格式 `code=0 The code is not found`）。常量集中此处，序列化随 ExchangeBody 发出。
+ */
+private const val EXCHANGE_SOURCE_SDK = "sdk"
+
+/**
+ * exchange 请求体（后端 REQ-03 口径 {code,state} + REQ-05 source=sdk）。
+ * [source] 不设默认值：kotlinx `encodeDefaults=false` 下带默认值的字段不会被序列化。
+ */
 @Serializable
-private data class ExchangeBody(val code: String, val state: String)
+private data class ExchangeBody(
+    val code: String,
+    val state: String,
+    val source: String,
+)
 
 /**
  * Applink 授权的两个网络动作（MIMO-TASK-APPLINK）：
@@ -81,8 +95,10 @@ class FeishuAuthRepo(
     /** 授权码直换会话：2xx ⇒ Ok（sid 已入 CookieJar）；401 ⇒ Rejected(后端 error 文案)。 */
     suspend fun exchange(code: String, state: String): ExchangeOutcome = withContext(Dispatchers.IO) {
         if (!api.currentlyOnline()) return@withContext ExchangeOutcome.Offline
-        val body = json.encodeToString(ExchangeBody.serializer(), ExchangeBody(code, state))
-            .toRequestBody(JSON_MEDIA_TYPE)
+        val body = json.encodeToString(
+            ExchangeBody.serializer(),
+            ExchangeBody(code, state, EXCHANGE_SOURCE_SDK),
+        ).toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder().url(api.urlOf(EXCHANGE_PATH)).post(body).build()
         try {
             api.httpClient.newCall(request).execute().use { response ->

@@ -59,3 +59,24 @@
 **修复**：`loginOutcomeOf` 的 `LoginSignal.MeLoaded` 分支判定改为 `me.allRoles.isEmpty() && me.permissions.isEmpty()`（用现成 `allRoles`）。
 **单测**：Me(roles=[], sysRoles=["sysadmin"]) ⇒ Success；Me(全空) ⇒ AUTH_NO_ROLE（两条都要）。
 **判据**：内网 CI 全绿 + 新 APK。10 分钟。
+
+---
+
+## 追加任务回执（mimo · 2026-10-21）
+
+### 交付
+1. **判定修正**（`LoginFlow.kt` `loginOutcomeOf` MeLoaded 分支）：`me.roles.isEmpty() && me.permissions.isEmpty()` → `me.allRoles.isEmpty() && me.permissions.isEmpty()`（`allRoles = roles + sysRoles`，MeRepository 现成属性），附注释说明漏 sysRoles 会误判 sysadmin。一行语义修正，其余信号分支未动。
+2. **单测两条**（`LoginFailureTest.kt` 追加）：
+   - `sysRoles 非空（sysadmin）- 判 Success 不再误判 AUTH_NO_ROLE`：Me(name="郝端", sysRoles=["sysadmin"]) ⇒ Success；
+   - `roles 与 permissions 全空 - 仍判 AUTH_NO_ROLE`：Me 三列表全空 ⇒ NoRole + errorCode=AUTH_NO_ROLE。
+   - 既有 6 条（含「未分配角色类」「有角色则登录成功」）保持全绿，无回归。本机 `--tests "*LoginFailureTest*" --tests "*LoginFlowFixTest*"` 共 **15/15 PASSED**。
+
+### 判据
+- **内网 CI 全绿 ✅**：**run 27（head `617ab08`）status=success**（构建+单测+lint+三门禁）。
+- **新 APK 产出 ✅**：`/srv/jx-lab-trace/ci/apk/app-debug-latest.apk` = 36,506,276 bytes，mtime **Oct 21 10:26**（run 27 产出，SSH `ls -l` 实证）。
+- 提交：`617ab08`（显式 2 路径：LoginFlow.kt + LoginFailureTest.kt）push gitea。
+
+### 事实与风险留痕
+- 与 LOGIN-FLOW-FIX 本体（F-1~F-3）协同：sysadmin 现在走 Success → sid 落盘 → 主屏停留，不再进 Failed 卡；真正的无角色用户仍走「我知道了 finish + 重试登录」可恢复循环。
+- `Me.permissions` 后端当前不返回（保留字段），判定口径与任务原文一致未动。
+- 本回执提交触发的 run 属文档自触发，不作判据；判据跑为 run 27（head `617ab08`）。

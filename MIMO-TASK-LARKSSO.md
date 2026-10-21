@@ -84,3 +84,23 @@
 **后端 REQ-05 已部署验收**（version=5d07c43，实测 source=sdk 的 probe code 走 passport 端点，错误格式 `code=0 The code is not found` 与 v2 端点可区分）。
 
 **任务**：`FeishuAuthRepo` 的 `ExchangeBody` 增加 `"source":"sdk"` 字段（JSON 序列化常量，加注释说明后端据此走 passport.feishu.cn/suite/passport/oauth/token 移动端契约）。**ExchangeBody 单测同步**（序列化含 source 字段断言）。判据：内网 CI 全绿 + 新 APK 产出。完成后 push gitea + 回执本文件末尾。
+
+---
+
+## 追加任务回执（mimo · 2026-10-21）
+
+### 交付
+1. **`ExchangeBody` 加 source 字段**（`FeishuAuthRepo.kt`）：文件级常量 `private const val EXCHANGE_SOURCE_SDK = "sdk"`（含 REQ-05 契约注释——后端据此走 passport.feishu.cn/suite/passport/oauth/token 移动端契约，错误格式 `code=0 The code is not found` 与 v2 端点可区分）；`ExchangeBody(code, state, source)` 三字段，`exchange()` 构造时显式传入常量。
+   - **实现注记（encodeDefaults 坑）**：初版把 `source` 写成默认值参数，单测红——kotlinx.serialization 默认 `encodeDefaults=false`，**带默认值的字段不参与序列化**（请求体实测缺 source）。改为无默认值 + 构造点显式传常量，序列化稳定输出。
+2. **单测同步**（`FeishuAuthRepoTest.kt`）：2xx 用例 body 断言改为 `{"code":"code-1","state":"state-1","source":"sdk"}`，字段顺序与序列化声明序一致。5/5 PASSED（本机 `--tests "*FeishuAuthRepoTest*"`）。
+   - 401/403/5xx/离线四用例只断言 outcome/message，不受 body 扩展影响，未改。
+
+### 判据
+- **内网 CI 全绿 ✅**：**run 24（head `d0b5e56`）status=success**（构建+单测+lint+三门禁）。
+- **新 APK 产出 ✅**：`/srv/jx-lab-trace/ci/apk/app-debug-latest.apk` = 36,506,278 bytes，mtime **Oct 21 09:02**（run 24 产出，SSH `ls -l` 实证）。
+- 本机同口径 FeishuAuthRepoTest 5/5 PASSED；提交 `d0b5e56`（显式 2 路径）push gitea。
+
+### 事实与风险留痕
+- 契约先读：按「追加规则」，字段语义与错误格式取自任务包内 REQ-05 已部署验收记录（version=5d07c43 probe 实测），未先写代码再对文档。
+- 请求体最终形态 `{"code":…,"state":…,"source":"sdk"}`。`exchange()` 全仓唯一调用点是 `LoginWebViewActivity.handleSsoCode`（SDK 回 code 后，`git grep` 实证）——WebView 兜底链路由后端 callback 自换 sid（APP 只读 Cookie），不经过本接口，故 `source=sdk` 与全部实际调用方语义一致，兜底链路不受影响。
+- 本回执提交触发的 run 属文档自触发，不作判据；判据跑为 run 24（head `d0b5e56`）。

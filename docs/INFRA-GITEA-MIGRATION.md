@@ -7,7 +7,8 @@
 
 | 项 | 值 |
 |---|---|
-| Gitea 地址 | `http://192.168.10.50:3010`（仅内网） |
+| Gitea 地址（内网） | `http://192.168.10.50:3010` |
+| Gitea 地址（公网） | `http://office.hunanyichu.com:5555`（软路由 5555→3010 转发，2026-10-21 启用；ROOT_URL 已同步） |
 | 管理员账号 | `chadhao` |
 | 初始密码 | `e82c464a1934d862`（★首次登录后请修改） |
 | Runner | `srv-runner`（act_runner v5.1.1，宿主执行模式，daemon 常驻） |

@@ -76,3 +76,11 @@
 
 ## ★ 追加规则（项目方 2026-10-21 指令，最高优先级）
 **任何涉及外部组件/SDK/第三方 API 的开发，必须先读官方文档、确定使用方法与数据结构之后才开始写代码**（用户级全局规则，已入档）。本任务后续所有联调修正（含 REQ-05 的 source 字段）同样先核对官方契约再动手。
+
+---
+
+## 追加任务（2026-10-21 08:55）· exchange 请求体加 source 字段（后端已上线）
+
+**后端 REQ-05 已部署验收**（version=5d07c43，实测 source=sdk 的 probe code 走 passport 端点，错误格式 `code=0 The code is not found` 与 v2 端点可区分）。
+
+**任务**：`FeishuAuthRepo` 的 `ExchangeBody` 增加 `"source":"sdk"` 字段（JSON 序列化常量，加注释说明后端据此走 passport.feishu.cn/suite/passport/oauth/token 移动端契约）。**ExchangeBody 单测同步**（序列化含 source 字段断言）。判据：内网 CI 全绿 + 新 APK 产出。完成后 push gitea + 回执本文件末尾。

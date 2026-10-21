@@ -68,6 +68,8 @@ import cn.hunanjiangxi.jxlabtrace.ui.components.TabBarItem
 import cn.hunanjiangxi.jxlabtrace.ui.components.TopBar
 import cn.hunanjiangxi.jxlabtrace.ui.home.HOME_TABS
 import cn.hunanjiangxi.jxlabtrace.ui.home.HomeEntryId
+import cn.hunanjiangxi.jxlabtrace.ui.home.HomeOverviewState
+import cn.hunanjiangxi.jxlabtrace.ui.home.HomeRepository
 import cn.hunanjiangxi.jxlabtrace.ui.home.HomeScreen
 import cn.hunanjiangxi.jxlabtrace.ui.icons.JxIcons
 import cn.hunanjiangxi.jxlabtrace.ui.printer.PrinterScreen
@@ -325,6 +327,21 @@ private fun AppShell(versionName: String, onSessionDead: () -> Unit, modifier: M
         }
     }
 
+    // /api/app/home 骨架（批次 A）：首载与「回到现场 Tab」时刷新；
+    // 任何失败/404（后端未实现）⇒ Unavailable 占位，不报错不踢会话
+    val homeRepo = remember(app) { HomeRepository(app.apiClient) }
+    var homeOverview by remember { mutableStateOf<HomeOverviewState>(HomeOverviewState.Loading) }
+    LaunchedEffect(pushStack.isEmpty()) {
+        if (pushStack.isEmpty()) {
+            val result = session.withSessionRetry { homeRepo.overview() }
+            homeOverview = if (result is ApiResult.Success) {
+                HomeOverviewState.Ready(result.data)
+            } else {
+                HomeOverviewState.Unavailable
+            }
+        }
+    }
+
     // 返回栈：推入屏逐级回退；无推入且非现场 Tab ⇒ 回现场（TabBar 所在的 Home）
     BackHandler(enabled = pushStack.isNotEmpty() || tab != "home") {
         if (pushStack.isNotEmpty()) {
@@ -370,6 +387,7 @@ private fun AppShell(versionName: String, onSessionDead: () -> Unit, modifier: M
                     else -> HomeScreen(
                         me = me,
                         versionName = versionName,
+                        overviewState = homeOverview,
                         onEntry = { id ->
                             if (id == HomeEntryId.TRACE) {
                                 // 追溯为角色无关的 Tab 级目的地，不进推入栈

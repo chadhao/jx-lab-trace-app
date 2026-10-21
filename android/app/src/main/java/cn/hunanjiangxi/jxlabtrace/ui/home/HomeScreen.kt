@@ -24,15 +24,79 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.hunanjiangxi.jxlabtrace.auth.Me
+import cn.hunanjiangxi.jxlabtrace.net.ApiClient
+import cn.hunanjiangxi.jxlabtrace.net.ApiResult
 import cn.hunanjiangxi.jxlabtrace.ui.components.DomainBlock
+import cn.hunanjiangxi.jxlabtrace.ui.components.EmptyState
 import cn.hunanjiangxi.jxlabtrace.ui.components.FieldCard
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
 import cn.hunanjiangxi.jxlabtrace.ui.icons.JxIcons
 import cn.hunanjiangxi.jxlabtrace.ui.login.roleLabel
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 /** S02 首页入口 id（单测 N-2 按此集合断言，与 SCOPE 矩阵口径一致）。 */
 enum class HomeEntryId { RECV, BAG, LOAD, TRACE, SAMPLE, BATCH, FEED, OPERATION, FG_PRINT, REPORT }
+
+// ===== GET /api/app/home 调用骨架（批次 A · docs/BACKEND-REQ-06.md）=====
+// 字段级契约后端未定，以下为 APP 侧提案模型（语义对齐批次 A：进行中单据摘要 /
+// 待收车·待打码·待装车计数 / 本人最近 N 条）；后端未实现前 404 等任何失败 ⇒
+// HomeOverviewState.Unavailable（空态占位，不报错、不阻断入口）。
+
+/** 进行中作业摘要（各域进行中的单据）。 */
+@Serializable
+data class HomeOngoingItem(
+    val domain: String = "",
+    val title: String = "",
+    val status: String = "",
+)
+
+/** 最近作业（本人最近 N 条）。 */
+@Serializable
+data class HomeRecentItem(
+    val time: String = "",
+    val action: String = "",
+    val ref: String = "",
+)
+
+/** 首页聚合（GET /api/app/home 提案载荷）。 */
+@Serializable
+data class HomeOverview(
+    val ongoing: List<HomeOngoingItem> = emptyList(),
+    val todo_recv: Int = 0,
+    val todo_bag: Int = 0,
+    val todo_load: Int = 0,
+    val recent: List<HomeRecentItem> = emptyList(),
+)
+
+/** 数据位状态：加载中 / 就绪 / 不可用（失败与 404 统一走不可用——占位不报错）。 */
+sealed interface HomeOverviewState {
+    object Loading : HomeOverviewState
+    data class Ready(val overview: HomeOverview) : HomeOverviewState
+    object Unavailable : HomeOverviewState
+}
+
+/** 首页聚合仓储（骨架）：GET /api/app/home，任何失败/404 归一为 [ApiResult.Failure]。 */
+class HomeRepository(
+    private val api: ApiClient,
+    private val json: Json = Json { ignoreUnknownKeys = true },
+) {
+    suspend fun overview(): ApiResult<HomeOverview> =
+        api.executeRead(HOME_PATH) { body -> parseOverview(body) }
+
+    private fun parseOverview(body: String): HomeOverview {
+        val root = json.parseToJsonElement(body) as? JsonObject ?: error("envelope 不是对象")
+        // 容忍两种口径：裸对象 {…} 与 data 包裹 {data:{…}}（契约未定期的骨架宽容）
+        val target = root["data"] as? JsonObject ?: root
+        return json.decodeFromString(HomeOverview.serializer(), target.toString())
+    }
+
+    companion object {
+        const val HOME_PATH = "/api/app/home"
+    }
+}
 
 /** 底部 TabBar 规格（N-3：三项恒为「现场/追溯/我的」，全部角色一致，与角色无关）。 */
 data class HomeTabItemSpec(val id: String, val label: String)
@@ -110,9 +174,10 @@ private fun entryText(id: HomeEntryId): Triple<String, String, androidx.compose.
     }
 
 /**
- * S02 现场首页：身份栏（首字头像 + 姓名 + 角色中文）+ 角色变体入口区 + 数据位占位。
+ * S02 现场首页：身份栏（首字头像 + 姓名 + 角色中文）+ 角色变体入口区 + 数据位。
  * 入口点击经 [onEntry] 交给宿主导航（MIMO-TASK-S02-NAV）。
- * 数据位（进行中/待办/最近作业）本期为结构占位，不造假数据。
+ * 数据位由 [overviewState] 驱动（/api/app/home 骨架）：就绪显真值、失败/404 空态占位、
+ * 加载中「--」——不造假数据。
  */
 @Composable
 fun HomeScreen(
@@ -120,6 +185,7 @@ fun HomeScreen(
     versionName: String,
     onEntry: (HomeEntryId) -> Unit,
     modifier: Modifier = Modifier,
+    overviewState: HomeOverviewState = HomeOverviewState.Loading,
 ) {
     Column(
         modifier = modifier
@@ -146,7 +212,7 @@ fun HomeScreen(
                         containerColor = container,
                         contentColor = content,
                         onClick = { onEntry(id) },
-                        // TODO(S02 数据位): 今日待办角标 —— 数据接口后续批次接入，本期不出假数
+                        // TODO(S02 数据位): 今日待办角标 —— 随 /api/app/home 就绪后接计数
                         badgeCount = null,
                         modifier = Modifier.weight(1f),
                     )
@@ -155,10 +221,53 @@ fun HomeScreen(
             }
         }
 
-        // TODO(S02 数据位): 进行中 / 待办 / 最近作业 —— 结构占位（"--"），数据接口后续批次接入
-        FieldCard(label = "进行中作业", value = "--", hint = "数据接口后续批次接入")
-        FieldCard(label = "今日待办", value = "--", hint = "数据接口后续批次接入")
-        FieldCard(label = "最近作业", value = "--", hint = "数据接口后续批次接入")
+        OverviewSection(state = overviewState)
+    }
+}
+
+/** 数据位三态渲染：加载中「--」/ 就绪真值 / 失败与 404 统一空态占位（不报错）。 */
+@Composable
+private fun OverviewSection(state: HomeOverviewState) {
+    when (state) {
+        HomeOverviewState.Loading -> {
+            FieldCard(label = "进行中作业", value = "--", hint = "加载中")
+            FieldCard(label = "今日待办", value = "--", hint = "加载中")
+            FieldCard(label = "最近作业", value = "--", hint = "加载中")
+        }
+
+        HomeOverviewState.Unavailable -> EmptyState(
+            title = "首页数据暂不可用",
+            hint = "聚合接口未就绪或网络异常；入口功能不受影响，数据随后续批次接入。",
+        )
+
+        is HomeOverviewState.Ready -> {
+            val overview = state.overview
+            val ongoing = overview.ongoing
+            val recent = overview.recent
+            FieldCard(
+                label = "进行中作业",
+                value = if (ongoing.isEmpty()) "无" else ongoing.first().title,
+                hint = if (ongoing.isEmpty()) {
+                    "各域进行中单据"
+                } else {
+                    "共 ${ongoing.size} 项 · ${ongoing.first().status}"
+                },
+            )
+            FieldCard(
+                label = "今日待办",
+                value = "收${overview.todo_recv} · 打码${overview.todo_bag} · 装车${overview.todo_load}",
+                hint = "待收车 / 待打码 / 待装车",
+            )
+            FieldCard(
+                label = "最近作业",
+                value = if (recent.isEmpty()) "无" else recent.first().action,
+                hint = if (recent.isEmpty()) {
+                    "本人最近作业"
+                } else {
+                    "${recent.first().time} · 共 ${recent.size} 条"
+                },
+            )
+        }
     }
 }
 

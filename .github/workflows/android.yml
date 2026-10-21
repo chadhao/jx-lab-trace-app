@@ -1,9 +1,9 @@
 name: android
 
+# 2026-10-21 起停用自动触发（内网 Gitea CI = .gitea/ 是唯一通道；GitHub 仅保留手动备份）。
+# 永不自动触发：仅 workflow_dispatch 手动点击运行。
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: write

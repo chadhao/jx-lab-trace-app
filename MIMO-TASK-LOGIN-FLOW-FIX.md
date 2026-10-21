@@ -49,3 +49,13 @@
 - `onRetry` 在 NoRole 也走 `beginAuthorize()`：用户换账号或后台已补角色时可当场重试；`flowMode` 失败时已复位 Idle，防重入仍有效。
 - Authorizing 态「取消登录」仍停留登录屏 Initial（未改）——任务只要求「我知道了」改 finish；若后续要 cancel 也返回主屏，属新需求。
 - 本回执提交自身会触发 run 22（md-only），不作判据；判据跑为 run 21（head `ca87073`）。
+
+---
+
+## 追加任务（2026-10-21 09:05）· AUTH_NO_ROLE 判定漏 sys_roles（真机实锤根因）
+
+**根因（后端/DB/飞书三层全查实锤）**：后端 /api/me 返回 `roles=[] + sys_roles=["sysadmin"]`（N-075 设计：sysadmin 是系统角色进 sys_roles）；Me 模型已有 `sysRoles` 与 `allRoles` 便捷属性（MeRepository.kt:18/23），**但 LoginFlow 的无角色判定只看 `me.roles.isEmpty() && me.permissions.isEmpty()`，漏了 sysRoles** ⇒ sysadmin 用户被误判 AUTH_NO_ROLE。10:03 的 s_session 两次会话均成功建立（open_id=郝端 ✓，ip=4G 出口）——授权/交换/建会话全成功，纯判定 bug。
+
+**修复**：`loginOutcomeOf` 的 `LoginSignal.MeLoaded` 分支判定改为 `me.allRoles.isEmpty() && me.permissions.isEmpty()`（用现成 `allRoles`）。
+**单测**：Me(roles=[], sysRoles=["sysadmin"]) ⇒ Success；Me(全空) ⇒ AUTH_NO_ROLE（两条都要）。
+**判据**：内网 CI 全绿 + 新 APK。10 分钟。

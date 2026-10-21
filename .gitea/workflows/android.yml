@@ -70,3 +70,56 @@ jobs:
           ls -l /srv/jx-lab-trace/ci/apk/app-debug-latest.apk
           echo "APK 产出: /srv/jx-lab-trace/ci/apk/app-debug-latest.apk"
           echo "Gitea: ${GITEA_SERVER_URL:-${GITHUB_SERVER_URL}}/${GITEA_REPOSITORY:-${GITHUB_REPOSITORY}}/actions/runs/${GITEA_RUN_ID:-${GITHUB_RUN_ID}}"
+
+      - name: Release（apk-latest 删旧重建 + 上传 APK · Gitea API）
+        # MIMO-TASK-S02-NAV 追加：构建成功后自动发布；删旧 404 = 首跑正常跳过；
+        # 其余失败（含 401/403 权限不足）一律标红（产物发布是交付的一部分）。
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SERVER_URL="${GITEA_SERVER_URL:-${GITHUB_SERVER_URL:-http://192.168.10.50:3010}}"
+          REPOSITORY="${GITEA_REPOSITORY:-${GITHUB_REPOSITORY:-chadhao/jx-lab-trace-app}}"
+          REF_NAME="${GITEA_REF_NAME:-${GITHUB_REF_NAME:-main}}"
+          SHA="${GITEA_SHA:-${GITHUB_SHA:-}}"
+          SHORT="${SHA:0:7}"
+          API="$SERVER_URL/api/v1"
+          APK=repo/android/app/build/outputs/apk/debug/app-debug.apk
+          AUTH="Authorization: token $TOKEN"
+          test -n "$TOKEN" || { echo "GITHUB_TOKEN 未注入"; exit 1; }
+          test -f "$APK" || { echo "APK 产物缺失: $APK"; exit 1; }
+
+          # ① 删旧：GET by tag → 200 则 DELETE；404 跳过（首跑）；其余标红（权限/服务异常）
+          CODE=$(curl -sS -o /tmp/rel_old.json -w '%{http_code}' -H "$AUTH" \
+            "$API/repos/$REPOSITORY/releases/tags/apk-latest")
+          if [ "$CODE" = "200" ]; then
+            REL_ID=$(python3 -c "import json;print(json.load(open('/tmp/rel_old.json'))['id'])")
+            DEL=$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "$AUTH" \
+              "$API/repos/$REPOSITORY/releases/$REL_ID")
+            echo "delete old release id=$REL_ID → HTTP $DEL"
+            { [ "$DEL" = "204" ] || [ "$DEL" = "200" ]; } \
+              || { echo "删除旧 Release 失败 HTTP $DEL（权限不足则按任务包写 BLOCKED）"; exit 1; }
+          elif [ "$CODE" = "404" ]; then
+            echo "apk-latest 无既有 Release（首跑跳过删除）"
+          else
+            echo "查询旧 Release 失败 HTTP $CODE（401/403 = token 权限不足 → 回执 BLOCKED）"
+            cat /tmp/rel_old.json
+            exit 1
+          fi
+
+          # ② 重建：body 含构建 commit 短号
+          BODY=$(printf '{"tag_name":"apk-latest","name":"apk-latest","body":"jx-lab-trace-app debug APK · commit %s · run %s","target_commitish":"%s"}' \
+            "$SHORT" "${GITEA_RUN_ID:-${GITHUB_RUN_ID:-0}}" "$REF_NAME")
+          NEW=$(curl -sS -o /tmp/rel_new.json -w '%{http_code}' -X POST -H "$AUTH" \
+            -H "Content-Type: application/json" -d "$BODY" \
+            "$API/repos/$REPOSITORY/releases")
+          [ "$NEW" = "201" ] || { echo "创建 Release 失败 HTTP $NEW"; cat /tmp/rel_new.json; exit 1; }
+          REL_ID=$(python3 -c "import json;print(json.load(open('/tmp/rel_new.json'))['id'])")
+
+          # ③ 上传资产（multipart attachment 字段）
+          UP=$(curl -sS -o /tmp/rel_asset.json -w '%{http_code}' -X POST -H "$AUTH" \
+            -F "attachment=@$APK" \
+            "$API/repos/$REPOSITORY/releases/$REL_ID/assets?name=jx-lab-trace-debug.apk")
+          [ "$UP" = "201" ] || { echo "上传 Release 资产失败 HTTP $UP"; cat /tmp/rel_asset.json; exit 1; }
+          echo "Release apk-latest 已更新：id=$REL_ID commit=$SHORT run=${GITEA_RUN_ID:-${GITHUB_RUN_ID:-0}}"
+          python3 -c "import json;a=json.load(open('/tmp/rel_asset.json'));print('asset:',a.get('name'),a.get('size'))"

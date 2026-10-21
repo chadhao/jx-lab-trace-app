@@ -75,3 +75,25 @@
 3. **可选优化（做了更好，不做不阻塞）**：TabBar 的背景延伸到底部导航条后面（TabBar 自身加 `windowInsetsPadding(WindowInsets.navigationBars)` 仅推内容、背景铺满）——mimo 视实现便利取舍，回执注明。
 
 **判据**：内网 CI 全绿 + 新 APK；真机（项目方）：状态栏/刘海不遮挡身份栏、底部导航条不压 TabBar、推入屏同样正常。
+
+## 追加任务回执（mimo · 2026-10-21）· 系统栏/刘海避让
+
+### 交付（`MainActivity.kt` 单文件，39+/13-）
+1. `MainActivity.onCreate`：`enableEdgeToEdge()`（androidx.activity）在 `setContent` 之前调用；
+2. **宿主渲染容器根布局统一避让**（一次生效 HomeScreen 与全部推入屏）：内容区 `Box` 挂 `windowInsetsPadding(contentInsets)`——
+   - TabBar 可见（Tab 宿主层）：`WindowInsets.safeDrawing.only(Top + Horizontal)`（顶部状态栏/刘海 + 水平；底部交给 TabBar 容器，避免双重垫高）；
+   - 入口屏推入（无 TabBar）：全量 `WindowInsets.safeDrawing`（含底部导航条）；
+3. **TabBar 背景延伸（可选优化，已做）**：TabBar 外包一层 `Box`——背景 `Surface.card` 铺满并延伸到底部导航条后面，`windowInsetsPadding(WindowInsets.navigationBars)` 仅推起内容；不动 `TabBar.kt` 组件本体，色值取 tokens。
+
+### 判据
+- **CI ✅** 内网 Gitea Actions **run34 = success**（head `b30777c`）：构建 + 194 单测 + 三门禁 + lint + **新 APK 发布**（workflow 每次 run 覆盖 `app-debug-latest.apk`）。
+- **本地先证**：check_colors/check_scope OK；`testDebugUnitTest` 全绿 + `assembleDebug` 成功。
+- **真机 ⏳**（项目方）：状态栏/刘海不遮挡身份栏、底部导航条不压 TabBar、推入屏同样正常。
+
+### 事实与风险留痕
+- 首编译失败一次：`WindowInsets.only` 为扩展函数需显式 import（`androidx.compose.foundation.layout.only`），已修；红不改判据不跳测。
+- run32/33 为前序回执 push 的触发尾迹（cancelled，非本任务）；本任务以 run34 为准。
+- 避让只在宿主层做，业务屏零改动；后续扫码全屏取景接入时同样落在该容器内自动生效。
+
+### CI 回执
+- push：`82edea0..b30777c → gitea`（显式路径 1 文件）；run34 success；提交 `b30777c mimo: S02-NAV 追加 系统栏/刘海避让 …`。

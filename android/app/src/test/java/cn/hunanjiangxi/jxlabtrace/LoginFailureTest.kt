@@ -78,4 +78,26 @@ class LoginFailureTest {
             as LoginOutcome.Failed
         assertEquals(LoginFailureKind.Rejected, failed.failure.kind)
     }
+
+    @Test
+    fun `sysRoles 非空（sysadmin）- 判 Success 不再误判 AUTH_NO_ROLE`() {
+        val outcome = loginOutcomeOf(
+            LoginSignal.MeLoaded(Me(name = "郝端", sysRoles = listOf("sysadmin"))),
+        )
+        assertTrue(
+            "sysadmin 在 sys_roles，allRoles 非空应判成功（LOGIN-FLOW-FIX 追加任务）",
+            outcome is LoginOutcome.Success,
+        )
+    }
+
+    @Test
+    fun `roles 与 permissions 全空 - 仍判 AUTH_NO_ROLE`() {
+        val failed = loginOutcomeOf(
+            LoginSignal.MeLoaded(
+                Me(name = "某人", roles = emptyList(), sysRoles = emptyList(), permissions = emptyList()),
+            ),
+        ) as LoginOutcome.Failed
+        assertEquals(LoginFailureKind.NoRole, failed.failure.kind)
+        assertEquals("AUTH_NO_ROLE", failed.failure.errorCode)
+    }
 }

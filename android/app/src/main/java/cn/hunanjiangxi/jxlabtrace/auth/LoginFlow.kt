@@ -113,7 +113,8 @@ fun loginOutcomeOf(signal: LoginSignal): LoginOutcome = when (signal) {
     )
 
     is LoginSignal.MeLoaded -> {
-        if (signal.me.roles.isEmpty() && signal.me.permissions.isEmpty()) {
+        // 无角色 = 业务角色∪系统角色皆空（allRoles 含 sysRoles；漏 sysRoles 会把 sysadmin 误判 AUTH_NO_ROLE）
+        if (signal.me.allRoles.isEmpty() && signal.me.permissions.isEmpty()) {
             LoginOutcome.Failed(
                 LoginFailure(
                     kind = LoginFailureKind.NoRole,

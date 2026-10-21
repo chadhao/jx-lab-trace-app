@@ -62,3 +62,16 @@
 - push：`93235bb..64c122f → gitea`（显式路径 3 文件，无 `git add -A`）；Gitea Actions **run30 = success**（head `64c122f`）。
 - 提交：`64c122f mimo: S02-NAV 现场首页与导航宿主 —— 身份栏/角色入口变体/TabBar 三 Tab 路由 + 入口集合与 Tab 单测`（`MainActivity.kt` / `ui/home/HomeScreen.kt` / `HomeNavTest.kt`）。
 - 无 BLOCKED；本地证据：三门禁 OK + 194/194 单测 + assembleDebug 成功。
+
+---
+
+## 追加任务（2026-10-21 14:30）· 系统栏/刘海避让（真机实锤：状态栏压身份栏、导航条压 TabBar）
+
+**根因**：targetSdk=35 强制 edge-to-edge（内容延伸到系统栏后），而全仓无任何 WindowInsets 处理（grep 实证 0 处）。
+
+**修复（统一在宿主级处理，一次生效全部屏）**：
+1. `MainActivity.onCreate`：`enableEdgeToEdge()`（androidx.activity）；
+2. **宿主渲染容器根布局**（含 HomeScreen 与 pushStack 推入屏的统一容器）：`Modifier.windowInsetsPadding(WindowInsets.safeDrawing)`——一次性避开顶部状态栏+刘海（displayCutout）与底部手势导航条；
+3. **可选优化（做了更好，不做不阻塞）**：TabBar 的背景延伸到底部导航条后面（TabBar 自身加 `windowInsetsPadding(WindowInsets.navigationBars)` 仅推内容、背景铺满）——mimo 视实现便利取舍，回执注明。
+
+**判据**：内网 CI 全绿 + 新 APK；真机（项目方）：状态栏/刘海不遮挡身份栏、底部导航条不压 TabBar、推入屏同样正常。

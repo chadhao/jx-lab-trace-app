@@ -129,3 +129,23 @@
 ### CI 回执（合并）
 - push：`913d160`（Release 步骤）、`5170f67`（①+②）→ gitea（显式路径）；runs：37 cancelled（被 99762b0 顶替）→ **38 success（99762b0）** → **39 success（5170f67）**；Release `apk-latest` = run39 产物（asset id=9，size 36,571,959）。
 - 无 BLOCKED；本地证据：三门禁 OK + 单测全绿 + assembleDebug 成功。
+
+---
+
+## 追加任务（2026-10-22 15:50）· 真机四 Bug 修复（首页三卡渲染 + 打印机闪退）
+
+### Bug-1 进行中卡 value=「/」
+`inProgressCardValue` 的 value 取 `latest.title`，后端返回 title="/"（纯符号空壳）时直显。修复：title `takeIf { it.isNotBlank() && it.isNotBlankTrimmed && it.any { ch -> ch.isLetterOrDigit() } }`（纯符号视同空，回落域 label 或「无」）；hint 拼接时 `it.label` 为空也要跳过分隔符。
+
+### Bug-2 待办卡挤成一团
+`todosCardValue` 把多项拼成一行长文本（无 label/count 空格）+ hint 与 value 内容重复 ⇒ 溢出挤压。修复：**待办卡改为逐项渲染**（Card 内 Column，每项一行「`label：count`」，复用 FieldCard 风格或轻量 Row），不再拼单行长串；hint 简化为「今日待办 · 服务端聚合」或删除。
+
+### Bug-3 最近作业直显原始码与 ISO 时间
+`recentCardValue`：value=action 原文「feishu_login」；hint 的 at 直显 RFC3339（2026-10-22T15:39:10.886+08:00）。修复：①action 映射人话（`feishu_login`→「飞书登录」，映射表可扩展，未知码原样显示）；②at 解析 RFC3339 → 显示 `MM-dd HH:mm`（解析失败原样兜底）。
+
+### Bug-4 连接打印机闪退
+`PrinterScreen.connect()` 本身有 try-catch，但闪退发生在更早路径。修复要求：**通读 `ui/printer/PrinterScreen.kt` 全文与 `print/AndroidBluetoothSpp`**，找出未捕获异常点（重点：`remember { AndroidBluetoothSpp(context) }` 构造、`bondedDevices()` 首调时机与权限预检顺序、permissionLauncher 的 API31+ 权限数组分支、onClick 路径）——全部蓝牙调用路径 try-catch 包裹 + 权限未授予时禁用按钮（不进 connect）。**闪退无 logcat，靠代码审查兜底**，回执列出找到的未捕获点。
+
+### 判据
+- 三个 cardValue 纯函数单测更新（title="/"、todos 多项、at RFC3339、action=feishu_login 四场景）；
+- 内网 CI 全绿 + 新 APK；真机（项目方）：三卡渲染正常、连接打印机不再闪退（或弹出友好错误）。

@@ -88,7 +88,7 @@ object CrashLogWriter {
             } catch (_: Exception) {
                 // swallow —— 崩溃路径不允许二次抛
             }
-            if (previous != null && previous !== handler) {
+            if (previous != null) {
                 previous.uncaughtException(thread, throwable)
             }
         }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import cn.hunanjiangxi.jxlabtrace.app.HomeOverview
 import cn.hunanjiangxi.jxlabtrace.auth.Me
 import cn.hunanjiangxi.jxlabtrace.net.ApiClient
 import cn.hunanjiangxi.jxlabtrace.net.ApiResult
@@ -33,65 +33,31 @@ import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
 import cn.hunanjiangxi.jxlabtrace.ui.icons.JxIcons
 import cn.hunanjiangxi.jxlabtrace.ui.login.roleLabel
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 
 /** S02 首页入口 id（单测 N-2 按此集合断言，与 SCOPE 矩阵口径一致）。 */
 enum class HomeEntryId { RECV, BAG, LOAD, TRACE, SAMPLE, BATCH, FEED, OPERATION, FG_PRINT, REPORT }
 
-// ===== GET /api/app/home 调用骨架（批次 A · docs/BACKEND-REQ-06.md）=====
-// 字段级契约后端未定，以下为 APP 侧提案模型（语义对齐批次 A：进行中单据摘要 /
-// 待收车·待打码·待装车计数 / 本人最近 N 条）；后端未实现前 404 等任何失败 ⇒
-// HomeOverviewState.Unavailable（空态占位，不报错、不阻断入口）。
+// ===== GET /api/app/home（批次 A · docs/APP-API-A-B.md §3 定稿契约）=====
+// 字段级模型见 app/HomeOverview；任何失败 ⇒ HomeOverviewState.Unavailable
+//（空态占位，不报错、不阻断入口）。401 由 SessionCoordinator 重授权路径处理。
 
-/** 进行中作业摘要（各域进行中的单据）。 */
-@Serializable
-data class HomeOngoingItem(
-    val domain: String = "",
-    val title: String = "",
-    val status: String = "",
-)
-
-/** 最近作业（本人最近 N 条）。 */
-@Serializable
-data class HomeRecentItem(
-    val time: String = "",
-    val action: String = "",
-    val ref: String = "",
-)
-
-/** 首页聚合（GET /api/app/home 提案载荷）。 */
-@Serializable
-data class HomeOverview(
-    val ongoing: List<HomeOngoingItem> = emptyList(),
-    val todo_recv: Int = 0,
-    val todo_bag: Int = 0,
-    val todo_load: Int = 0,
-    val recent: List<HomeRecentItem> = emptyList(),
-)
-
-/** 数据位状态：加载中 / 就绪 / 不可用（失败与 404 统一走不可用——占位不报错）。 */
+/** 数据位状态：加载中 / 就绪 / 不可用（失败统一走不可用——占位不报错）。 */
 sealed interface HomeOverviewState {
     object Loading : HomeOverviewState
     data class Ready(val overview: HomeOverview) : HomeOverviewState
     object Unavailable : HomeOverviewState
 }
 
-/** 首页聚合仓储（骨架）：GET /api/app/home，任何失败/404 归一为 [ApiResult.Failure]。 */
+/** 首页聚合仓储：GET /api/app/home（§3）。 */
 class HomeRepository(
     private val api: ApiClient,
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
     suspend fun overview(): ApiResult<HomeOverview> =
-        api.executeRead(HOME_PATH) { body -> parseOverview(body) }
-
-    private fun parseOverview(body: String): HomeOverview {
-        val root = json.parseToJsonElement(body) as? JsonObject ?: error("envelope 不是对象")
-        // 容忍两种口径：裸对象 {…} 与 data 包裹 {data:{…}}（契约未定期的骨架宽容）
-        val target = root["data"] as? JsonObject ?: root
-        return json.decodeFromString(HomeOverview.serializer(), target.toString())
-    }
+        api.executeRead(HOME_PATH) { body ->
+            json.decodeFromString(HomeOverview.serializer(), body)
+        }
 
     companion object {
         const val HOME_PATH = "/api/app/home"
@@ -174,10 +140,10 @@ private fun entryText(id: HomeEntryId): Triple<String, String, androidx.compose.
     }
 
 /**
- * S02 现场首页：身份栏（首字头像 + 姓名 + 角色中文）+ 角色变体入口区 + 数据位。
+ * S02 现场首页：身份栏（首字头像 + 姓名 + 角色中文）+ 角色变体入口区 + 数据位三卡。
  * 入口点击经 [onEntry] 交给宿主导航（MIMO-TASK-S02-NAV）。
- * 数据位由 [overviewState] 驱动（/api/app/home 骨架）：就绪显真值、失败/404 空态占位、
- * 加载中「--」——不造假数据。
+ * 数据位由 [overviewState] 驱动（/api/app/home §3 契约）：
+ * 进行中卡=in_progress+count 角标；待办卡=todos；最近作业卡=recent。
  */
 @Composable
 fun HomeScreen(
@@ -225,7 +191,37 @@ fun HomeScreen(
     }
 }
 
-/** 数据位三态渲染：加载中「--」/ 就绪真值 / 失败与 404 统一空态占位（不报错）。 */
+/** 进行中卡：in_progress 列表 + count 合计角标文案；最新一条 title/status 作主值。 */
+internal fun inProgressCardValue(overview: HomeOverview): Pair<String, String> {
+    val items = overview.in_progress
+    if (items.isEmpty()) return "无" to "各域进行中单据"
+    val total = items.sumOf { it.count }
+    val latest = items.firstNotNullOfOrNull { it.latest }
+    val value = latest?.title?.takeIf { it.isNotBlank() } ?: "无"
+    val hint = buildString {
+        append("在办 $total 项")
+        items.firstOrNull { it.count > 0 }?.let { append(" · ${it.label} ${it.count}") }
+        latest?.let { append(" · ${it.status}") }
+    }
+    return value to hint
+}
+
+/** 待办卡：todos 逐项 `label count` 拼接（§3.4 口径由服务端聚合）。 */
+internal fun todosCardValue(overview: HomeOverview): Pair<String, String> {
+    val todos = overview.todos
+    if (todos.isEmpty()) return "无" to "今日待办"
+    val value = todos.joinToString(" · ") { "${it.label}${it.count}" }
+    return value to "待收车 / 待打码 / 待装车"
+}
+
+/** 最近作业卡：recent 首条 action + at（§3.1 最多 10 条按 id 倒序）。 */
+internal fun recentCardValue(overview: HomeOverview): Pair<String, String> {
+    val recent = overview.recent.firstOrNull() ?: return "无" to "本人最近作业"
+    val value = recent.action.ifBlank { recent.entity }
+    return value to "${recent.at} · 共 ${overview.recent.size} 条"
+}
+
+/** 数据位三态渲染：加载中「--」/ 就绪三卡真值 / 失败统一空态占位（不报错）。 */
 @Composable
 private fun OverviewSection(state: HomeOverviewState) {
     when (state) {
@@ -242,31 +238,12 @@ private fun OverviewSection(state: HomeOverviewState) {
 
         is HomeOverviewState.Ready -> {
             val overview = state.overview
-            val ongoing = overview.ongoing
-            val recent = overview.recent
-            FieldCard(
-                label = "进行中作业",
-                value = if (ongoing.isEmpty()) "无" else ongoing.first().title,
-                hint = if (ongoing.isEmpty()) {
-                    "各域进行中单据"
-                } else {
-                    "共 ${ongoing.size} 项 · ${ongoing.first().status}"
-                },
-            )
-            FieldCard(
-                label = "今日待办",
-                value = "收${overview.todo_recv} · 打码${overview.todo_bag} · 装车${overview.todo_load}",
-                hint = "待收车 / 待打码 / 待装车",
-            )
-            FieldCard(
-                label = "最近作业",
-                value = if (recent.isEmpty()) "无" else recent.first().action,
-                hint = if (recent.isEmpty()) {
-                    "本人最近作业"
-                } else {
-                    "${recent.first().time} · 共 ${recent.size} 条"
-                },
-            )
+            val (inProgressValue, inProgressHint) = inProgressCardValue(overview)
+            val (todosValue, todosHint) = todosCardValue(overview)
+            val (recentValue, recentHint) = recentCardValue(overview)
+            FieldCard(label = "进行中作业", value = inProgressValue, hint = inProgressHint)
+            FieldCard(label = "今日待办", value = todosValue, hint = todosHint)
+            FieldCard(label = "最近作业", value = recentValue, hint = recentHint)
         }
     }
 }
@@ -332,6 +309,41 @@ private fun HomeScreenPreview() {
             me = Me(name = "刘川", roles = listOf("receiver")),
             versionName = "local00",
             onEntry = {},
+            overviewState = HomeOverviewState.Ready(
+                HomeOverview(
+                    in_progress = listOf(
+                        cn.hunanjiangxi.jxlabtrace.app.HomeInProgressItem(
+                            key = "notice_open",
+                            label = "预报中车次",
+                            domain = "recv",
+                            count = 2,
+                            latest = cn.hunanjiangxi.jxlabtrace.app.HomeLatest(
+                                id = 12,
+                                code = "N-20261021-003",
+                                title = "湘F·12345 / 李师傅",
+                                status = "预报",
+                                at = "2026-10-21 09:12:00",
+                            ),
+                        ),
+                    ),
+                    todos = listOf(
+                        cn.hunanjiangxi.jxlabtrace.app.HomeTodoItem(
+                            key = "await_receive",
+                            label = "待收",
+                            domain = "recv",
+                            count = 1,
+                        ),
+                    ),
+                    recent = listOf(
+                        cn.hunanjiangxi.jxlabtrace.app.HomeRecentItem(
+                            id = 88,
+                            at = "2026-10-21 09:20:00",
+                            action = "create",
+                            actor = "张三",
+                        ),
+                    ),
+                ),
+            ),
         )
     }
 }

@@ -1,5 +1,6 @@
 package cn.hunanjiangxi.jxlabtrace.net
 
+import cn.hunanjiangxi.jxlabtrace.app.AppInterceptBody
 import cn.hunanjiangxi.jxlabtrace.log.AppLogger
 import cn.hunanjiangxi.jxlabtrace.log.LogLevel
 import java.io.IOException
@@ -152,6 +153,18 @@ class ApiClient(
 
     private fun <T> mapResponse(response: Response, parse: (String) -> T): ApiResult<T> {
         val bodyText = response.body?.string().orEmpty()
+        // /api/app/* 4xx 结构化拦截四字段（docs/APP-API-A-B.md §2.1）：
+        // 400/403/404/409 命中 {error,reason,owner,contact} ⇒ Intercept（交 InterceptPage 三段展示）；
+        // 401 保持 Unauthorized（会话重授权路径不变）；解析不中 ⇒ 走下方旧映射（Web 端点兼容）。
+        if (response.code in 400..499 && response.code != 401) {
+            AppInterceptBody.parse(bodyText, json)?.let { body ->
+                logger.log(
+                    LogLevel.W, TAG,
+                    "HTTP ${response.code} 结构化拦截：${body.error} / owner=${body.owner}",
+                )
+                return ApiResult.Failure(body.toApiError(response.code))
+            }
+        }
         return when {
             response.code == 401 -> {
                 logger.log(LogLevel.W, TAG, "HTTP 401 → Unauthorized")
@@ -235,7 +248,24 @@ class ApiClient(
         if (path.startsWith("http://") || path.startsWith("https://")) {
             path.toHttpUrl()
         } else {
-            baseUrl.newBuilder().addEncodedPathSegments(path.trimStart('/'))!!.build()
+            // 支持 path?query 形式（如 /api/app/recv/notices?mode=pending）：
+            // addEncodedPathSegments 会把 ? 编码进路径段，须拆出查询串单独挂参数。
+            val queryIndex = path.indexOf('?')
+            val pathPart = if (queryIndex >= 0) path.substring(0, queryIndex) else path
+            val builder = baseUrl.newBuilder().addEncodedPathSegments(pathPart.trimStart('/'))!!
+            if (queryIndex >= 0) {
+                path.substring(queryIndex + 1).split('&').forEach { pair ->
+                    if (pair.isNotBlank()) {
+                        val eq = pair.indexOf('=')
+                        if (eq >= 0) {
+                            builder.addQueryParameter(pair.substring(0, eq), pair.substring(eq + 1))
+                        } else {
+                            builder.addQueryParameter(pair, "")
+                        }
+                    }
+                }
+            }
+            builder.build()
         }
 
     companion object {

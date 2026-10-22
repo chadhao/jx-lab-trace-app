@@ -124,8 +124,16 @@ object WeighLogic {
         return kotlin.math.ceil(netTons / DEFAULT_BAG_TONS).toInt().coerceAtLeast(1)
     }
 
-    /** 提交合法性：毛 > 皮 ≥ 0 且净 > 0。 */
-    fun canSubmitWeigh(gross: String, tare: String): Boolean = netTons(gross, tare) != null
+    /**
+     * 提交合法性（契约 §4.4）：毛重必填 >0；皮重条件必填——
+     * 非空时须 ≥0 且净 >0；空 ⇒ 省略字段交服务端取历史皮重（无历史则 400 人工录入）。
+     */
+    fun canSubmitWeigh(gross: String, tare: String): Boolean {
+        val g = gross.trim().toDoubleOrNull() ?: return false
+        if (g <= 0) return false
+        if (tare.trim().isEmpty()) return true
+        return netTons(gross, tare) != null
+    }
 
     private fun round3(v: Double): Double = kotlin.math.round(v * 1000.0) / 1000.0
 }

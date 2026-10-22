@@ -51,6 +51,8 @@ object ErrorMessages {
         is ApiError.Server,
         is ApiError.Parse,
         -> error.userMessage
+        // 结构化拦截四字段：userMessage 已是人话 reason（§2.1），原样透传。
+        is ApiError.Intercept -> error.userMessage
         is ApiError.Biz -> {
             KNOWN_409[error.code]
                 ?: KNOWN_409_TEXTS.firstNotNullOfOrNull { (needle, phrase) ->

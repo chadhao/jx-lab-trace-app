@@ -1,5 +1,6 @@
 package cn.hunanjiangxi.jxlabtrace.recv
 
+import cn.hunanjiangxi.jxlabtrace.net.ApiError
 import cn.hunanjiangxi.jxlabtrace.net.ApiResult
 import cn.hunanjiangxi.jxlabtrace.net.ErrorMessages
 import cn.hunanjiangxi.jxlabtrace.net.SessionCoordinator
@@ -18,7 +19,9 @@ import kotlinx.coroutines.launch
 sealed interface NoticesUiState {
     object Loading : NoticesUiState
     data class Loaded(val pending: List<RecvNotice>, val arrived: List<RecvNotice>) : NoticesUiState
-    data class Error(val message: String) : NoticesUiState
+
+    /** 加载失败：[error] 为结构化拦截时屏上走 InterceptPage 四字段（§2.1）。 */
+    data class Error(val error: ApiError) : NoticesUiState
 }
 
 /**
@@ -45,6 +48,10 @@ class NoticesViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    /** 写动作结构化拦截（4xx 四字段）⇒ 屏上 AppInterceptPage；与 dialog message 分流。 */
+    private val _intercept = MutableStateFlow<ApiError.Intercept?>(null)
+    val intercept: StateFlow<ApiError.Intercept?> = _intercept.asStateFlow()
+
     /** 全量缓存（拦截页「最近 3 条」也从这里本地过滤）。 */
     @Volatile
     var allNotices: List<RecvNotice> = emptyList()
@@ -63,8 +70,7 @@ class NoticesViewModel(
                         arrived = NoticesFilter.arrivedToday(result.data, today),
                     )
                 }
-                is ApiResult.Failure -> _state.value =
-                    NoticesUiState.Error(ErrorMessages.of(result.error))
+                is ApiResult.Failure -> _state.value = NoticesUiState.Error(result.error)
             }
         }
     }
@@ -86,13 +92,24 @@ class NoticesViewModel(
                     _confirmed.value = result.data
                     refresh()
                 }
-                is ApiResult.Failure -> _message.value = ErrorMessages.of(result.error)
+                is ApiResult.Failure -> {
+                    val err = result.error
+                    if (err is ApiError.Intercept) {
+                        _intercept.value = err
+                    } else {
+                        _message.value = ErrorMessages.of(err)
+                    }
+                }
             }
         }
     }
 
     fun clearMessage() {
         _message.value = null
+    }
+
+    fun clearIntercept() {
+        _intercept.value = null
     }
 
     fun clearConfirmed() {
@@ -125,7 +142,9 @@ sealed interface WeighUiState {
     data class Editing(val truck: RecvTruck) : WeighUiState
     object Submitting : WeighUiState
     data class Done(val truck: RecvTruck) : WeighUiState
-    data class Error(val message: String) : WeighUiState
+
+    /** 加载/提交失败：结构化拦截走 InterceptPage。 */
+    data class Error(val error: ApiError) : WeighUiState
 }
 
 class WeighViewModel(
@@ -157,8 +176,7 @@ class WeighViewModel(
                     // 皮重历史默认：该车已有皮重则带出（可改）
                     truck.tare_weight?.let { _tare.value = formatTons(it) }
                 }
-                is ApiResult.Failure -> _state.value =
-                    WeighUiState.Error(ErrorMessages.of(result.error))
+                is ApiResult.Failure -> _state.value = WeighUiState.Error(result.error)
             }
         }
     }
@@ -181,13 +199,13 @@ class WeighViewModel(
 
     fun submit() {
         val g = _gross.value.toDoubleOrNull() ?: return
-        val t = _tare.value.toDoubleOrNull() ?: return
+        // 皮重空 ⇒ 省略字段（契约 §4.4：服务端取历史皮重，无历史 400 人工录入）
+        val t = _tare.value.trim().toDoubleOrNull()
         _state.value = WeighUiState.Submitting
         scope.launch {
             when (val result = session.withSessionRetry { repo.weigh(truckId, g, t) }) {
                 is ApiResult.Success -> _state.value = WeighUiState.Done(result.data)
-                is ApiResult.Failure -> _state.value =
-                    WeighUiState.Error(ErrorMessages.of(result.error))
+                is ApiResult.Failure -> _state.value = WeighUiState.Error(result.error)
             }
         }
     }
@@ -222,14 +240,15 @@ sealed interface BagUiState {
 
     data class PrintDone(val printed: Int, val failures: List<PrintFailure>) : BagUiState
 
-    data class Error(val message: String) : BagUiState
+    /** 失败：结构化拦截走 InterceptPage。 */
+    data class Error(val error: ApiError) : BagUiState
 }
 
 data class PrintFailure(val bagSeq: Int, val code: String, val reason: String)
 
 /**
  * S06：袋数折算 → 建袋（幂等）→ 连打队列。
- * 幂等：重试前先 [BagIdempotency.planRetry]，已有袋不重复 POST bags（M5-2）。
+ * 幂等：重试前先 [BagIdempotency.planRetry]，已有袋不重复 POST bag-gen（M5-2）。
  */
 class BagPrintViewModel(
     private val repo: RecvRepository,
@@ -269,12 +288,10 @@ class BagPrintViewModel(
                                 BagUiState.Built(truck, bags)
                             }
                         }
-                        is ApiResult.Failure -> _state.value =
-                            BagUiState.Error(ErrorMessages.of(bagsResult.error))
+                        is ApiResult.Failure -> _state.value = BagUiState.Error(bagsResult.error)
                     }
                 }
-                is ApiResult.Failure -> _state.value =
-                    BagUiState.Error(ErrorMessages.of(result.error))
+                is ApiResult.Failure -> _state.value = BagUiState.Error(result.error)
             }
         }
     }
@@ -298,7 +315,7 @@ class BagPrintViewModel(
             val existing = when (val r = session.withSessionRetry { repo.listBags(truckId) }) {
                 is ApiResult.Success -> r.data
                 is ApiResult.Failure -> {
-                    _state.value = BagUiState.Error(ErrorMessages.of(r.error))
+                    _state.value = BagUiState.Error(r.error)
                     return@launch
                 }
             }
@@ -324,14 +341,17 @@ class BagPrintViewModel(
                                 bags = recheck.data
                                 _state.value = BagUiState.Built(truck, bags)
                             } else {
-                                _state.value = BagUiState.Error(ErrorMessages.of(result.error))
+                                _state.value = BagUiState.Error(result.error)
                             }
                         }
                     }
                 }
                 is BagIdempotency.RetryPlan.Partial -> {
                     _state.value = BagUiState.Error(
-                        "已存在 ${plan.existing} 袋（期望 ${plan.expected}），请到 PC 核查后重进本页",
+                        ApiError.Biz(
+                            "BAG_PARTIAL",
+                            "已存在 ${plan.existing} 袋（期望 ${plan.expected}），请到 PC 核查后重进本页",
+                        ),
                     )
                 }
             }
@@ -359,28 +379,35 @@ class BagPrintViewModel(
         }
     }
 
-    /** 补打（须有效 reason —— [ReprintForm.isValid] 门禁）。 */
+    /** 补打（§4.6 单袋 bag_code + 必填 reason —— [ReprintForm.isValid] 门禁）。 */
     fun reprint(bagSeq: Int, reasonCategory: String?, detail: String, copies: Int = 1) {
         val bag = bags.find { it.bag_seq == bagSeq }
         if (bag == null || !ReprintForm.isValid(reasonCategory, detail)) return
         val reason = ReprintForm.reasonText(requireNotNull(reasonCategory), detail)
         scope.launch {
             var failures = 0
+            var lastIntercept: ApiError.Intercept? = null
             repeat(copies.coerceIn(1, 10)) {
                 when (val result = session.withSessionRetry {
-                    repo.reprintLabels(listOf(bag.code), reason)
+                    repo.reprintLabel(bag.code, reason)
                 }) {
                     is ApiResult.Success -> when (val send = printOne(bag.code)) {
                         is ApiResult.Success -> Unit
                         is ApiResult.Failure -> failures++
                     }
-                    is ApiResult.Failure -> failures++
+                    is ApiResult.Failure -> {
+                        failures++
+                        if (result.error is ApiError.Intercept) {
+                            lastIntercept = result.error as ApiError.Intercept
+                        }
+                    }
                 }
             }
             if (failures == 0) {
                 _state.value = BagUiState.Built(truck, bags)
             } else {
-                _state.value = BagUiState.Error("补打失败 $failures 张，请检查打印机后重试")
+                _state.value = lastIntercept?.let { BagUiState.Error(it) }
+                    ?: BagUiState.Error(ApiError.Biz("REPRINT_FAIL", "补打失败 $failures 张，请检查打印机后重试"))
             }
         }
     }

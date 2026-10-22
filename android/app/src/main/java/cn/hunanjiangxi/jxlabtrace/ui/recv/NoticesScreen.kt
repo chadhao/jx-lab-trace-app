@@ -26,6 +26,7 @@ import cn.hunanjiangxi.jxlabtrace.recv.NoNoticeModel
 import cn.hunanjiangxi.jxlabtrace.recv.NoticesUiState
 import cn.hunanjiangxi.jxlabtrace.recv.NoticesViewModel
 import cn.hunanjiangxi.jxlabtrace.recv.RecvNotice
+import cn.hunanjiangxi.jxlabtrace.ui.components.AppInterceptPage
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButton
 import cn.hunanjiangxi.jxlabtrace.ui.components.ConfirmDialog
 import cn.hunanjiangxi.jxlabtrace.ui.components.EmptyState
@@ -34,6 +35,8 @@ import cn.hunanjiangxi.jxlabtrace.ui.components.Skeleton
 import cn.hunanjiangxi.jxlabtrace.ui.components.StatusPill
 import cn.hunanjiangxi.jxlabtrace.ui.components.PillTone
 import cn.hunanjiangxi.jxlabtrace.ui.components.TopBar
+import cn.hunanjiangxi.jxlabtrace.net.ApiError
+import cn.hunanjiangxi.jxlabtrace.net.ErrorMessages
 import cn.hunanjiangxi.jxlabtrace.recv.ReturnFlow
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
 
@@ -51,6 +54,7 @@ fun NoticesScreen(
     val confirming by viewModel.confirming.collectAsState()
     val confirmed by viewModel.confirmed.collectAsState()
     val message by viewModel.message.collectAsState()
+    val intercept by viewModel.intercept.collectAsState()
 
     LaunchedEffect(confirmed) {
         confirmed?.let { truck ->
@@ -74,11 +78,24 @@ fun NoticesScreen(
         })
         when (val s = state) {
             NoticesUiState.Loading -> Skeleton(Modifier.padding(Tokens.Space.space4))
-            is NoticesUiState.Error -> EmptyState(
-                title = "预报加载失败",
-                hint = s.message,
-                modifier = Modifier.padding(Tokens.Space.space6),
-            )
+            is NoticesUiState.Error -> {
+                val err = s.error
+                if (err is ApiError.Intercept) {
+                    AppInterceptPage(
+                        intercept = err,
+                        onBack = viewModel::refresh,
+                        actionText = "刷新重试",
+                        onAction = viewModel::refresh,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    EmptyState(
+                        title = "预报加载失败",
+                        hint = ErrorMessages.of(err),
+                        modifier = Modifier.padding(Tokens.Space.space6),
+                    )
+                }
+            }
             is NoticesUiState.Loaded -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.space3),
@@ -135,6 +152,25 @@ fun NoticesScreen(
             onConfirm = viewModel::clearMessage,
             onDismiss = viewModel::clearMessage,
             danger = false,
+        )
+    }
+
+    // 结构化拦截四字段（§2.1）：写动作 4xx 全屏拦截页（原因+owner+contact）
+    intercept?.let { hit ->
+        val isConflict = hit.httpCode == 409
+        AppInterceptPage(
+            intercept = hit,
+            onBack = viewModel::clearIntercept,
+            actionText = if (isConflict) "刷新" else "返回",
+            onAction = if (isConflict) {
+                {
+                    viewModel.clearIntercept()
+                    viewModel.refresh()
+                }
+            } else {
+                null
+            },
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

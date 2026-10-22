@@ -27,6 +27,19 @@ sealed class ApiError(val userMessage: String) {
 
     /** 响应体解析失败。 */
     class Parse(val cause: Throwable?) : ApiError("数据解析失败，请重试；若反复出现请联系管理员。")
+
+    /**
+     * /api/app/ 前缀 4xx 结构化拦截四字段（docs/APP-API-A-B.md §2.1）：
+     * `{error, reason, owner, contact}` → InterceptPage 三段展示（原因+owner+contact）。
+     * [httpCode] 保留原始状态（400/403/404/409…）；[userMessage]＝人话 [reason]。
+     */
+    class Intercept(
+        val httpCode: Int,
+        val error: String,
+        val reason: String,
+        val owner: String,
+        val contact: String,
+    ) : ApiError(reason.ifBlank { error.ifBlank { "操作被拦截。" } })
 }
 
 /** 网络层统一返回值。 */

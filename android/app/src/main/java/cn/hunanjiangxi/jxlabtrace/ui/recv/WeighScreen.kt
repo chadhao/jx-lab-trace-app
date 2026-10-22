@@ -13,11 +13,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import cn.hunanjiangxi.jxlabtrace.net.ApiError
+import cn.hunanjiangxi.jxlabtrace.net.ErrorMessages
 import cn.hunanjiangxi.jxlabtrace.recv.RecvTruck
 import cn.hunanjiangxi.jxlabtrace.recv.WeighLogic
 import cn.hunanjiangxi.jxlabtrace.recv.WeighUiState
 import cn.hunanjiangxi.jxlabtrace.recv.WeighViewModel
+import cn.hunanjiangxi.jxlabtrace.ui.components.AppInterceptPage
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButton
+import cn.hunanjiangxi.jxlabtrace.ui.components.EmptyState
 import cn.hunanjiangxi.jxlabtrace.ui.components.FieldCard
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
 import cn.hunanjiangxi.jxlabtrace.ui.components.NumPad
@@ -40,6 +44,27 @@ fun WeighScreen(
 
     LaunchedEffect(state) {
         if (state is WeighUiState.Done) onWeighed()
+    }
+
+    // 结构化拦截四字段（§2.1）：加载/提交 4xx ⇒ InterceptPage（原因+owner+contact）
+    if (state is WeighUiState.Error) {
+        val err = (state as WeighUiState.Error).error
+        if (err is ApiError.Intercept) {
+            AppInterceptPage(
+                intercept = err,
+                onBack = { viewModel.load() },
+                actionText = "刷新重试",
+                onAction = { viewModel.load() },
+                modifier = modifier,
+            )
+            return
+        }
+        EmptyState(
+            title = "过磅数据加载失败",
+            hint = ErrorMessages.of(err),
+            modifier = modifier.padding(Tokens.Space.space6),
+        )
+        return
     }
 
     Column(modifier = modifier.fillMaxSize()) {

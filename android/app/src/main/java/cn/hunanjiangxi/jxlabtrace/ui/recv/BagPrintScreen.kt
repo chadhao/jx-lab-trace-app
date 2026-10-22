@@ -69,12 +69,25 @@ fun BagPrintScreen(
             modifier = Modifier.padding(Tokens.Space.space4),
         )
         when (val s = state) {
-            is BagUiState.Error -> Text(
-                text = s.message,
-                color = Tokens.Color.Status.danger,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(Tokens.Space.space4),
-            )
+            is BagUiState.Error -> {
+                val err = s.error
+                if (err is cn.hunanjiangxi.jxlabtrace.net.ApiError.Intercept) {
+                    cn.hunanjiangxi.jxlabtrace.ui.components.AppInterceptPage(
+                        intercept = err,
+                        onBack = { viewModel.load(null) },
+                        actionText = "刷新重试",
+                        onAction = { viewModel.load(null) },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Text(
+                        text = cn.hunanjiangxi.jxlabtrace.net.ErrorMessages.of(err),
+                        color = Tokens.Color.Status.danger,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(Tokens.Space.space4),
+                    )
+                }
+            }
 
             is BagUiState.Ready -> Column(
                 modifier = Modifier

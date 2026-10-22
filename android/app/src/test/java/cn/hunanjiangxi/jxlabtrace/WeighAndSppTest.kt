@@ -43,11 +43,14 @@ class WeighAndSppTest {
     }
 
     @Test
-    fun `提交门禁 - 毛皮合法才true`() {
+    fun `提交门禁 - 毛重必填且皮重条件必填`() {
         assertTrue(WeighLogic.canSubmitWeigh("32.18", "8.62"))
-        assertFalse(WeighLogic.canSubmitWeigh("32.18", ""))
+        // 契约 §4.4：皮重可省略（服务端取历史皮重，无历史 400 人工录入）
+        assertTrue(WeighLogic.canSubmitWeigh("32.18", ""))
         assertFalse(WeighLogic.canSubmitWeigh("", "8.62"))
+        assertFalse(WeighLogic.canSubmitWeigh("", ""))
         assertFalse(WeighLogic.canSubmitWeigh("5", "5"))
+        assertFalse(WeighLogic.canSubmitWeigh("0", ""))
     }
 
     // ---- SPP ----

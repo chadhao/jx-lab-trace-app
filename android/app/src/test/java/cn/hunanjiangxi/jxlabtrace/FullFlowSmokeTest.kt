@@ -61,22 +61,31 @@ class FullFlowSmokeTest {
                            "sys_roles":[],"permissions":[]}""",
                     )
 
-                    // 步1：到货确认
-                    method == "POST" && path == "/api/recv/arrivals" -> MockResponse()
-                        .setResponseCode(200)
-                        .setBody("""{"confirmed":true,"row":{"id":1,"code":"1A","plate_no":"湘F·A1234","status":"已到货"}}""")
-
-                    // 步2：过磅
-                    method == "POST" && path == "/api/recv/trucks/1/weigh" -> MockResponse()
-                        .setResponseCode(200)
-                        .setBody("""{"weighed":true,"row":{"id":1,"gross_weight":40.0,"tare_weight":12.0,"net_weight":28.0}}""")
-
-                    // 步3：建袋
-                    method == "POST" && path == "/api/recv/trucks/1/bags" -> MockResponse()
+                    // 步1：到货确认（/api/app/recv/arrive-confirm §4.2 扁平响应）
+                    method == "POST" && path == "/api/app/recv/arrive-confirm" -> MockResponse()
                         .setResponseCode(200)
                         .setBody(
-                            """{"generated":true,"rows":[
-                               {"id":99,"code":"$rawBag","bag_seq":1,"status":"在库"}]}""",
+                            """{"confirmed":true,"truck_lot_id":1,"truck_code":"1A","truck_human":"1A-…",
+                               "notice_id":1,"arrive_date":"2026-10-20","seq_no":1,
+                               "plate_no":"湘F·A1234","status":"待检"}""",
+                        )
+
+                    // 步2：过磅（/api/app/recv/weigh §4.4 扁平响应）
+                    method == "POST" && path == "/api/app/recv/weigh" -> MockResponse()
+                        .setResponseCode(200)
+                        .setBody(
+                            """{"weighed":true,"truck_lot_id":1,"truck_code":"1A",
+                               "gross_weight":40.0,"tare_weight":12.0,"net_weight":28.0,
+                               "tare_source":"input","tare_history":null,"status":"待检"}""",
+                        )
+
+                    // 步3：建袋（/api/app/recv/bag-gen §4.5 bags[]）
+                    method == "POST" && path == "/api/app/recv/bag-gen" -> MockResponse()
+                        .setResponseCode(200)
+                        .setBody(
+                            """{"generated":1,"truck_lot_id":1,"bags":[
+                               {"bag_seq":1,"code":"$rawBag","human":"1B-…",
+                                "weight_allocated":28.0,"weight_is_allocated":1,"status":"在库"}]}""",
                         )
 
                     // 步4：取样（★ 直连接口，2xx 响应体无 envelope）
@@ -191,11 +200,11 @@ class FullFlowSmokeTest {
         assertTrue("步1 到货应成功，实际=$arrive", arrive is ApiResult.Success)
 
         // 步2：过磅
-        val weigh = recv.weigh(truckId = 1, gross = 40.0, tare = 12.0)
+        val weigh = recv.weigh(truckLotId = 1, gross = 40.0, tare = 12.0)
         assertTrue("步2 过磅应成功，实际=$weigh", weigh is ApiResult.Success)
 
         // 步3：建袋
-        val bags = recv.generateBags(truckId = 1, count = 1)
+        val bags = recv.generateBags(truckLotId = 1, count = 1)
         assertTrue("步3 建袋应成功，实际=$bags", bags is ApiResult.Success)
         assertEquals(rawBag, (bags as ApiResult.Success).data.first().code)
 
@@ -253,9 +262,9 @@ class FullFlowSmokeTest {
         val all = hits.joinToString("\n")
         val mustContain = listOf(
             "GET /api/me",
-            "POST /api/recv/arrivals",
-            "POST /api/recv/trucks/1/weigh",
-            "POST /api/recv/trucks/1/bags",
+            "POST /api/app/recv/arrive-confirm",
+            "POST /api/app/recv/weigh",
+            "POST /api/app/recv/bag-gen",
             "POST /api/sample/take",
             "POST /api/prod/batches",
             "POST /api/prod/batches/7/feeds",

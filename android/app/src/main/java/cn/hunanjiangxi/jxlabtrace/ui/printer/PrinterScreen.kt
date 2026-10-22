@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import cn.hunanjiangxi.jxlabtrace.BuildConfig
 import cn.hunanjiangxi.jxlabtrace.auth.LoginDiag
 import cn.hunanjiangxi.jxlabtrace.log.AppLogger
 import cn.hunanjiangxi.jxlabtrace.log.CrashLogWriter
@@ -229,17 +230,32 @@ fun PrinterScreen(
                     }
                 },
                 onSelfTest = {
-                    // 本批只做连接打通；打印绘制（TSPL/SDK draw*）下批接入
                     if (state !is PrinterUiState.Connected) {
                         statusModel.onError("打印机未连接 · 去连接")
                     } else {
-                        statusModel.onError("标签打印下批接入 · 本批已打通连接")
+                        // 自检打印（追加任务）：SDK 绘制+出纸均阻塞——移 IO 线程；
+                        // 回调可能来自库内部线程，statusModel 为 StateFlow 线程安全。
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                KmPrinterBridge.printSelfTest(
+                                    versionName = BuildConfig.VERSION_NAME,
+                                    onSuccess = {
+                                        AppLogger.i("Printer", "自检打印成功")
+                                        // 成功不覆盖连接态——仅 log；真机看纸即可
+                                    },
+                                    onFail = { msg ->
+                                        AppLogger.e("Printer", "自检打印失败：$msg")
+                                        statusModel.onError(msg)
+                                    },
+                                )
+                            }
+                        }
                     }
                 },
             )
             Text(
                 text = "驱动通道 ${if (useLegacySpp) "自研 SPP（回退）" else "快麦官方 SDK（KM-118BT）"} · " +
-                    "纸宽 ${PrinterProfile.SIZE_MM}mm · 打印绘制下批",
+                    "纸宽 ${PrinterProfile.SIZE_MM}mm · 自检出一张测试标签",
                 color = Tokens.Color.Text.tertiary,
                 style = MaterialTheme.typography.labelMedium,
             )

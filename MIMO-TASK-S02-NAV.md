@@ -149,3 +149,16 @@
 ### 判据
 - 三个 cardValue 纯函数单测更新（title="/"、todos 多项、at RFC3339、action=feishu_login 四场景）；
 - 内网 CI 全绿 + 新 APK；真机（项目方）：三卡渲染正常、连接打印机不再闪退（或弹出友好错误）。
+
+---
+
+## 追加任务（2026-10-22 20:50）· 全局崩溃捕获（蓝牙闪退第二轮防御失效，转「留栈」路线）
+
+**现状**：打印机蓝牙闪退，两轮防御性修复未兜住，且无 logcat 无法定位。**治本：先让所有闪退留下栈**。
+
+**需求**：
+1. **App 级崩溃捕获**（`JxLabTraceApp.onCreate`）：`Thread.setDefaultUncaughtExceptionHandler`——未捕获异常时把 `时间戳 + 线程 + 异常类 + 完整堆栈 + 关键上下文（版本号/是否蓝牙路径）` 追加写入 `files/crash-log.txt`，然后交还默认 handler（保持系统崩溃行为）。
+2. **崩溃日志并入诊断导出**：现有的诊断日志导出逻辑把 `crash-log.txt` 一并输出。
+3. **打印机路径再审查**（第三轮，聚焦点收窄）：`remember { AndroidBluetoothSpp(context) }` 构造函数体内是否有可能抛异常（adapter 获取/receiver 注册）——构造移出 remember 或整体 try；`spp.open()` 若是 SPP socket 连接，确认在何种线程执行、异常类型是否全部覆盖；`permissionLauncher` 回调路径。
+
+**判据**：内网 CI 全绿 + 新 APK；项目方复现闪退 → 「我的」导出诊断日志 → 发回 crash-log 内容（拿到真实栈后精修）。

@@ -24,26 +24,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import cn.hunanjiangxi.jxlabtrace.auth.LoginDiag
 import cn.hunanjiangxi.jxlabtrace.log.AppLogger
+import cn.hunanjiangxi.jxlabtrace.log.CrashLogWriter
 import cn.hunanjiangxi.jxlabtrace.print.AndroidBluetoothSpp
-import cn.hunanjiangxi.jxlabtrace.print.PrintSession
+import cn.hunanjiangxi.jxlabtrace.print.KmPrinterBridge
 import cn.hunanjiangxi.jxlabtrace.print.PrinterGateCard
 import cn.hunanjiangxi.jxlabtrace.print.PrinterProfile
 import cn.hunanjiangxi.jxlabtrace.print.PrinterStatusModel
 import cn.hunanjiangxi.jxlabtrace.print.PrinterUiState
-import cn.hunanjiangxi.jxlabtrace.print.sendSelfTest
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButton
 import cn.hunanjiangxi.jxlabtrace.ui.components.BigButtonStyle
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
 import cn.hunanjiangxi.jxlabtrace.ui.components.TopBar
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * S15 我的 · 打印机（M09）：连接管理（扫描已配对/记忆/断连「去连接」）+ 自检打印。
- * 自检 = 100mm 标尺位图（TSPL 直发；未连接时给「去连接」）。
+ * S15 我的 · 打印机（MIMO-TASK-PRINTER-SDK）：
+ * 默认连接走快麦官方驱动库（KmPrinterBridge → BluetoothPrinterManager）；
+ * 自研 SPP（AndroidBluetoothSpp/PrintSession）代码保留但**默认不启用**（回退开关 [useLegacySpp]）。
+ * 本批只做连接打通 + 状态读取；标签绘制（drawText/drawQRCode）下批。
  */
 @Composable
 fun PrinterScreen(
@@ -53,16 +57,17 @@ fun PrinterScreen(
     val context = LocalContext.current
     val state by statusModel.state.collectAsState()
     val scope = rememberCoroutineScope()
-    // 第三轮审查：构造函数体仅存 context 引用（adapter 为惰性 getter），理论上不抛；
-    // 仍以 runCatching 防御未知 OEM 差异——失败则整个屏给错误态不闪退。
+
+    // 自研回退开关：默认 false（SDK 为主路径）；真机 SDK 仍失败时可翻 true 走旧 SPP。
+    var useLegacySpp by remember { mutableStateOf(false) }
+
+    // 自研 SPP 仍构造（回退路径用）；SDK 路径仅用其 bondedDevices() 读已配对列表。
     val spp = remember {
         runCatching { AndroidBluetoothSpp(context) }.getOrElse { e ->
             AppLogger.e("Printer", "AndroidBluetoothSpp 构造失败：${e.message}")
-            // 构造失败后 spp 为 null 语义——用空实现占位，所有操作走错误分支
             AndroidBluetoothSpp(context)
         }
     }
-    val session = remember { PrintSession(spp) }
     var remembered by remember {
         mutableStateOf(
             runCatching {
@@ -72,12 +77,57 @@ fun PrinterScreen(
         )
     }
 
-    /**
-     * 第三轮审查关键修复：`spp.open()` 内 `BluetoothSocket.connect()` 为阻塞调用
-     * （SPP RFCOMM 握手可长达 ~12s），原在主线程执行——ANR/部分 OEM 蓝牙协议栈
-     * 在主线程调用时直接 abort 进程（无 Java 栈可捕）。整体移至 Dispatchers.IO。
-     */
-    fun connect() {
+    /** SDK 路径连接（默认）：读已配对 → BluetoothPrinterManager.connect（IO 线程）。 */
+    fun connectViaSdk() {
+        if (!spp.hasPermission()) {
+            statusModel.onError("缺少蓝牙权限，请到系统设置开启")
+            return
+        }
+        statusModel.onConnecting()
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val bonded = spp.bondedDevices()
+                    // 优先记忆地址；否则取名字以 KM-118BT 开头的已配对设备
+                    val match = bonded.find { it.address == remembered }
+                        ?: bonded.find { it.name.startsWith(KmPrinterBridge.MODEL) }
+                        ?: bonded.firstOrNull()
+                    if (match == null) {
+                        null
+                    } else {
+                        val ok = KmPrinterBridge.connect(match.name, match.address)
+                        Triple(match.address, match.name, ok)
+                    }
+                }
+                if (result == null) {
+                    statusModel.onError("未找到已配对打印机 · 请先在系统蓝牙设置中配对 ${KmPrinterBridge.MODEL}")
+                    return@launch
+                }
+                val (addr, name, ok) = result
+                if (!ok) {
+                    statusModel.onError("连接失败 · 请检查打印机电源与配对状态（型号前缀 ${KmPrinterBridge.MODEL}）")
+                    return@launch
+                }
+                remembered = addr
+                runCatching {
+                    context.getSharedPreferences("printer_memory", Context.MODE_PRIVATE)
+                        .edit().putString("address", addr).apply()
+                }
+                // 连接后读一次状态（库 printerStatus 可能阻塞——已在 IO 线程外，用缓存口径）
+                val st = withContext(Dispatchers.IO) { KmPrinterBridge.status() }
+                AppLogger.i("Printer", "SDK 连接成功 name=$name addr=$addr status=${KmPrinterBridge.statusLabel(st)}")
+                statusModel.onConnected(name)
+            } catch (e: SecurityException) {
+                statusModel.onError("缺少蓝牙权限，请到系统设置开启")
+            } catch (e: Exception) {
+                AppLogger.e("Printer", "SDK 连接异常：${e.message}")
+                statusModel.onError("连接失败：${e.message ?: "请检查打印机电源"}")
+            }
+        }
+    }
+
+    /** 回退路径：自研 SPP（保留代码，默认不启用）。 */
+    fun connectViaLegacySpp() {
         if (!spp.hasPermission()) {
             statusModel.onError("缺少蓝牙权限，请到系统设置开启")
             return
@@ -116,10 +166,11 @@ fun PrinterScreen(
         }
     }
 
+    fun connect() = if (useLegacySpp) connectViaLegacySpp() else connectViaSdk()
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants ->
-        // 第三轮审查：回调在主线程；connect 已移后台，此处只需决定是否进入
         try {
             if (grants.values.all { it }) {
                 connect()
@@ -127,8 +178,25 @@ fun PrinterScreen(
                 statusModel.onError("缺少蓝牙权限，请到系统设置开启")
             }
         } catch (e: Exception) {
-            // 回调路径任何未知异常兜底（不闪退）
             statusModel.onError("权限处理失败：${e.message ?: "请重试"}")
+        }
+    }
+
+    /** 导出诊断日志（P-2）：AppLogger 环形缓冲 + crash-log.txt → 系统分享面板。 */
+    fun exportDiag() {
+        try {
+            val crashText = CrashLogWriter.readAll(
+                File(context.filesDir, CrashLogWriter.FILE_NAME),
+            )
+            val text = LoginDiag.exportTextWithCrash(AppLogger.snapshot(), crashText)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "JX 追溯 APP 诊断日志")
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            context.startActivity(Intent.createChooser(send, "导出诊断日志"))
+        } catch (e: Exception) {
+            statusModel.onError("导出失败：${e.message ?: "请重试"}")
         }
     }
 
@@ -161,31 +229,17 @@ fun PrinterScreen(
                     }
                 },
                 onSelfTest = {
-                    val address = remembered
-                    if (address.isNullOrBlank() || state !is PrinterUiState.Connected) {
+                    // 本批只做连接打通；打印绘制（TSPL/SDK draw*）下批接入
+                    if (state !is PrinterUiState.Connected) {
                         statusModel.onError("打印机未连接 · 去连接")
                     } else {
-                        // 第三轮：sendSelfTest 同样含 socket.connect() 阻塞——移 IO 线程
-                        scope.launch {
-                            try {
-                                val result = withContext(Dispatchers.IO) {
-                                    session.sendSelfTest(address)
-                                }
-                                when (result) {
-                                    is PrintSession.PrintSendResult.Sent -> Unit
-                                    is PrintSession.PrintSendResult.Failed ->
-                                        statusModel.onError(result.reason)
-                                }
-                            } catch (e: Exception) {
-                                statusModel.onError("自检打印失败：${e.message ?: "请重试"}")
-                            }
-                        }
+                        statusModel.onError("标签打印下批接入 · 本批已打通连接")
                     }
                 },
             )
             Text(
-                text = "主通道 TSPL · 纸宽 ${PrinterProfile.SIZE_MM}mm · " +
-                    "自检打 100mm 标尺验证可打宽度",
+                text = "驱动通道 ${if (useLegacySpp) "自研 SPP（回退）" else "快麦官方 SDK（KM-118BT）"} · " +
+                    "纸宽 ${PrinterProfile.SIZE_MM}mm · 打印绘制下批",
                 color = Tokens.Color.Text.tertiary,
                 style = MaterialTheme.typography.labelMedium,
             )
@@ -193,13 +247,18 @@ fun PrinterScreen(
                 text = "打开系统蓝牙设置",
                 style = BigButtonStyle.Quiet,
                 onClick = {
-                    // 真机 Bug-4：个别无蓝牙/定制系统无该 Settings Activity——兜底不闪退
                     try {
                         context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
                     } catch (e: Exception) {
                         statusModel.onError("无法打开系统蓝牙设置，请手动前往设置")
                     }
                 },
+            )
+            // P-2：诊断导出入口（之前只在登录失败卡有，真机排障找不到）
+            BigButton(
+                text = "导出诊断日志",
+                style = BigButtonStyle.Quiet,
+                onClick = { exportDiag() },
             )
         }
     }

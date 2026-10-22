@@ -110,6 +110,12 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.4")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
+    // 打印机治本（MIMO-TASK-PRINTER-SDK）：快麦 KM-118BT 官方驱动库。
+    // jcenter 已死；阿里云 public 镜像实测可解析两 AAR（POM+AAR HTTP 200，回执注明）。
+    // protocol=协议层（BluetoothPrinterManager/IBluetoothPrinterProtocol）；printer=驱动实现（KuaiMai 等）。
+    implementation("io.vin.android:bluetoothprinterprotocol:1.0.2")
+    implementation("io.vin.android:bluetoothprinter:1.0.18")
+
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")

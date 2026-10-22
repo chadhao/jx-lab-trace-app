@@ -6,6 +6,7 @@ import cn.hunanjiangxi.jxlabtrace.auth.FileSidStore
 import cn.hunanjiangxi.jxlabtrace.auth.KeystoreSidCipher
 import cn.hunanjiangxi.jxlabtrace.auth.MeRepository
 import cn.hunanjiangxi.jxlabtrace.auth.ReauthBridge
+import cn.hunanjiangxi.jxlabtrace.log.CrashLogWriter
 import cn.hunanjiangxi.jxlabtrace.net.ApiClient
 import cn.hunanjiangxi.jxlabtrace.net.JxCookieJar
 import cn.hunanjiangxi.jxlabtrace.net.NetworkMonitor
@@ -33,6 +34,12 @@ class JxLabTraceApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        // 全局崩溃留栈（追加任务 2026-10-22）：未捕获异常追加写 files/crash-log.txt，
+        // 写完交还系统默认 handler（保持崩溃行为）。诊断导出（LoginDiag）一并读取该文件。
+        CrashLogWriter.install(
+            file = File(filesDir, CrashLogWriter.FILE_NAME),
+            versionName = BuildConfig.VERSION_NAME,
+        )
         networkMonitor = NetworkMonitor(this).also { it.start() }
 
         // M03：jx_sid 文件持久化（Keystore 加密），注入 OkHttp CookieJar。

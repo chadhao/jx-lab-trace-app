@@ -434,9 +434,12 @@ class LoginWebViewActivity : ComponentActivity() {
         runCatching { startActivity(intent) }
     }
 
-    /** Authorizing 态「导出诊断日志」：全量缓冲 → 系统分享面板（text/plain）。 */
+    /** Authorizing 态「导出诊断日志」：全量缓冲 + crash-log.txt → 系统分享面板（text/plain）。 */
     private fun handleExportDiag() {
-        val text = LoginDiag.exportText(AppLogger.snapshot())
+        val crashText = cn.hunanjiangxi.jxlabtrace.log.CrashLogWriter.readAll(
+            java.io.File(filesDir, cn.hunanjiangxi.jxlabtrace.log.CrashLogWriter.FILE_NAME),
+        )
+        val text = LoginDiag.exportTextWithCrash(AppLogger.snapshot(), crashText)
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, "登录诊断日志")

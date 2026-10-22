@@ -8,11 +8,13 @@ import java.util.Locale
 /**
  * 登录诊断导出：把 [cn.hunanjiangxi.jxlabtrace.log.AppLogger] 环形缓冲
  * 格式化为可分享纯文本（`HH:mm:ss.SSS LEVEL [tag] message` 逐行）。
+ * 追加任务（2026-10-22）：[exportTextWithCrash] 并入 files/crash-log.txt 全文。
  * 纯函数，无 Android 依赖，便于单测。
  */
 object LoginDiag {
 
     private const val EMPTY_TEXT = "(缓冲为空)"
+    private const val EMPTY_CRASH = "(无崩溃记录)"
 
     /** 单条日志的导出行格式：`HH:mm:ss.SSS LEVEL [tag] message`。 */
     fun formatLine(entry: LogEntry, timeMillis: Long = entry.timeMillis): String {
@@ -24,4 +26,16 @@ object LoginDiag {
     fun exportText(entries: List<LogEntry>): String =
         if (entries.isEmpty()) EMPTY_TEXT
         else entries.joinToString(separator = "\n") { formatLine(it) }
+
+    /**
+     * 诊断导出 + 崩溃留栈并入（追加任务）：
+     * 上半 = AppLogger 环形缓冲；下半 = crash-log.txt 全文（空则占位说明）。
+     */
+    fun exportTextWithCrash(entries: List<LogEntry>, crashLogText: String): String = buildString {
+        appendLine("===== 诊断日志（AppLogger）=====")
+        appendLine(exportText(entries))
+        appendLine()
+        appendLine("===== 崩溃留栈（crash-log.txt）=====")
+        appendLine(crashLogText.ifBlank { EMPTY_CRASH })
+    }
 }

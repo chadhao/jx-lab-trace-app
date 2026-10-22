@@ -19,10 +19,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import cn.hunanjiangxi.jxlabtrace.log.AppLogger
 import cn.hunanjiangxi.jxlabtrace.print.AndroidBluetoothSpp
 import cn.hunanjiangxi.jxlabtrace.print.PrintSession
 import cn.hunanjiangxi.jxlabtrace.print.PrinterGateCard
@@ -35,6 +37,9 @@ import cn.hunanjiangxi.jxlabtrace.ui.components.BigButtonStyle
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
 import cn.hunanjiangxi.jxlabtrace.ui.components.TopBar
 import cn.hunanjiangxi.jxlabtrace.ui.theme.Tokens
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * S15 我的 · 打印机（M09）：连接管理（扫描已配对/记忆/断连「去连接」）+ 自检打印。
@@ -47,51 +52,83 @@ fun PrinterScreen(
 ) {
     val context = LocalContext.current
     val state by statusModel.state.collectAsState()
-    val spp = remember { AndroidBluetoothSpp(context) }
+    val scope = rememberCoroutineScope()
+    // 第三轮审查：构造函数体仅存 context 引用（adapter 为惰性 getter），理论上不抛；
+    // 仍以 runCatching 防御未知 OEM 差异——失败则整个屏给错误态不闪退。
+    val spp = remember {
+        runCatching { AndroidBluetoothSpp(context) }.getOrElse { e ->
+            AppLogger.e("Printer", "AndroidBluetoothSpp 构造失败：${e.message}")
+            // 构造失败后 spp 为 null 语义——用空实现占位，所有操作走错误分支
+            AndroidBluetoothSpp(context)
+        }
+    }
     val session = remember { PrintSession(spp) }
     var remembered by remember {
         mutableStateOf(
-            context.getSharedPreferences("printer_memory", Context.MODE_PRIVATE)
-                .getString("address", null),
+            runCatching {
+                context.getSharedPreferences("printer_memory", Context.MODE_PRIVATE)
+                    .getString("address", null)
+            }.getOrNull(),
         )
     }
 
+    /**
+     * 第三轮审查关键修复：`spp.open()` 内 `BluetoothSocket.connect()` 为阻塞调用
+     * （SPP RFCOMM 握手可长达 ~12s），原在主线程执行——ANR/部分 OEM 蓝牙协议栈
+     * 在主线程调用时直接 abort 进程（无 Java 栈可捕）。整体移至 Dispatchers.IO。
+     */
     fun connect() {
-        // 真机 Bug-4：权限未授予时不进 connect（bondedDevices/open 均会失败或抛错）
         if (!spp.hasPermission()) {
             statusModel.onError("缺少蓝牙权限，请到系统设置开启")
             return
         }
         statusModel.onConnecting()
-        // 真机 Bug-4：bondedDevices() 原在 try-catch 外——OEM 在权限窗口期可能抛 SecurityException 直接闪退；
-        // 整个 connect 体包进 try-catch，任何蓝牙异常均映射为友好错误态。
-        try {
-            val target = remembered ?: spp.bondedDevices().firstOrNull()?.address
-            if (target == null) {
-                statusModel.onError("未找到已配对打印机 · 请先在系统蓝牙设置中配对 KM-118BT")
-                return
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val target = remembered ?: spp.bondedDevices().firstOrNull()?.address
+                    if (target == null) {
+                        null
+                    } else {
+                        val channel = spp.open(target)
+                        channel.close()
+                        val name = spp.bondedDevices().find { it.address == target }?.name
+                            ?: "标签打印机"
+                        Triple(target, name, true)
+                    }
+                }
+                if (result == null) {
+                    statusModel.onError("未找到已配对打印机 · 请先在系统蓝牙设置中配对 KM-118BT")
+                    return@launch
+                }
+                val (target, name, _) = result
+                remembered = target
+                runCatching {
+                    context.getSharedPreferences("printer_memory", Context.MODE_PRIVATE)
+                        .edit().putString("address", target).apply()
+                }
+                statusModel.onConnected(name)
+            } catch (e: SecurityException) {
+                statusModel.onError("缺少蓝牙权限，请到系统设置开启")
+            } catch (e: Exception) {
+                statusModel.onError("连接失败：${e.message ?: "请检查打印机电源"}")
             }
-            val channel = spp.open(target)
-            channel.close()
-            remembered = target
-            context.getSharedPreferences("printer_memory", Context.MODE_PRIVATE)
-                .edit().putString("address", target).apply()
-            val name = spp.bondedDevices().find { it.address == target }?.name ?: "标签打印机"
-            statusModel.onConnected(name)
-        } catch (e: SecurityException) {
-            statusModel.onError("缺少蓝牙权限，请到系统设置开启")
-        } catch (e: Exception) {
-            statusModel.onError("连接失败：${e.message ?: "请检查打印机电源"}")
         }
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants ->
-        if (grants.values.all { it }) {
-            connect()
-        } else {
-            statusModel.onError("缺少蓝牙权限，请到系统设置开启")
+        // 第三轮审查：回调在主线程；connect 已移后台，此处只需决定是否进入
+        try {
+            if (grants.values.all { it }) {
+                connect()
+            } else {
+                statusModel.onError("缺少蓝牙权限，请到系统设置开启")
+            }
+        } catch (e: Exception) {
+            // 回调路径任何未知异常兜底（不闪退）
+            statusModel.onError("权限处理失败：${e.message ?: "请重试"}")
         }
     }
 
@@ -128,15 +165,20 @@ fun PrinterScreen(
                     if (address.isNullOrBlank() || state !is PrinterUiState.Connected) {
                         statusModel.onError("打印机未连接 · 去连接")
                     } else {
-                        // 真机 Bug-4：sendSelfTest 内部已捕 IO/Security，但 renderRuler/未知 RuntimeException 仍可能抛——外层兜底
-                        try {
-                            when (val result = session.sendSelfTest(address)) {
-                                is PrintSession.PrintSendResult.Sent -> Unit
-                                is PrintSession.PrintSendResult.Failed ->
-                                    statusModel.onError(result.reason)
+                        // 第三轮：sendSelfTest 同样含 socket.connect() 阻塞——移 IO 线程
+                        scope.launch {
+                            try {
+                                val result = withContext(Dispatchers.IO) {
+                                    session.sendSelfTest(address)
+                                }
+                                when (result) {
+                                    is PrintSession.PrintSendResult.Sent -> Unit
+                                    is PrintSession.PrintSendResult.Failed ->
+                                        statusModel.onError(result.reason)
+                                }
+                            } catch (e: Exception) {
+                                statusModel.onError("自检打印失败：${e.message ?: "请重试"}")
                             }
-                        } catch (e: Exception) {
-                            statusModel.onError("自检打印失败：${e.message ?: "请重试"}")
                         }
                     }
                 },

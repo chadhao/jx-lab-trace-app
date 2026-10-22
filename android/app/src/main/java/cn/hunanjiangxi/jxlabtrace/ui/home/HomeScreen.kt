@@ -1,6 +1,7 @@
 package cn.hunanjiangxi.jxlabtrace.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import cn.hunanjiangxi.jxlabtrace.app.HomeOverview
 import cn.hunanjiangxi.jxlabtrace.auth.Me
 import cn.hunanjiangxi.jxlabtrace.net.ApiClient
@@ -191,34 +193,81 @@ fun HomeScreen(
     }
 }
 
-/** 进行中卡：in_progress 列表 + count 合计角标文案；最新一条 title/status 作主值。 */
+/**
+ * 进行中卡：in_progress 列表 + count 合计角标文案；最新一条 title/status 作主值。
+ * 真机 Bug-1：后端 title 可能为「/」等纯符号空壳——须含字母/数字才算有效，
+ * 否则回落域 label，再回落「无」；hint 拼接时空 label 跳过分隔符。
+ */
 internal fun inProgressCardValue(overview: HomeOverview): Pair<String, String> {
     val items = overview.in_progress
     if (items.isEmpty()) return "无" to "各域进行中单据"
     val total = items.sumOf { it.count }
     val latest = items.firstNotNullOfOrNull { it.latest }
-    val value = latest?.title?.takeIf { it.isNotBlank() } ?: "无"
+    val value = latest?.title?.takeIf { t ->
+        t.isNotBlank() && t.any { ch -> ch.isLetterOrDigit() }
+    } ?: items.firstOrNull { it.label.isNotBlank() }?.label
+        ?: "无"
     val hint = buildString {
         append("在办 $total 项")
-        items.firstOrNull { it.count > 0 }?.let { append(" · ${it.label} ${it.count}") }
-        latest?.let { append(" · ${it.status}") }
+        items.firstOrNull { it.count > 0 && it.label.isNotBlank() }
+            ?.let { append(" · ${it.label} ${it.count}") }
+        latest?.status?.takeIf { it.isNotBlank() }?.let { append(" · $it") }
     }
     return value to hint
 }
 
-/** 待办卡：todos 逐项 `label count` 拼接（§3.4 口径由服务端聚合）。 */
-internal fun todosCardValue(overview: HomeOverview): Pair<String, String> {
+/**
+ * 待办卡逐项行（真机 Bug-2：不拼单行长串，Card 内 Column 每项一行「label：count」）。
+ * 空列表 ⇒ 单行「无」。
+ */
+internal fun todosCardLines(overview: HomeOverview): List<String> {
     val todos = overview.todos
-    if (todos.isEmpty()) return "无" to "今日待办"
-    val value = todos.joinToString(" · ") { "${it.label}${it.count}" }
-    return value to "待收车 / 待打码 / 待装车"
+    if (todos.isEmpty()) return listOf("无")
+    return todos.filter { it.label.isNotBlank() }.map { "${it.label}：${it.count}" }
+        .ifEmpty { listOf("无") }
 }
 
-/** 最近作业卡：recent 首条 action + at（§3.1 最多 10 条按 id 倒序）。 */
+/** 真机 Bug-3：action 原始码 → 人话（映射表可扩展；未知码原样显示）。 */
+internal val RECENT_ACTION_LABELS: Map<String, String> = mapOf(
+    "feishu_login" to "飞书登录",
+    "login" to "登录",
+    "create" to "新建",
+    "arrive" to "到货确认",
+    "weigh" to "过磅",
+    "bag_gen" to "建袋打码",
+    "return" to "退车",
+    "reprint" to "标签补打",
+)
+
+/**
+ * 真机 Bug-3：at 格式化——RFC3339 / `YYYY-MM-DD HH:MM:SS` 均归一 `MM-dd HH:mm`；
+ * 解析失败原样兜底（不吞时间信息）。
+ */
+internal fun formatRecentAt(at: String): String {
+    if (at.isBlank()) return ""
+    // RFC3339（含时区，如 2026-10-22T15:39:10.886+08:00）
+    runCatching {
+        val t = java.time.OffsetDateTime.parse(at)
+        return t.format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+    }
+    // 契约 §2 at 类时间戳 YYYY-MM-DD HH:MM:SS
+    runCatching {
+        val t = java.time.LocalDateTime.parse(
+            at,
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+        )
+        return t.format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+    }
+    return at
+}
+
+/** 最近作业卡：recent 首条 action 人话 + 格式化 at（§3.1 最多 10 条按 id 倒序）。 */
 internal fun recentCardValue(overview: HomeOverview): Pair<String, String> {
     val recent = overview.recent.firstOrNull() ?: return "无" to "本人最近作业"
-    val value = recent.action.ifBlank { recent.entity }
-    return value to "${recent.at} · 共 ${overview.recent.size} 条"
+    val actionLabel = RECENT_ACTION_LABELS[recent.action]
+        ?: recent.action.ifBlank { recent.entity }
+    val atText = formatRecentAt(recent.at)
+    return actionLabel to (if (atText.isBlank()) "共 ${overview.recent.size} 条" else "$atText · 共 ${overview.recent.size} 条")
 }
 
 /** 数据位三态渲染：加载中「--」/ 就绪三卡真值 / 失败统一空态占位（不报错）。 */
@@ -239,12 +288,47 @@ private fun OverviewSection(state: HomeOverviewState) {
         is HomeOverviewState.Ready -> {
             val overview = state.overview
             val (inProgressValue, inProgressHint) = inProgressCardValue(overview)
-            val (todosValue, todosHint) = todosCardValue(overview)
             val (recentValue, recentHint) = recentCardValue(overview)
             FieldCard(label = "进行中作业", value = inProgressValue, hint = inProgressHint)
-            FieldCard(label = "今日待办", value = todosValue, hint = todosHint)
+            // 待办卡逐项渲染（Bug-2：不拼单行长串，Card 内 Column 每项一行）
+            TodosCard(lines = todosCardLines(overview))
             FieldCard(label = "最近作业", value = recentValue, hint = recentHint)
         }
+    }
+}
+
+/**
+ * 今日待办卡：Card 内 Column 逐项渲染（真机 Bug-2——多项拼一行会溢出挤压）。
+ * 每项一行「label：count」，风格对齐 FieldCard（同 surface/label 体系）。
+ */
+@Composable
+private fun TodosCard(lines: List<String>, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Tokens.Radius.md))
+            .background(Tokens.Color.Surface.card)
+            .border(1.dp, Tokens.Color.Surface.border, RoundedCornerShape(Tokens.Radius.md))
+            .padding(Tokens.Space.space4),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.space1),
+    ) {
+        Text(
+            text = "今日待办",
+            color = Tokens.Color.Text.tertiary,
+            style = MaterialTheme.typography.labelMedium,
+        )
+        lines.forEach { line ->
+            Text(
+                text = line,
+                color = Tokens.Color.Text.primary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        Text(
+            text = "今日待办 · 服务端聚合",
+            color = Tokens.Color.Text.tertiary,
+            style = MaterialTheme.typography.labelSmall,
+        )
     }
 }
 

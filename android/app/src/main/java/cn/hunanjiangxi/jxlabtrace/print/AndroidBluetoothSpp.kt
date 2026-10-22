@@ -38,11 +38,17 @@ class AndroidBluetoothSpp(private val context: Context) : SppFactory {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    @SuppressLint("MissingPermission") // 入口已 hasPermission() 守卫
+    @SuppressLint("MissingPermission") // 入口已 hasPermission() 守卫；单设备 name 访问仍可能 SecurityException（OEM 差异），逐项兜底
     fun bondedDevices(): List<BondedItem> {
         if (!hasPermission()) return emptyList()
-        val bonded = adapter?.bondedDevices ?: return emptyList()
-        return bonded.map { BondedItem(it.name ?: it.address, it.address) }
+        // 真机 Bug-4：部分 OEM 在权限刚授予/撤销窗口期 getBondedDevices 仍抛 SecurityException——整体兜底
+        val bonded = runCatching { adapter?.bondedDevices }.getOrNull() ?: return emptyList()
+        return bonded.mapNotNull { device ->
+            // it.name 在 API31+ 需 CONNECT；个别设备即使已授权仍可能瞬时抛错——逐设备兜底不拖垮整表
+            val name = runCatching { device.name }.getOrNull()
+            val address = runCatching { device.address }.getOrNull() ?: return@mapNotNull null
+            BondedItem(name ?: address, address)
+        }
     }
 
     @SuppressLint("MissingPermission") // 入口已 hasPermission() 守卫

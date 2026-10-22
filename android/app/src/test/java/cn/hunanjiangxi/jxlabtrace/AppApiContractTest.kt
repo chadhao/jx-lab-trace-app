@@ -12,7 +12,7 @@ import cn.hunanjiangxi.jxlabtrace.ui.home.HomeOverviewState
 import cn.hunanjiangxi.jxlabtrace.ui.home.HomeRepository
 import cn.hunanjiangxi.jxlabtrace.ui.home.inProgressCardValue
 import cn.hunanjiangxi.jxlabtrace.ui.home.recentCardValue
-import cn.hunanjiangxi.jxlabtrace.ui.home.todosCardValue
+import cn.hunanjiangxi.jxlabtrace.ui.home.todosCardLines
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -167,15 +167,15 @@ class AppApiContractTest {
         assertEquals(0, truckPending.count)
         assertEquals(null, truckPending.latest)
 
-        // 待办卡 = todos
-        val (todosValue, _) = todosCardValue(data)
-        assertTrue("待办卡应含待收：$todosValue", todosValue.contains("待收车数1"))
-        assertTrue(todosValue.contains("待打码数2"))
+        // 待办卡 = todos 逐项行
+        val todoLines = todosCardLines(data)
+        assertTrue("待办卡应含待收行：$todoLines", todoLines.contains("待收车数：1"))
+        assertTrue(todoLines.contains("待打码数：2"))
 
-        // 最近作业卡 = recent
+        // 最近作业卡 = recent（action 人话映射 + at 格式化）
         val (recentValue, recentHint) = recentCardValue(data)
-        assertEquals("create", recentValue)
-        assertTrue(recentHint.contains("2026-10-21 09:20:00"))
+        assertEquals("新建", recentValue) // create → 新建
+        assertTrue(recentHint.contains("10-21 09:20")) // at 归一 MM-dd HH:mm
 
         // I-2 宿主状态映射
         val state = HomeOverviewState.Ready(data)

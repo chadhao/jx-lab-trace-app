@@ -57,13 +57,20 @@ fun PrinterScreen(
     }
 
     fun connect() {
-        statusModel.onConnecting()
-        val target = remembered ?: spp.bondedDevices().firstOrNull()?.address
-        if (target == null) {
-            statusModel.onError("未找到已配对打印机 · 请先在系统蓝牙设置中配对 KM-118BT")
+        // 真机 Bug-4：权限未授予时不进 connect（bondedDevices/open 均会失败或抛错）
+        if (!spp.hasPermission()) {
+            statusModel.onError("缺少蓝牙权限，请到系统设置开启")
             return
         }
+        statusModel.onConnecting()
+        // 真机 Bug-4：bondedDevices() 原在 try-catch 外——OEM 在权限窗口期可能抛 SecurityException 直接闪退；
+        // 整个 connect 体包进 try-catch，任何蓝牙异常均映射为友好错误态。
         try {
+            val target = remembered ?: spp.bondedDevices().firstOrNull()?.address
+            if (target == null) {
+                statusModel.onError("未找到已配对打印机 · 请先在系统蓝牙设置中配对 KM-118BT")
+                return
+            }
             val channel = spp.open(target)
             channel.close()
             remembered = target
@@ -121,10 +128,15 @@ fun PrinterScreen(
                     if (address.isNullOrBlank() || state !is PrinterUiState.Connected) {
                         statusModel.onError("打印机未连接 · 去连接")
                     } else {
-                        when (val result = session.sendSelfTest(address)) {
-                            is PrintSession.PrintSendResult.Sent -> Unit
-                            is PrintSession.PrintSendResult.Failed ->
-                                statusModel.onError(result.reason)
+                        // 真机 Bug-4：sendSelfTest 内部已捕 IO/Security，但 renderRuler/未知 RuntimeException 仍可能抛——外层兜底
+                        try {
+                            when (val result = session.sendSelfTest(address)) {
+                                is PrintSession.PrintSendResult.Sent -> Unit
+                                is PrintSession.PrintSendResult.Failed ->
+                                    statusModel.onError(result.reason)
+                            }
+                        } catch (e: Exception) {
+                            statusModel.onError("自检打印失败：${e.message ?: "请重试"}")
                         }
                     }
                 },
@@ -138,7 +150,14 @@ fun PrinterScreen(
             BigButton(
                 text = "打开系统蓝牙设置",
                 style = BigButtonStyle.Quiet,
-                onClick = { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+                onClick = {
+                    // 真机 Bug-4：个别无蓝牙/定制系统无该 Settings Activity——兜底不闪退
+                    try {
+                        context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                    } catch (e: Exception) {
+                        statusModel.onError("无法打开系统蓝牙设置，请手动前往设置")
+                    }
+                },
             )
         }
     }

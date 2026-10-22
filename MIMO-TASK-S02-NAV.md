@@ -162,3 +162,19 @@
 3. **打印机路径再审查**（第三轮，聚焦点收窄）：`remember { AndroidBluetoothSpp(context) }` 构造函数体内是否有可能抛异常（adapter 获取/receiver 注册）——构造移出 remember 或整体 try；`spp.open()` 若是 SPP socket 连接，确认在何种线程执行、异常类型是否全部覆盖；`permissionLauncher` 回调路径。
 
 **判据**：内网 CI 全绿 + 新 APK；项目方复现闪退 → 「我的」导出诊断日志 → 发回 crash-log 内容（拿到真实栈后精修）。
+
+---
+
+## 追加任务（2026-10-22 22:05）· 自检打印实现（打印机已连接，快麦 SDK 打通验证通过）
+
+**打印机连接真机验证通过 ✅（协议治本成功）**。现实现自检打印：
+
+1. `KmPrinterBridge` 加 `printSelfTest()`：连接状态下通过 `IBluetoothPrinterProtocol` 绘制并打印**测试标签**（TSPL）：
+   - 文本行：`江熙追溯 · 打印自检` / `时间：<yyyy-MM-dd HH:mm:ss>` / `版本：<versionName>` / `纸宽 100mm · 快麦 KM-118BT`；
+   - 一个二维码（内容=时间戳字符串，验证清晰度）+ 一条 CODE128 条码（内容=test 数字）；
+   - `printAndFeed(callback)` 出纸（onPrintFail 显示失败码文案 / onPrintSuccess 提示成功）；
+   - 全路径 try-catch，失败进 statusModel.onError。
+2. `PrinterScreen.onSelfTest` 接线：未连接 ⇒ 提示去连接；已连接 ⇒ 调 `printSelfTest()`（IO 线程）。
+3. 单测：自检内容构造纯函数断言（含版本号/时间格式/含二维码与条码调用）。
+
+**判据**：内网 CI 全绿 + 新 APK；真机：点自检 → 打印机出一张测试标签。

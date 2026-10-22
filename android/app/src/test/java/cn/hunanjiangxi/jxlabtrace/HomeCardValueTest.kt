@@ -114,7 +114,7 @@ class HomeCardValueTest {
     }
 
     @Test
-    fun `Bug-3 at为契约datetime格式 - 归一MM-dd HH:mm`() {
+    fun `Bug-3 at为契约datetime格式 归一MM-dd HHmm`() {
         val overview = HomeOverview(
             recent = listOf(
                 HomeRecentItem(id = 1, at = "2026-10-21 09:20:00", action = "create"),

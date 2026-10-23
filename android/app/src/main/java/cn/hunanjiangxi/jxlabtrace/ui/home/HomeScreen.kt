@@ -2,6 +2,7 @@ package cn.hunanjiangxi.jxlabtrace.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,12 +10,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +31,6 @@ import cn.hunanjiangxi.jxlabtrace.app.HomeOverview
 import cn.hunanjiangxi.jxlabtrace.auth.Me
 import cn.hunanjiangxi.jxlabtrace.net.ApiClient
 import cn.hunanjiangxi.jxlabtrace.net.ApiResult
-import cn.hunanjiangxi.jxlabtrace.ui.components.DomainBlock
 import cn.hunanjiangxi.jxlabtrace.ui.components.EmptyState
 import cn.hunanjiangxi.jxlabtrace.ui.components.FieldCard
 import cn.hunanjiangxi.jxlabtrace.ui.components.JxPreviewTheme
@@ -97,8 +99,9 @@ private val ENTRY_PERMS: Map<HomeEntryId, List<String>> = mapOf(
 
 fun homeEntryIds(permissions: List<String>): List<HomeEntryId> {
     val granted = permissions.toSet()
+    // 首页入口三改①（2026-10-23）：TRACE 恒过滤——追溯由 TabBar 单独按钮提供，landing 不放重复入口。
     return HomeEntryId.entries.filter { id ->
-        ENTRY_PERMS[id].orEmpty().any { it in granted }
+        id != HomeEntryId.TRACE && ENTRY_PERMS[id].orEmpty().any { it in granted }
     }
 }
 
@@ -129,20 +132,61 @@ private fun entryVisual(id: HomeEntryId): Pair<Color, Color> = when (id) {
         Tokens.Color.Brand.primarySoft to Tokens.Color.Brand.primary
 }
 
-/** 入口标题/副题（口径 = 任务包入口区文案）。 */
-private fun entryText(id: HomeEntryId): Triple<String, String, androidx.compose.ui.graphics.vector.ImageVector> =
+/**
+ * 入口标题 + 图标（口径 = 任务包入口区文案）。
+ * 首页入口三改③：副标题弃用（纵向极简卡无 subtitle）——仅保留 title/icon。
+ */
+private fun entryText(id: HomeEntryId): Pair<String, androidx.compose.ui.graphics.vector.ImageVector> =
     when (id) {
-        HomeEntryId.RECV -> Triple("收货", "预报 · 过磅 · 打码", JxIcons.RecvTruck)
-        HomeEntryId.BAG -> Triple("建袋打码", "吨袋生成 · 标签", JxIcons.Bag)
-        HomeEntryId.LOAD -> Triple("装车出场", "归集 · 出场", JxIcons.ShipOut)
-        HomeEntryId.TRACE -> Triple("追溯", "扫码看全程", JxIcons.TraceForward)
-        HomeEntryId.SAMPLE -> Triple("取样", "现场取样提交", JxIcons.Sample)
-        HomeEntryId.BATCH -> Triple("建批", "新建生产批", JxIcons.Batch)
-        HomeEntryId.FEED -> Triple("投料", "吨袋投料记录", JxIcons.Feed)
-        HomeEntryId.OPERATION -> Triple("作业段", "作业打点计时", JxIcons.OpLog)
-        HomeEntryId.FG_PRINT -> Triple("成品打码", "成品袋标签", JxIcons.FgBag)
-        HomeEntryId.REPORT -> Triple("报表", "经营看板 · 只读", JxIcons.Report)
+        HomeEntryId.RECV -> "收货" to JxIcons.RecvTruck
+        HomeEntryId.BAG -> "建袋打码" to JxIcons.Bag
+        HomeEntryId.LOAD -> "装车出场" to JxIcons.ShipOut
+        HomeEntryId.TRACE -> "追溯" to JxIcons.TraceForward
+        HomeEntryId.SAMPLE -> "取样" to JxIcons.Sample
+        HomeEntryId.BATCH -> "建批" to JxIcons.Batch
+        HomeEntryId.FEED -> "投料" to JxIcons.Feed
+        HomeEntryId.OPERATION -> "作业段" to JxIcons.OpLog
+        HomeEntryId.FG_PRINT -> "成品打码" to JxIcons.FgBag
+        HomeEntryId.REPORT -> "报表" to JxIcons.Report
     }
+
+/**
+ * 首页入口三改②：纵向极简卡——图标缩小居上（iconLg）+ 大标题居下（titleLarge，maxLines=1），
+ * 无副标题；样式沿用域色/圆角（lg）/触控高（touchComfort）。替换横排 DomainBlock（半屏宽放不下大标题）。
+ */
+@Composable
+private fun HomeEntryBlock(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .heightIn(min = Tokens.Size.touchComfort)
+            .clip(RoundedCornerShape(Tokens.Radius.lg))
+            .background(containerColor)
+            .clickable(onClick = onClick)
+            .padding(Tokens.Space.space4),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.space2),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = contentColor,
+            modifier = Modifier.size(Tokens.Size.iconLg),
+        )
+        Text(
+            text = title,
+            color = contentColor,
+            style = MaterialTheme.typography.titleLarge,
+            maxLines = 1,
+        )
+    }
+}
 
 /**
  * S02 现场首页：身份栏（首字头像 + 姓名 + 角色中文）+ 角色变体入口区 + 数据位三卡。
@@ -174,17 +218,14 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 pair.forEach { id ->
-                    val (title, subtitle, icon) = entryText(id)
+                    val (title, icon) = entryText(id)
                     val (container, content) = entryVisual(id)
-                    DomainBlock(
+                    HomeEntryBlock(
                         title = title,
-                        subtitle = subtitle,
                         icon = icon,
                         containerColor = container,
                         contentColor = content,
                         onClick = { onEntry(id) },
-                        // TODO(S02 数据位): 今日待办角标 —— 随 /api/app/home 就绪后接计数
-                        badgeCount = null,
                         modifier = Modifier.weight(1f),
                     )
                 }

@@ -77,12 +77,7 @@ fun PrinterGateCard(
                         text = "自检打印",
                         onClick = onSelfTest,
                         style = BigButtonStyle.Quiet,
-                        modifier = Modifier.weight(1f),
-                    )
-                    BigButton(
-                        text = "管理",
-                        onClick = onGoSettings,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }

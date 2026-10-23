@@ -77,8 +77,11 @@ class HomeNavTest {
     fun `N-2 空角色与未知角色 - 仅角色无关入口追溯`() {
         assertEquals(listOf(HomeEntryId.TRACE), homeEntryIds(emptyList()))
         assertEquals(listOf(HomeEntryId.TRACE), homeEntryIds(listOf("qc")))
-        // 系统管理员（sysadmin 在 sys_roles）：业务矩阵无其变体，仅角色无关入口
-        assertEquals(listOf(HomeEntryId.TRACE), homeEntryIds(listOf("sysadmin")))
+        // 系统管理员 = 全量入口（2026-10-23 项目方确认：管理域角色可现场操作测试）
+        assertEquals(
+            HomeEntryId.entries.toList(),
+            homeEntryIds(listOf("sysadmin")),
+        )
     }
 
     // ===== N-3：TabBar 三项与角色无关 =====

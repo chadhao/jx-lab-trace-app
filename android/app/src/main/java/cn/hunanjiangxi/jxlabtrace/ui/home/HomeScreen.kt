@@ -83,6 +83,11 @@ val HOME_TABS = listOf(
 fun homeEntryIds(allRoles: List<String>): List<HomeEntryId> {
     val roles = allRoles.toSet()
     val out = LinkedHashSet<HomeEntryId>()
+    // 系统管理员 = 全量入口（管理域角色可现场操作测试，2026-10-23 项目方确认）
+    if ("sysadmin" in roles) {
+        out += HomeEntryId.entries
+        return out.toList()
+    }
     if ("receiver" in roles) {
         out += listOf(HomeEntryId.RECV, HomeEntryId.BAG, HomeEntryId.LOAD, HomeEntryId.TRACE)
     }

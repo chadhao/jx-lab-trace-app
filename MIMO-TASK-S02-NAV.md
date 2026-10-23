@@ -178,3 +178,18 @@
 3. 单测：自检内容构造纯函数断言（含版本号/时间格式/含二维码与条码调用）。
 
 **判据**：内网 CI 全绿 + 新 APK；真机：点自检 → 打印机出一张测试标签。
+
+---
+
+## 追加任务（2026-10-23 12:20）· 首页入口三改（真机反馈，WorkBuddy 已验收规格）
+
+**背景**：项目方真机截图——①追溯已在 TabBar 单独按钮，landing 页不放重复入口；②入口卡大标题截断（横排版式在半屏宽度放不下）；③版式要求「图标缩小居上、大标题放大居下、副标题去掉」。
+
+**规格（已定稿，WorkBuddy 曾临时实现但因分工纪律回滚——由 mimo 正式实现）**：
+
+1. **`homeEntryIds` 过滤 TRACE**：返回集合恒不含 `HomeEntryId.TRACE`（追溯由 TabBar 恒定提供，所有用户一致）。
+2. **新增 `HomeEntryBlock` 私有 Composable**（HomeScreen 内）：**纵向极简卡**——Column（图标 Box 缩小 `Tokens.Size.iconLg` 居上 + Text 大标题 `titleLarge` 居下，`maxLines=1`），无副标题；样式沿用域色/圆角/触控高。
+3. **渲染替换**：入口区 `DomainBlock(...)` 换 `HomeEntryBlock(...)`（`entryText` 的 subtitle 字段弃用）。
+4. **单测更新**（HomeNavTest，矩阵语义）：入口集合断言**全部去 TRACE**（FULL→entries 去 TRACE；收货域→RECV+BAG；生产域→生产 5 项；管理层→REPORT；空权限→空列表）；TabBar 用例改「TRACE 恒由 TabBar 提供，入口列表不含」。
+
+**判据**：内网 CI 全绿 + 新 APK；真机（项目方）：入口无追溯、大标题完整不截断、图标居上标题居下。

@@ -295,7 +295,8 @@ private fun AppShell(versionName: String, onSessionDead: () -> Unit, modifier: M
     var tab by remember { mutableStateOf("home") }
     val pushStack = remember { mutableStateListOf<PushRoute>() }
     var meState by remember { mutableStateOf(app.meRepository.cached()) }
-    val printerStatus = remember { PrinterStatusModel() }
+    // 打印机状态提升 App 级（MIMO-TASK-AUTO-CONNECT）：启动自动连接与本屏共享同一实例
+    val printerStatus = app.printerStatus
 
     val printOne = remember(context) { buildPrintOne(context) }
     val scanDeferred: () -> Unit = {

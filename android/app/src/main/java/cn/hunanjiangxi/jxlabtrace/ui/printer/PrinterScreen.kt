@@ -167,7 +167,12 @@ fun PrinterScreen(
         }
     }
 
-    fun connect() = if (useLegacySpp) connectViaLegacySpp() else connectViaSdk()
+    fun connect() {
+        // 幂等防护（MIMO-TASK-AUTO-CONNECT ④）：已连接/连接中重复触发直接返回，
+        // 自动连接（App 级）与手动连接不冲突。
+        if (state is PrinterUiState.Connected || state is PrinterUiState.Connecting) return
+        if (useLegacySpp) connectViaLegacySpp() else connectViaSdk()
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),

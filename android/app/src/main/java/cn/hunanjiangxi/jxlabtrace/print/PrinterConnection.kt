@@ -39,6 +39,14 @@ fun printEntryEnabled(state: PrinterUiState): Boolean = state is PrinterUiState.
 fun printerDisconnectedHint(state: PrinterUiState): String? =
     if (state is PrinterUiState.Disconnected) "打印机未连接 · 去连接" else null
 
+/**
+ * 启动自动连接条件判定（MIMO-TASK-AUTO-CONNECT · 纯函数可 JVM 单测）：
+ * 三条件全满足才连——①保存地址非空白；②蓝牙权限已授予；③当前未连接。
+ * 缺任一条件 ⇒ false（调用方静默跳过，不弹窗不报错）。
+ */
+fun shouldAutoConnect(saved: String?, hasPermission: Boolean, connected: Boolean): Boolean =
+    !saved.isNullOrBlank() && hasPermission && !connected
+
 /** 已记忆设备（蓝牙地址）本地存储抽象。 */
 interface PrinterMemory {
     fun savedAddress(): String?
@@ -58,7 +66,11 @@ class InMemoryPrinterMemory : PrinterMemory {
     }
 }
 
-/** S15 打印机页状态（断连 ⇒ 打印入口「去连接」· M9-3）。 */
+/**
+ * S15 打印机页状态（断连 ⇒ 打印入口「去连接」· M9-3）。
+ * MIMO-TASK-AUTO-CONNECT：提升为 App 级共享单例（JxLabTraceApp.printerStatus）——
+ * 自动连接与手动连接写同一实例，PrinterScreen/各业务屏读同一状态流。
+ */
 class PrinterStatusModel {
     private val _state = MutableStateFlow<PrinterUiState>(PrinterUiState.Disconnected)
     val state: StateFlow<PrinterUiState> = _state.asStateFlow()

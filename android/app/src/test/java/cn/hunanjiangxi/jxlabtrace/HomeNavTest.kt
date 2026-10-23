@@ -15,6 +15,13 @@ import org.junit.Test
  */
 class HomeNavTest {
 
+    // 权限矩阵驱动用例的权限点集（2026-10-23：me.permissions 上线后口径）
+    private val FULL_PERMS = listOf("recv.arrive.confirm","recv.weigh","recv.bag.gen","ship.load.scan","out.register","sample.take","prod.batch.create","prod.feed.scan","prod.op.log","prod.fg.gen","trace.forward","trace.backward","trace.batch.view","rpt.view")
+    private val RECV_ONLY_PERMS = listOf("recv.arrive.confirm","recv.weigh","recv.bag.gen","ship.load.scan","out.register","trace.forward")
+    private val PROD_PERMS = listOf("sample.take","prod.batch.create","prod.feed.scan","prod.op.log","prod.fg.gen","trace.backward")
+    private val MGMT_PERMS = listOf("trace.forward","trace.backward","trace.batch.view","rpt.view")
+
+
     // ===== N-2：角色 → 入口集合 =====
 
     @Test
@@ -23,7 +30,7 @@ class HomeNavTest {
             setOf(
                 HomeEntryId.RECV, HomeEntryId.BAG, HomeEntryId.LOAD, HomeEntryId.TRACE,
             ),
-            homeEntryIds(listOf("receiver")).toSet(),
+            homeEntryIds(RECV_ONLY_PERMS).toSet(),
         )
     }
 
@@ -34,7 +41,7 @@ class HomeNavTest {
                 HomeEntryId.SAMPLE, HomeEntryId.BATCH, HomeEntryId.FEED,
                 HomeEntryId.OPERATION, HomeEntryId.FG_PRINT, HomeEntryId.TRACE,
             ),
-            homeEntryIds(listOf("production")).toSet(),
+            homeEntryIds(PROD_PERMS).toSet(),
         )
     }
 
@@ -42,7 +49,7 @@ class HomeNavTest {
     fun `N-2 management - 追溯·报表`() {
         assertEquals(
             setOf(HomeEntryId.TRACE, HomeEntryId.REPORT),
-            homeEntryIds(listOf("management")).toSet(),
+            homeEntryIds(MGMT_PERMS).toSet(),
         )
     }
 
@@ -50,7 +57,7 @@ class HomeNavTest {
     fun `N-2 sales - 追溯·报表`() {
         assertEquals(
             setOf(HomeEntryId.TRACE, HomeEntryId.REPORT),
-            homeEntryIds(listOf("sales")).toSet(),
+            homeEntryIds(MGMT_PERMS).toSet(),
         )
     }
 
@@ -62,25 +69,25 @@ class HomeNavTest {
                 HomeEntryId.SAMPLE, HomeEntryId.BATCH, HomeEntryId.FEED,
                 HomeEntryId.OPERATION, HomeEntryId.FG_PRINT,
             ),
-            homeEntryIds(listOf("receiver", "production")).toSet(),
+            homeEntryIds(RECV_ONLY_PERMS + PROD_PERMS).toSet(),
         )
         assertEquals(
             setOf(
                 HomeEntryId.RECV, HomeEntryId.BAG, HomeEntryId.LOAD,
                 HomeEntryId.TRACE, HomeEntryId.REPORT,
             ),
-            homeEntryIds(listOf("sales", "receiver")).toSet(),
+            homeEntryIds(RECV_ONLY_PERMS + MGMT_PERMS).toSet(),
         )
     }
 
     @Test
-    fun `N-2 空角色与未知角色 - 仅角色无关入口追溯`() {
-        assertEquals(listOf(HomeEntryId.TRACE), homeEntryIds(emptyList()))
-        assertEquals(listOf(HomeEntryId.TRACE), homeEntryIds(listOf("qc")))
-        // 系统管理员 = 全量入口（2026-10-23 项目方确认：管理域角色可现场操作测试）
+    fun `N-2 无权限点 - 无入口（矩阵语义：无权限即无功能）`() {
+        assertEquals(emptyList<HomeEntryId>(), homeEntryIds(emptyList()))
+        assertEquals(emptyList<HomeEntryId>(), homeEntryIds(listOf("unknown.perm")))
+        // sysadmin = 51 点全量 ⇒ 全入口（矩阵聚合结果，非角色特判）
         assertEquals(
             HomeEntryId.entries.toList(),
-            homeEntryIds(listOf("sysadmin")),
+            homeEntryIds(FULL_PERMS),
         )
     }
 
@@ -97,16 +104,11 @@ class HomeNavTest {
             HOME_TABS.map { it.label },
         )
         // 全部角色一致：常量与 roles 解耦（三 APP 角色逐一遍历断言）
-        listOf(
-            listOf("receiver"),
-            listOf("production"),
-            listOf("management"),
-            listOf("sales"),
-        ).forEach { roles ->
+        listOf(RECV_ONLY_PERMS, PROD_PERMS, MGMT_PERMS, FULL_PERMS).forEach { perms ->
             assertEquals(3, HOME_TABS.size)
             assertEquals(listOf("现场", "追溯", "我的"), HOME_TABS.map { it.label })
-            // 入口集合随角色变化，但追溯入口恒在（TabBar 追溯项对全部角色可达）
-            assertTrue(HomeEntryId.TRACE in homeEntryIds(roles))
+            // 入口集合随权限变化，但追溯入口恒在（TabBar 追溯项对全部角色可达）
+            assertTrue(HomeEntryId.TRACE in homeEntryIds(perms))
         }
     }
 

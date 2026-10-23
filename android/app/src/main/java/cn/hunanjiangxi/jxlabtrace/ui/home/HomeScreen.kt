@@ -80,28 +80,26 @@ val HOME_TABS = listOf(
  * 多角色取并集（固定变体顺序 receiver → production → management/sales，LinkedHashSet 去重）；
  * 追溯为角色无关入口恒可见；未知/空角色（含系统管理员）仅剩角色无关入口。
  */
-fun homeEntryIds(allRoles: List<String>): List<HomeEntryId> {
-    val roles = allRoles.toSet()
-    val out = LinkedHashSet<HomeEntryId>()
-    // 系统管理员 = 全量入口（管理域角色可现场操作测试，2026-10-23 项目方确认）
-    if ("sysadmin" in roles) {
-        out += HomeEntryId.entries
-        return out.toList()
+// 权限矩阵驱动（2026-10-23 项目方裁决：入口可见性 = 权限矩阵聚合权限点，无角色特判）。
+// 入口 → 所需权限点（SCOPE-APP 18 现场动作；TRACE 为任一追溯权限点）。
+private val ENTRY_PERMS: Map<HomeEntryId, List<String>> = mapOf(
+    HomeEntryId.RECV to listOf("recv.arrive.confirm", "recv.weigh", "recv.bag.gen"),
+    HomeEntryId.BAG to listOf("recv.bag.gen"),
+    HomeEntryId.LOAD to listOf("ship.load.scan", "out.register"),
+    HomeEntryId.SAMPLE to listOf("sample.take"),
+    HomeEntryId.BATCH to listOf("prod.batch.create"),
+    HomeEntryId.FEED to listOf("prod.feed.scan"),
+    HomeEntryId.OPERATION to listOf("prod.op.log"),
+    HomeEntryId.FG_PRINT to listOf("prod.fg.gen"),
+    HomeEntryId.TRACE to listOf("trace.forward", "trace.backward", "trace.batch.view"),
+    HomeEntryId.REPORT to listOf("rpt.view"),
+)
+
+fun homeEntryIds(permissions: List<String>): List<HomeEntryId> {
+    val granted = permissions.toSet()
+    return HomeEntryId.entries.filter { id ->
+        ENTRY_PERMS[id].orEmpty().any { it in granted }
     }
-    if ("receiver" in roles) {
-        out += listOf(HomeEntryId.RECV, HomeEntryId.BAG, HomeEntryId.LOAD, HomeEntryId.TRACE)
-    }
-    if ("production" in roles) {
-        out += listOf(
-            HomeEntryId.SAMPLE, HomeEntryId.BATCH, HomeEntryId.FEED,
-            HomeEntryId.OPERATION, HomeEntryId.FG_PRINT, HomeEntryId.TRACE,
-        )
-    }
-    if ("management" in roles || "sales" in roles) {
-        out += listOf(HomeEntryId.TRACE, HomeEntryId.REPORT)
-    }
-    if (out.isEmpty()) out += HomeEntryId.TRACE
-    return out.toList()
 }
 
 /** 角色中文（身份栏）：系统角色 sysadmin → 系统管理员，业务角色复用 S01 的 roleLabel 口径。 */
@@ -169,7 +167,7 @@ fun HomeScreen(
     ) {
         IdentityCard(me = me, versionName = versionName)
 
-        val entries = homeEntryIds(me.allRoles)
+        val entries = homeEntryIds(me.permissions)
         entries.chunked(2).forEach { pair ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Tokens.Space.space3),
